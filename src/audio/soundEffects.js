@@ -349,6 +349,14 @@ class SoundEffectsEngine {
     osc.start(now);
     osc.stop(now + 0.045);
   }
+
+  playNitro() {
+    this.playNitroBoost();
+  }
+
+  playCarEngine() {
+    this.startEngine();
+  }
 }
 
 export const soundEffects = new SoundEffectsEngine();
