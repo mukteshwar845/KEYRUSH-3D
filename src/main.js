@@ -93,7 +93,7 @@ class KeyRushApp {
 
     const headerMount = document.getElementById('header-mount');
     if (headerMount) {
-      if (screenId === 'landing') {
+      if (screenId === 'landing' || screenId === 'dashboard') {
         headerMount.style.display = 'none';
       } else {
         headerMount.style.display = 'block';

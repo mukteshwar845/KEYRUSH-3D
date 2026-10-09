@@ -1,9 +1,10 @@
 /**
  * KeyRush Offline Service Worker
  * Enables 100% offline gameplay, asset caching, and lightning load speeds.
+ * Network-first strategy ensures latest code updates while providing offline resilience.
  */
 
-const CACHE_NAME = 'keyrush-v1';
+const CACHE_NAME = 'keyrush-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -39,13 +40,10 @@ self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
+  // Network-First with cache fallback strategy
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((networkResponse) => {
-        // Cache external assets or scripts
+    fetch(event.request)
+      .then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -53,12 +51,16 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        // Offline fallback for navigations
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          if (event.request.mode === 'navigate') {
+            return caches.match('/index.html');
+          }
+        });
+      })
   );
 });
