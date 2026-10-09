@@ -368,12 +368,47 @@ class MusicManager {
   stopAll() {
     this._cancelFade();
     this._cancelDuck();
+    this._pendingMode = null;
     this.currentMode = null;
     this.isPausedForRace = false;
     this.interiorAudio.pause();
     this.interiorAudio.volume = 0;
     this.racingAudio.pause();
     this.racingAudio.volume = 0;
+  }
+
+  /**
+   * Smoothly fade out and stop all playing music over fadeMs.
+   * Clears any pending playback queues.
+   */
+  fadeOutAndStop(fadeMs = 500) {
+    this._pendingMode = null;
+    this._cancelDuck();
+    if ((!this.interiorAudio.paused && this.interiorAudio.volume > 0) ||
+        (!this.racingAudio.paused && this.racingAudio.volume > 0)) {
+      this._cancelFade();
+      const startInterior = this.interiorAudio.volume;
+      const startRacing = this.racingAudio.volume;
+      const startTime = performance.now();
+
+      const step = (now) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / fadeMs);
+        this.interiorAudio.volume = Math.max(0, startInterior * (1 - progress));
+        this.racingAudio.volume = Math.max(0, startRacing * (1 - progress));
+
+        if (progress < 1) {
+          this._fadeAnimationId = requestAnimationFrame(step);
+        } else {
+          this._fadeAnimationId = null;
+          this.stopAll();
+        }
+      };
+
+      this._fadeAnimationId = requestAnimationFrame(step);
+    } else {
+      this.stopAll();
+    }
   }
 
   // --- CROSSFADE & FADE-IN ENGINES ---

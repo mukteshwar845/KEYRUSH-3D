@@ -103,8 +103,12 @@ class KeyRushApp {
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Transition music: non-race screens play ambient interior music
-    if (screenId !== 'race') {
+    // Music Management:
+    // User requirement: No song/music on the landing page!
+    if (screenId === 'landing') {
+      musicManager.fadeOutAndStop(400);
+    } else if (screenId !== 'race') {
+      // Non-landing, non-race screens play ambient interior music
       musicManager.playInterior();
     }
 

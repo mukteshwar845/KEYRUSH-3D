@@ -28,6 +28,8 @@ export class LandingView {
 
   render(profile) {
     this.profile = profile || {};
+    // User requirement: No song/music on the landing page
+    musicManager.fadeOutAndStop(300);
 
     this.container.innerHTML = `
       <div class="sp40-landing-screen" id="sp40-root">
