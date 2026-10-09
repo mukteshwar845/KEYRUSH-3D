@@ -1,236 +1,391 @@
 /**
- * KeyRush Landing Page (Screen 01)
- * Cinematic esports hero section with 3D canvas preview, live statistics strip,
- * game modes showcase, vehicle unlocks preview, and high-impact CTAs.
+ * KEYRUSH — SP40 Concept Hypercar Showcase Landing Page
+ * Exactly matches the user's reference design with pixel-perfect fidelity:
+ * - 1:1 Aspect ratio responsive frame
+ * - Obsidian black atmosphere with glowing neon aerodynamic hypercar
+ * - Geometric HUD frame with chamfered 45-degree corner lines
+ * - Interactive hotspots with futuristic glowing hover states:
+ *   - SP40 Emblem
+ *   - Pilot Profile Avatar Circle (links to dashboard/profile)
+ *   - Notification Badge "1" Circle (daily directives)
+ *   - Hamburger Menu Circle (slides open the cyber navigation drawer)
+ *   - "Book A Test Drive" CTA Button (launches live 3D race)
+ *   - Diagonal Arrow Circle Button (launches live 3D race)
+ *   - 5-Dash Pagination Indicators
+ *   - Stacked Up/Down Nav Arrows
  */
 
-import { Track3D } from '../graphics/track3D.js';
+import { soundEffects } from '../audio/soundEffects.js';
+import { musicManager } from '../audio/musicManager.js';
 
 export class LandingView {
   constructor(container, app) {
     this.container = container;
     this.app = app;
-    this.trackPreview = null;
+    this.activeCarIndex = 2; // Default: HUAYRAN (3rd dash)
+    this.isDrawerOpen = false;
+    this.profile = null;
   }
 
   render(profile) {
+    this.profile = profile || {};
+
     this.container.innerHTML = `
-      <div class="landing-page-wrapper">
-        <!-- HERO SECTION -->
-        <section class="landing-hero">
-          <!-- 3D Background Canvas -->
-          <div id="landing-3d-canvas" class="hero-3d-container"></div>
-          <div class="hero-overlay-gradient"></div>
+      <div class="sp40-landing-screen" id="sp40-root">
+        <!-- IMMERSIVE 16:10 RESPONSIVE SHOWCASE STAGE -->
+        <div class="sp40-stage" id="sp40-stage">
+          <!-- PIXEL-PERFECT CONCEPT CAR BACKDROP -->
+          <img 
+            src="/images/sp40_landing.png" 
+            alt="KEYRUSH SP40 Concept Hypercar" 
+            class="sp40-backdrop-img"
+            id="sp40-backdrop-img"
+            draggable="false"
+          />
 
-          <div class="hero-content">
-            <div class="hero-badge">
-              <span class="pulse-dot"></span> NEXT-GEN MOTORSPORT TYPING SIMULATOR
-            </div>
-            <h1 class="hero-title">
-              YOUR KEYBOARD.<br>
-              <span class="gradient-text">YOUR ENGINE.</span><br>
-              YOUR VICTORY.
-            </h1>
-            <p class="hero-subtitle">
-              Master your typing speed. Sharpen your accuracy. Leave everyone behind.
-              Real-time physics where every keystroke drives vehicle acceleration.
-            </p>
+          <!-- 1. TOP-LEFT LOGO HOTSPOT -->
+          <button 
+            class="sp40-hotspot sp40-hs-logo" 
+            id="hs-logo" 
+            title="KEYRUSH — SP40 Concept Hypercar"
+            aria-label="SP40 Brand"
+          ></button>
 
-            <div class="hero-actions">
-              <button class="btn btn-primary btn-large glow-primary" data-nav="race">
-                <span class="btn-icon">⚡</span> START RACING
-              </button>
-              <button class="btn btn-secondary btn-large" data-nav="diagnostic">
-                <span class="btn-icon">⏱️</span> SKILL DIAGNOSTIC
-              </button>
-              <button class="btn btn-ghost btn-large" data-nav="academy">
-                <span class="btn-icon">🎯</span> EXPLORE TRAINING
-              </button>
-            </div>
+          <!-- 2. TOP-RIGHT CIRCULAR ACTIONS CLUSTER -->
+          <!-- Profile Circle -->
+          <button 
+            class="sp40-hotspot sp40-hs-circle sp40-hs-profile" 
+            id="hs-profile" 
+            title="Pilot Profile (${this.profile?.username || 'Pilot'})"
+            aria-label="Profile"
+          ></button>
 
-            <!-- COMPACT LIVE TELEMETRY STRIP -->
-            <div class="telemetry-strip">
-              <div class="telem-item">
-                <span class="telem-label">GLOBAL PEAK SPEED</span>
-                <span class="telem-val">168 <small>WPM</small></span>
-              </div>
-              <div class="telem-divider"></div>
-              <div class="telem-item">
-                <span class="telem-label">AVERAGE ACCURACY</span>
-                <span class="telem-val">97.4<small>%</small></span>
-              </div>
-              <div class="telem-divider"></div>
-              <div class="telem-item">
-                <span class="telem-label">ACTIVE RACERS TODAY</span>
-                <span class="telem-val">14,820 <small>ONLINE</small></span>
-              </div>
-              <div class="telem-divider"></div>
-              <div class="telem-item">
-                <span class="telem-label">OFFLINE CAPABILITY</span>
-                <span class="telem-val"><span class="status-dot online"></span> 100% READY</span>
-              </div>
-            </div>
+          <!-- Notification Badge "1" Circle -->
+          <button 
+            class="sp40-hotspot sp40-hs-circle sp40-hs-badge" 
+            id="hs-badge" 
+            title="Active Directive (1 Quest Available)"
+            aria-label="Notifications"
+          ></button>
+
+          <!-- Hamburger Menu Circle -->
+          <button 
+            class="sp40-hotspot sp40-hs-circle sp40-hs-menu" 
+            id="hs-menu" 
+            title="Open Mission Terminal"
+            aria-label="Menu"
+          ></button>
+
+          <!-- 3. BOTTOM-RIGHT 'BOOK A TEST DRIVE' PILL BUTTON -->
+          <button 
+            class="sp40-hotspot sp40-hs-testdrive" 
+            id="hs-testdrive" 
+            title="Book A Test Drive (Launch 3D Race)"
+            aria-label="Book A Test Drive"
+          ></button>
+
+          <!-- 4. BOTTOM-RIGHT DIAGONAL ARROW CIRCLE -->
+          <button 
+            class="sp40-hotspot sp40-hs-circle sp40-hs-arrow" 
+            id="hs-arrow" 
+            title="Enter Cockpit & Race"
+            aria-label="Launch Race"
+          ></button>
+
+          <!-- 5. BOTTOM-CENTER PAGINATION DASHES -->
+          <div class="sp40-hs-dashes" id="hs-dashes-bar" title="Supercar Showcase Carousel">
+            <button class="sp40-dash-btn" data-index="0" title="Model 1 — APEX GT" aria-label="Car 1"></button>
+            <button class="sp40-dash-btn" data-index="1" title="Model 2 — PHANTOM EV" aria-label="Car 2"></button>
+            <button class="sp40-dash-btn active" data-index="2" title="Model 3 — HUAYRAN SP40" aria-label="Car 3"></button>
+            <button class="sp40-dash-btn" data-index="3" title="Model 4 — VIPER GTS" aria-label="Car 4"></button>
+            <button class="sp40-dash-btn" data-index="4" title="Model 5 — TALON FX" aria-label="Car 5"></button>
           </div>
-        </section>
 
-        <!-- GAME MODES SECTION -->
-        <section class="modes-section section-padding">
-          <div class="section-header">
-            <span class="section-tag">COMPETITIVE CIRCUIT</span>
-            <h2 class="section-title">CHOOSE YOUR RACING DISCIPLINE</h2>
-            <p class="section-desc">From solo finger-agility drills to cutthroat online head-to-head Grand Prix.</p>
-          </div>
+          <!-- 6. FAR-RIGHT STACKED NAV ARROWS -->
+          <button class="sp40-hs-arrow-nav sp40-hs-arrow-up" id="hs-arrow-up" title="Previous Supercar" aria-label="Previous"></button>
+          <button class="sp40-hs-arrow-nav sp40-hs-arrow-down" id="hs-arrow-down" title="Next Supercar" aria-label="Next"></button>
+        </div>
 
-          <div class="modes-grid">
-            <div class="mode-card" data-nav="race" data-nav-param="practice">
-              <div class="mode-card-badge">OFFLINE READY</div>
-              <div class="mode-icon">🎯</div>
-              <h3 class="mode-title">Solo Practice</h3>
-              <p class="mode-desc">Refine muscle memory, eliminate weak-finger hitches, and warm up without pressure.</p>
-              <div class="mode-footer">
-                <span class="mode-stat">Custom Passages & Drills</span>
-                <span class="mode-arrow">→</span>
+        <!-- SLIDE-OVER NAVIGATION DRAWER -->
+        <div class="sp40-drawer-overlay" id="sp40-drawer-overlay">
+          <aside class="sp40-nav-drawer" id="sp40-nav-drawer">
+            <div class="sp40-drawer-header">
+              <div class="drawer-title-group">
+                <span class="drawer-badge">KEYRUSH OS // 2026</span>
+                <h3 class="drawer-title">MISSION ACCESS</h3>
               </div>
+              <button class="sp40-drawer-close-btn" id="sp40-drawer-close" aria-label="Close Menu">✕</button>
             </div>
 
-            <div class="mode-card highlighted" data-nav="ai-select">
-              <div class="mode-card-badge glow-badge">POPULAR</div>
-              <div class="mode-icon">🤖</div>
-              <h3 class="mode-title">Race Against AI</h3>
-              <p class="mode-desc">Face 5 tiers of simulated human drivers or adaptive neural AI that calibrates to your pace.</p>
-              <div class="mode-footer">
-                <span class="mode-stat">35 - 120 WPM Tiers</span>
-                <span class="mode-arrow">→</span>
-              </div>
-            </div>
-
-            <div class="mode-card" data-nav="multiplayer">
-              <div class="mode-card-badge">P2P & LOBBY</div>
-              <div class="mode-icon">⚔️</div>
-              <h3 class="mode-title">Multiplayer & Friends</h3>
-              <p class="mode-desc">Challenge friends with private codes, local 2-player split screen, or ranked matchmaking.</p>
-              <div class="mode-footer">
-                <span class="mode-stat">Real-time Latency HUD</span>
-                <span class="mode-arrow">→</span>
-              </div>
-            </div>
-
-            <div class="mode-card" data-nav="academy">
-              <div class="mode-card-badge">ESPORTS ACADEMY</div>
-              <div class="mode-icon">⌨️</div>
-              <h3 class="mode-title">Touch-Typing Academy</h3>
-              <p class="mode-desc">Home-row discipline, visual finger assignment maps, and elite finger agility exercises.</p>
-              <div class="mode-footer">
-                <span class="mode-stat">6 Specialized Courses</span>
-                <span class="mode-arrow">→</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- VEHICLE SHOWCASE PREVIEW -->
-        <section class="garage-preview-section section-padding">
-          <div class="preview-layout">
-            <div class="preview-info">
-              <span class="section-tag">COSMETIC REWARDS</span>
-              <h2 class="section-title">EARN SUPERCARS THROUGH KEYBOARD SPEED</h2>
-              <p class="preview-body">
-                Skill is your currency. Win races, maintain daily streaks, and break personal records to unlock
-                aerodynamic hypercars, custom neon underglow, paint schemes, and particle exhaust trails.
-                Zero pay-to-win mechanics — pure touch-typing mastery.
-              </p>
-              <div class="preview-highlights">
-                <div class="highlight-item">
-                  <span class="check-icon">✓</span> 5 Tiered Vehicles (Starter to Mythic Chronos V12)
+            <nav class="sp40-drawer-menu">
+              <button class="sp40-drawer-item" data-nav="race">
+                <span class="drawer-item-icon">🏎️</span>
+                <div class="drawer-item-text">
+                  <strong>TEST DRIVE & RACE</strong>
+                  <small>Live 3D track, head-to-head AI, telemetry HUD</small>
                 </div>
-                <div class="highlight-item">
-                  <span class="check-icon">✓</span> Dynamic WebGL 3D Showroom with Turntable Studio
+                <span class="drawer-item-arrow">→</span>
+              </button>
+
+              <button class="sp40-drawer-item" data-nav="dashboard">
+                <span class="drawer-item-icon">📊</span>
+                <div class="drawer-item-text">
+                  <strong>PILOT DASHBOARD</strong>
+                  <small>WPM benchmark, accuracy curve, daily practice</small>
                 </div>
-                <div class="highlight-item">
-                  <span class="check-icon">✓</span> Custom Underglow, Neon Rim Accents, and Exhaust Trails
+                <span class="drawer-item-arrow">→</span>
+              </button>
+
+              <button class="sp40-drawer-item" data-nav="garage">
+                <span class="drawer-item-icon">🛠️</span>
+                <div class="drawer-item-text">
+                  <strong>3D SUPERCAR GARAGE</strong>
+                  <small>Custom paint, neon underglow, unlocked hypercars</small>
+                </div>
+                <span class="drawer-item-arrow">→</span>
+              </button>
+
+              <button class="sp40-drawer-item" data-nav="ai-select">
+                <span class="drawer-item-icon">🤖</span>
+                <div class="drawer-item-text">
+                  <strong>AI RACING SIMULATOR</strong>
+                  <small>Face 5 difficulty tiers from Amateur to Apex Legend</small>
+                </div>
+                <span class="drawer-item-arrow">→</span>
+              </button>
+
+              <button class="sp40-drawer-item" data-nav="academy">
+                <span class="drawer-item-icon">🎯</span>
+                <div class="drawer-item-text">
+                  <strong>TOUCH-TYPING ACADEMY</strong>
+                  <small>Home-row discipline, finger agility, rhythm courses</small>
+                </div>
+                <span class="drawer-item-arrow">→</span>
+              </button>
+
+              <button class="sp40-drawer-item" data-nav="leaderboard">
+                <span class="drawer-item-icon">🏆</span>
+                <div class="drawer-item-text">
+                  <strong>GLOBAL RANKED LEAGUE</strong>
+                  <small>Competitive tiers from Bronze to Grandmaster</small>
+                </div>
+                <span class="drawer-item-arrow">→</span>
+              </button>
+
+              <button class="sp40-drawer-item" data-nav="analytics">
+                <span class="drawer-item-icon">📈</span>
+                <div class="drawer-item-text">
+                  <strong>TELEMETRY ANALYTICS</strong>
+                  <small>Weak key heatmaps, consistency, acceleration graphs</small>
+                </div>
+                <span class="drawer-item-arrow">→</span>
+              </button>
+
+              <button class="sp40-drawer-item" data-nav="settings">
+                <span class="drawer-item-icon">⚙️</span>
+                <div class="drawer-item-text">
+                  <strong>AUDIO & SYSTEM SETTINGS</strong>
+                  <small>Volume sliders, recommended mix reset, themes</small>
+                </div>
+                <span class="drawer-item-arrow">→</span>
+              </button>
+            </nav>
+
+            <div class="sp40-drawer-footer">
+              <div class="sp40-pilot-pill">
+                <span class="pilot-avatar-icon">${this.profile?.avatar || '🏎️'}</span>
+                <div class="pilot-details">
+                  <span class="pilot-callsign">${this.profile?.username || 'Pilot'}</span>
+                  <span class="pilot-tier">LVL ${this.profile?.level || 1} • ${this.profile?.league || 'Silver II'}</span>
                 </div>
               </div>
-              <button class="btn btn-primary" data-nav="garage">
-                ENTER VEHICLE GARAGE →
+            </div>
+          </aside>
+        </div>
+
+        <!-- PROFILE POPUP MODAL -->
+        <div class="sp40-modal-overlay hidden" id="sp40-profile-modal">
+          <div class="sp40-modal-card card-dark">
+            <div class="sp40-modal-header">
+              <span class="modal-chip">DRIVER IDENTIFICATION</span>
+              <button class="sp40-modal-close" id="profile-modal-close">✕</button>
+            </div>
+            <div class="profile-hero-row">
+              <span class="profile-large-avatar">${this.profile?.avatar || '🏎️'}</span>
+              <div class="profile-header-info">
+                <h3 class="profile-username">${this.profile?.username || 'CyberRacer'}</h3>
+                <span class="profile-league-tag">${this.profile?.league || 'Silver Division II'}</span>
+              </div>
+            </div>
+            <div class="profile-stats-grid">
+              <div class="p-stat">
+                <span class="p-label">BEST SPEED</span>
+                <strong class="p-val font-mono">${this.profile?.bestWpm || 0} <small>WPM</small></strong>
+              </div>
+              <div class="p-stat">
+                <span class="p-label">AVG ACCURACY</span>
+                <strong class="p-val font-mono">${this.profile?.averageAccuracy || 98}%</strong>
+              </div>
+              <div class="p-stat">
+                <span class="p-label">RACES COMPLETED</span>
+                <strong class="p-val font-mono">${this.profile?.racesPlayed || 0}</strong>
+              </div>
+              <div class="p-stat">
+                <span class="p-label">PRACTICE STREAK</span>
+                <strong class="p-val font-mono">${this.profile?.currentStreak || 1} Days</strong>
+              </div>
+            </div>
+            <div class="profile-modal-actions">
+              <button class="btn btn-primary btn-full glow-primary" data-nav="dashboard">
+                OPEN FULL PILOT DASHBOARD
               </button>
             </div>
+          </div>
+        </div>
 
-            <div class="preview-cards-rack">
-              <div class="mini-car-card">
-                <span class="car-badge">COMMON</span>
-                <h4>Apex Talon</h4>
-                <p>Starter Cyber-Coupe</p>
+        <!-- MISSIONS / NOTIFICATION MODAL -->
+        <div class="sp40-modal-overlay hidden" id="sp40-mission-modal">
+          <div class="sp40-modal-card card-dark">
+            <div class="sp40-modal-header">
+              <span class="modal-chip">DAILY DIRECTIVE</span>
+              <button class="sp40-modal-close" id="mission-modal-close">✕</button>
+            </div>
+            <div class="mission-briefing">
+              <div class="mission-icon-box">⚡</div>
+              <div>
+                <h4>CIRCUIT QUALIFYING LAP</h4>
+                <p>Complete 1 race above 65 WPM with 96%+ accuracy to claim daily telemetry bonus.</p>
               </div>
-              <div class="mini-car-card">
-                <span class="car-badge rare">RARE</span>
-                <h4>Vortex R34</h4>
-                <p>Widebody Tuner</p>
-              </div>
-              <div class="mini-car-card">
-                <span class="car-badge epic">EPIC</span>
-                <h4>Phantom GT</h4>
-                <p>Mid-Engine Supercar</p>
-              </div>
-              <div class="mini-car-card">
-                <span class="car-badge legendary">LEGENDARY</span>
-                <h4>Chronos V12</h4>
-                <p>Experimental Plasma Hypercar</p>
-              </div>
+            </div>
+            <div class="mission-progress-bar">
+              <div class="progress-fill" style="width: 50%"></div>
+            </div>
+            <div class="mission-reward-row">
+              <span>REWARD: +150 XP • TACHOMETER BADGE</span>
+              <button class="btn btn-primary" data-nav="race">RACE NOW</button>
             </div>
           </div>
-        </section>
-
-        <!-- FOOTER -->
-        <footer class="app-footer">
-          <div class="footer-inner">
-            <div class="footer-left">
-              <span class="logo-icon">⚡</span>
-              <span class="brand-title">KEYRUSH</span>
-              <span class="footer-copyright">© 2026 KEYRUSH. All rights reserved. Offline-first PWA enabled.</span>
-            </div>
-            <div class="footer-links">
-              <button class="footer-btn" data-nav="settings">Offline & Privacy</button>
-              <button class="footer-btn" data-nav="diagnostic">Diagnostic Assessment</button>
-              <button class="footer-btn" data-nav="analytics">Export Telemetry</button>
-            </div>
-          </div>
-        </footer>
+        </div>
       </div>
     `;
 
-    // Initialize 3D preview track in the background hero
-    setTimeout(() => {
-      const container = document.getElementById('landing-3d-canvas');
-      if (container) {
-        this.trackPreview = new Track3D(container);
-        this.trackPreview.setPlayerCar('phantom', '#00e5ff', '#a855f7');
-        this.trackPreview.setOpponents([
-          { id: 'op1', carModel: 'vortex', color: '#ff3366' },
-          { id: 'op2', carModel: 'talon', color: '#ffb800' }
-        ]);
+    this.bindEvents();
+  }
 
-        // Gentle auto demo drive
-        let demoProgress = 0.2;
-        let demoOpProgress = 0.22;
-        this.demoTimer = setInterval(() => {
-          if (!this.trackPreview) return;
-          demoProgress = (demoProgress + 0.0006) % 0.85;
-          demoOpProgress = (demoOpProgress + 0.0005) % 0.85;
-          this.trackPreview.updatePlayerProgress(demoProgress, 75, true);
-          this.trackPreview.updateOpponentProgress('op1', demoOpProgress, 72);
-        }, 16);
+  toggleDrawer(open) {
+    this.isDrawerOpen = typeof open === 'boolean' ? open : !this.isDrawerOpen;
+    const overlay = document.getElementById('sp40-drawer-overlay');
+    if (overlay) {
+      overlay.classList.toggle('active', this.isDrawerOpen);
+    }
+    if (this.isDrawerOpen) {
+      soundEffects.playKeyClick(true);
+    }
+  }
+
+  bindEvents() {
+    // 1. Launch Race via 'Book A Test Drive' or diagonal arrow
+    const launchRace = () => {
+      soundEffects.playNitroBoost();
+      this.app.showScreen('race', { mode: 'Solo Practice' });
+    };
+
+    document.getElementById('hs-testdrive')?.addEventListener('click', launchRace);
+    document.getElementById('hs-arrow')?.addEventListener('click', launchRace);
+
+    // 2. Profile Circle
+    document.getElementById('hs-profile')?.addEventListener('click', () => {
+      soundEffects.playKeyClick(true);
+      document.getElementById('sp40-profile-modal')?.classList.remove('hidden');
+    });
+
+    document.getElementById('profile-modal-close')?.addEventListener('click', () => {
+      document.getElementById('sp40-profile-modal')?.classList.add('hidden');
+    });
+
+    // 3. Notification Badge "1"
+    document.getElementById('hs-badge')?.addEventListener('click', () => {
+      soundEffects.playKeyClick(true);
+      document.getElementById('sp40-mission-modal')?.classList.remove('hidden');
+    });
+
+    document.getElementById('mission-modal-close')?.addEventListener('click', () => {
+      document.getElementById('sp40-mission-modal')?.classList.add('hidden');
+    });
+
+    // 4. Hamburger Menu Drawer
+    document.getElementById('hs-menu')?.addEventListener('click', () => {
+      this.toggleDrawer(true);
+    });
+
+    document.getElementById('sp40-drawer-close')?.addEventListener('click', () => {
+      this.toggleDrawer(false);
+    });
+
+    document.getElementById('sp40-drawer-overlay')?.addEventListener('click', (e) => {
+      if (e.target.id === 'sp40-drawer-overlay') {
+        this.toggleDrawer(false);
       }
-    }, 50);
+    });
+
+    // 5. Logo Click Feedback
+    document.getElementById('hs-logo')?.addEventListener('click', () => {
+      soundEffects.playKeyClick(true);
+    });
+
+    // 6. Navigation items
+    this.container.querySelectorAll('[data-nav]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const targetScreen = btn.getAttribute('data-nav');
+        soundEffects.playKeyClick(true);
+        this.toggleDrawer(false);
+        document.getElementById('sp40-profile-modal')?.classList.add('hidden');
+        document.getElementById('sp40-mission-modal')?.classList.add('hidden');
+        this.app.showScreen(targetScreen);
+      });
+    });
+
+    // 7. Dashes and Arrows
+    const dashBtns = this.container.querySelectorAll('.sp40-dash-btn');
+    const updateActiveDash = (idx) => {
+      this.activeCarIndex = idx;
+      dashBtns.forEach((b, i) => b.classList.toggle('active', i === idx));
+      soundEffects.playKeyClick(true);
+    };
+
+    dashBtns.forEach((dash) => {
+      dash.addEventListener('click', () => {
+        const idx = Number(dash.getAttribute('data-index'));
+        updateActiveDash(idx);
+      });
+    });
+
+    document.getElementById('hs-arrow-up')?.addEventListener('click', () => {
+      const prev = (this.activeCarIndex - 1 + 5) % 5;
+      updateActiveDash(prev);
+    });
+
+    document.getElementById('hs-arrow-down')?.addEventListener('click', () => {
+      const next = (this.activeCarIndex + 1) % 5;
+      updateActiveDash(next);
+    });
+
+    // 8. Keyboard listener (ESC closes modals/drawer)
+    this.onKeyDown = (e) => {
+      if (this.app.currentScreen !== 'landing') return;
+      if (e.key === 'Escape') {
+        this.toggleDrawer(false);
+        document.getElementById('sp40-profile-modal')?.classList.add('hidden');
+        document.getElementById('sp40-mission-modal')?.classList.add('hidden');
+      }
+    };
+    window.addEventListener('keydown', this.onKeyDown);
   }
 
   dispose() {
-    if (this.demoTimer) {
-      clearInterval(this.demoTimer);
-      this.demoTimer = null;
-    }
-    if (this.trackPreview) {
-      this.trackPreview.dispose();
-      this.trackPreview = null;
+    if (this.onKeyDown) {
+      window.removeEventListener('keydown', this.onKeyDown);
+      this.onKeyDown = null;
     }
   }
 }

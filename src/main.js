@@ -90,7 +90,16 @@ class KeyRushApp {
 
     // Refresh profile in case stats changed
     this.profile = await storage.getProfile();
-    await this.updateHeader();
+
+    const headerMount = document.getElementById('header-mount');
+    if (headerMount) {
+      if (screenId === 'landing') {
+        headerMount.style.display = 'none';
+      } else {
+        headerMount.style.display = 'block';
+        await this.updateHeader();
+      }
+    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
