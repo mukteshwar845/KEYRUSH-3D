@@ -1,0 +1,17 @@
+{
+  "name": "KEYRUSH — Type. Race. Dominate.",
+  "short_name": "KEYRUSH",
+  "description": "Master touch typing speed and accuracy through high-octane 3D car racing.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#00e5ff",
+  "icons": [
+    {
+      "src": "/logo-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
