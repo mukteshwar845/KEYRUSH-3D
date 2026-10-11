@@ -51,18 +51,28 @@ class KeyRushApp {
     this.renderShell();
     this.navManager.bindEvents();
 
-    // 5. Initial View Route — check hash or default to Home Dashboard
+    // 5. Initial View Route — Stop direct access to main page; must enter via Get Started button
     const validScreens = ['landing', 'dashboard', 'race', 'race-modes', 'diagnostic', 'academy', 'garage', 'leaderboard', 'analytics', 'missions', 'settings'];
     const initialHash = window.location.hash.replace('#', '').trim();
-    if (initialHash && validScreens.includes(initialHash)) {
+    const hasEntered = sessionStorage.getItem('keyrush_entered') === 'true';
+
+    if (!hasEntered) {
+      // Force Landing overview page on initial load or direct URL access
+      this.showScreen('landing');
+    } else if (initialHash && validScreens.includes(initialHash)) {
       this.showScreen(initialHash);
     } else {
       this.showScreen('dashboard');
     }
 
-    // Support browser back/forward buttons
+    // Support browser back/forward buttons with route guard
     window.addEventListener('hashchange', () => {
       const targetHash = window.location.hash.replace('#', '').trim();
+      const sessionEntered = sessionStorage.getItem('keyrush_entered') === 'true';
+      if (!sessionEntered && targetHash !== 'landing') {
+        this.showScreen('landing');
+        return;
+      }
       if (targetHash && validScreens.includes(targetHash) && targetHash !== this.currentScreen) {
         this.showScreen(targetHash);
       }
@@ -88,6 +98,12 @@ class KeyRushApp {
   }
 
   async showScreen(screenId, params = null) {
+    // RouteGuard: stop direct access to main dashboard or inner pages
+    const sessionEntered = sessionStorage.getItem('keyrush_entered') === 'true';
+    if (!sessionEntered && screenId !== 'landing') {
+      screenId = 'landing';
+    }
+
     // Dispose previous active screen
     if (this.currentViewInstance && this.currentViewInstance.dispose) {
       this.currentViewInstance.dispose();

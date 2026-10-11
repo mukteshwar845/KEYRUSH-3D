@@ -52,50 +52,19 @@ export class LandingView {
 
           <!-- Center Navigation Links -->
           <nav class="nav-links" aria-label="Main Landing Links">
-            <a href="#section-hero" class="nav-link active" data-nav="landing">Home</a>
-            <a href="#section-modes" class="nav-link" data-scroll="section-modes">Features</a>
+            <a href="#section-hero" class="nav-link active" data-scroll="section-hero">Home</a>
+            <a href="#section-hero" class="nav-link" data-scroll="section-hero">Features</a>
             <a href="#section-modes" class="nav-link" data-scroll="section-modes">Game Modes</a>
-            <a href="#garage" class="nav-link" data-nav="garage">Garage</a>
-            <a href="#leaderboard" class="nav-link" data-nav="leaderboard">Leaderboard</a>
-            <a href="#missions" class="nav-link" data-nav="missions">Tournaments</a>
+            <a href="#section-footer" class="nav-link" data-scroll="section-footer">Garage</a>
+            <a href="#section-footer" class="nav-link" data-scroll="section-footer">Leaderboard</a>
+            <a href="#section-footer" class="nav-link" data-scroll="section-footer">Tournaments</a>
             <a href="#section-footer" class="nav-link" data-scroll="section-footer">About</a>
           </nav>
 
-          <!-- Right Action Controls -->
+          <!-- Right Action Controls: ONLY Get Started button -->
           <div class="nav-actions">
-            <!-- Offline Status Pill -->
-            <div class="nav-status-pill" title="Offline-First Engine: Full Local Availability">
-              <span class="nav-status-dot"></span>
-              <div class="nav-status-text">
-                <strong>Offline Mode</strong>
-                <small>Play anytime, anywhere</small>
-              </div>
-            </div>
-
-            <!-- Notifications Bell -->
-            <button class="nav-icon-btn" id="landing-notify-btn" title="3 Notifications">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
-              <span class="nav-badge-count">3</span>
-            </button>
-
-            <!-- Settings Gear -->
-            <button class="nav-icon-btn" data-nav="settings" title="System Settings">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-            </button>
-
-            <!-- Login Outline Pill Button -->
-            <button class="nav-btn-login" id="landing-login-btn">
-              Login
-            </button>
-
             <!-- Get Started Vibrant Gradient CTA -->
-            <button class="nav-btn-get-started" data-nav="race-modes">
+            <button class="nav-btn-get-started" id="landing-get-started-btn" data-nav="dashboard">
               <span>Get Started</span>
               <span class="btn-arrow-right">→</span>
             </button>
@@ -443,21 +412,6 @@ export class LandingView {
           </div>
         </div>
 
-        <!-- QUICK LOGIN / RACER MONIKER MODAL -->
-        <div class="login-modal-backdrop hidden" id="login-modal-backdrop">
-          <div class="login-modal-card">
-            <div class="login-modal-header">
-              <h3>PILOT AUTHENTICATION</h3>
-              <button class="modal-close-btn" id="login-modal-close">✕</button>
-            </div>
-            <div class="login-modal-body">
-              <label for="input-pilot-callsign">Racer Callsign / Moniker:</label>
-              <input type="text" id="input-pilot-callsign" value="${this.profile.username || 'Kartik'}" placeholder="Enter callsign..." />
-              <button class="btn btn-primary" id="btn-save-pilot-callsign">Save & Enter Grid</button>
-            </div>
-          </div>
-        </div>
-
       </div>
     `;
 
@@ -467,13 +421,24 @@ export class LandingView {
   }
 
   bindEvents() {
-    // 1. Navigation items delegation
+    // 1. Get Started Button — The official gate to the Main Dashboard
+    const getStartedBtn = document.getElementById('landing-get-started-btn');
+    getStartedBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      soundEffects.playUiClick();
+      sessionStorage.setItem('keyrush_entered', 'true');
+      this.app.showScreen('dashboard');
+    });
+
+    // 2. Navigation items delegation (Hero CTA, Challenge cards, etc.)
     this.container.querySelectorAll('[data-nav]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         const targetScreen = btn.getAttribute('data-nav');
         soundEffects.playKeyClick(true);
+        sessionStorage.setItem('keyrush_entered', 'true');
         if (targetScreen === 'race') {
           soundEffects.playNitroBoost();
         }
@@ -481,7 +446,7 @@ export class LandingView {
       });
     });
 
-    // 2. Smooth internal scroll anchors
+    // 3. Smooth internal scroll anchors for Landing Navbar & Sections
     this.container.querySelectorAll('[data-scroll]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -492,17 +457,6 @@ export class LandingView {
           targetEl.scrollIntoView({ behavior: 'smooth' });
         }
       });
-    });
-
-    // 3. Audio toggle
-    const audioBtn = document.getElementById('landing-audio-toggle');
-    audioBtn?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      soundEffects.playUiClick();
-      const isMuted = await musicManager.toggleMute(true);
-      if (audioBtn) {
-        audioBtn.classList.toggle('is-muted', isMuted);
-      }
     });
 
     // 4. Trailer Modal
@@ -524,41 +478,6 @@ export class LandingView {
       if (e.target === trailerModal) {
         trailerModal.classList.add('hidden');
       }
-    });
-
-    // 5. Login Modal
-    const loginBtn = document.getElementById('landing-login-btn');
-    const loginModal = document.getElementById('login-modal-backdrop');
-    const loginClose = document.getElementById('login-modal-close');
-    const saveCallsignBtn = document.getElementById('btn-save-pilot-callsign');
-
-    loginBtn?.addEventListener('click', () => {
-      soundEffects.playUiClick();
-      if (loginModal) loginModal.classList.remove('hidden');
-    });
-
-    loginClose?.addEventListener('click', () => {
-      soundEffects.playUiClick();
-      if (loginModal) loginModal.classList.add('hidden');
-    });
-
-    saveCallsignBtn?.addEventListener('click', async () => {
-      const input = document.getElementById('input-pilot-callsign');
-      const val = input ? input.value.trim() : '';
-      if (val) {
-        this.profile.username = val;
-        await storage.saveProfile(this.profile);
-        soundEffects.playVictoryFanfare();
-        this.app.updateHeader();
-        if (loginModal) loginModal.classList.add('hidden');
-      }
-    });
-
-    // 6. Notifications popover trigger
-    const notifyBtn = document.getElementById('landing-notify-btn');
-    notifyBtn?.addEventListener('click', () => {
-      soundEffects.playUiClick();
-      alert('🔔 Notifications (3):\n\n1. Daily Streak Active (7 Days)\n2. Vortex R34 Prototype Available in Garage\n3. Season 1 Championships Open');
     });
   }
 
