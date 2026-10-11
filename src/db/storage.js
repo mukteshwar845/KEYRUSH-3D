@@ -79,7 +79,7 @@ class KeyRushStorage {
         id: 'user_profile',
         username: 'Kartik',
         role: 'Racer',
-        avatar: '/images/avatar_kartik.png',
+        avatar: '/images/ui/avatar-kartik.png',
         league: 'Silver II',
         leagueTier: 'Silver',
         xp: 2480,

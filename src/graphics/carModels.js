@@ -23,7 +23,7 @@ export const VEHICLE_CATALOG = [
     handlingVal: 98,
     nitroVal: 85,
     tagline: 'Precision. Power. Perfection.',
-    image: '/images/garage_hero_car.jpg',
+    image: '/images/cars/garage-hero-car.jpg',
     unlockCondition: 'Default Active Vehicle',
     description: 'Precision-crafted hypercar engineered for razor-sharp response, active aerodynamics, and maximum cornering velocity.',
     unlocked: true
@@ -42,7 +42,7 @@ export const VEHICLE_CATALOG = [
     handlingVal: 94,
     nitroVal: 88,
     tagline: 'Twin-Turbo Aerodynamic Precision.',
-    image: '/images/garage_vortex.jpg',
+    image: '/images/cars/garage-vortex.jpg',
     unlockCondition: 'Win 3 AI Races or reach 75 WPM',
     description: 'Widebody track prototype featuring active splitters and twin-turbo induction.',
     unlocked: false
@@ -61,7 +61,7 @@ export const VEHICLE_CATALOG = [
     handlingVal: 96,
     nitroVal: 92,
     tagline: 'Instant Torque. Quantum Ground-Effects.',
-    image: '/images/garage_nebula.jpg',
+    image: '/images/cars/garage-nebula.jpg',
     unlockCondition: 'Complete a 7-day practice streak',
     description: 'All-electric hypercraft delivering instantaneous dual-motor torque and active underbody suction.',
     unlocked: false
@@ -80,7 +80,7 @@ export const VEHICLE_CATALOG = [
     handlingVal: 91,
     nitroVal: 80,
     tagline: 'V12 Symphony & Raw Mechanical Grip.',
-    image: '/images/garage_chronos.jpg',
+    image: '/images/cars/garage-chronos.jpg',
     unlockCondition: 'Reach 90 WPM with ≥ 96% Accuracy',
     description: 'Naturally aspirated V12 endurance racer with titanium chassis and carbon-ceramic downforce.',
     unlocked: false
@@ -99,7 +99,7 @@ export const VEHICLE_CATALOG = [
     handlingVal: 88,
     nitroVal: 75,
     tagline: 'Polished 24K Carbon Monocoque.',
-    image: '/images/garage_gold.jpg',
+    image: '/images/cars/garage-gold.jpg',
     unlockCondition: 'Unlock at Player Level 5',
     description: 'Special exhibition edition with 24-karat gold leaf finish and hand-tuned aero wing.',
     unlocked: false
@@ -118,7 +118,7 @@ export const VEHICLE_CATALOG = [
     handlingVal: 89,
     nitroVal: 82,
     tagline: 'Dark Stealth Aero & Unbridled Torque.',
-    image: '/images/garage_shadow.jpg',
+    image: '/images/cars/garage-shadow.jpg',
     unlockCondition: 'Achieve 98% Accuracy on 5 Tests',
     description: 'Supercharged widebody muscle missile built for brute-force acceleration and aggressive slipstreams.',
     unlocked: false

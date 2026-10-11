@@ -35,7 +35,7 @@ export class NavigationManager {
     this.pingInterval = setInterval(() => {
       if (this.isOnline) {
         const start = performance.now();
-        fetch('/vite.svg', { method: 'HEAD', cache: 'no-store' })
+        fetch('/logo-icon.svg', { method: 'HEAD', cache: 'no-store' })
           .then(() => {
             this.currentLatencyMs = Math.round(performance.now() - start);
             this.updateNetworkBadge();
@@ -205,7 +205,7 @@ export class NavigationManager {
           <div class="dash-sidebar-bottom">
             <!-- Promo 1: Unlock New Cars -->
             <div class="sidebar-promo-card">
-              <img src="/images/sidebar_unlock_cars.png" alt="Unlock New Cars" class="sidebar-promo-img" />
+              <img src="/images/ui/sidebar-unlock-cars.png" alt="Unlock New Cars" class="sidebar-promo-img" />
               <div class="sidebar-promo-content">
                 <span class="sidebar-promo-title">Unlock New Cars</span>
                 <span class="sidebar-promo-sub">Complete challenges & earn rewards</span>
@@ -298,7 +298,7 @@ export class NavigationManager {
 
               <!-- Player Avatar & Profile -->
               <div class="dash-user-chip" id="dash-user-chip" role="button" tabindex="0" data-nav="analytics" title="Player Profile & Telemetry">
-                <img src="/images/avatar_kartik.png" alt="${username}" class="dash-user-avatar" />
+                <img src="/images/ui/avatar-kartik.png" alt="${username}" class="dash-user-avatar" />
                 <div class="dash-user-info">
                   <span class="dash-user-name">${username}</span>
                   <span class="dash-user-role">Racer</span>

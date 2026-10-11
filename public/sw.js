@@ -4,12 +4,14 @@
  * Network-first strategy ensures latest code updates while providing offline resilience.
  */
 
-const CACHE_NAME = 'keyrush-v2';
+const CACHE_NAME = 'keyrush-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
-  '/logo-icon.svg'
+  '/logo-icon.svg',
+  '/favicon.svg',
+  '/icons.svg'
 ];
 
 self.addEventListener('install', (event) => {

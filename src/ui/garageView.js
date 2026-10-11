@@ -143,7 +143,7 @@ export class GarageView {
               <!-- Main Stage Visual (Studio Backdrop / Realistic Render + Optional 3D Canvas) -->
               <div class="stage-visual-container">
                 <img 
-                  src="${activeCar.image || '/images/garage_hero_car.jpg'}" 
+                  src="${activeCar.image || '/images/cars/garage-hero-car.jpg'}" 
                   alt="${activeCar.name}" 
                   class="stage-hero-car-img ${this.is3DMode ? 'hidden' : ''}" 
                   id="stage-hero-car-img"
@@ -348,7 +348,7 @@ export class GarageView {
           </div>
 
           <div class="card-image-box">
-            <img src="${car.image || '/images/garage_hero_car.jpg'}" alt="${car.name}" class="card-car-thumb" />
+            <img src="${car.image || '/images/cars/garage-hero-car.jpg'}" alt="${car.name}" class="card-car-thumb" />
           </div>
 
           <div class="card-body-info">

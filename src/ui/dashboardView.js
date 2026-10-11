@@ -74,7 +74,7 @@ export class DashboardView {
 
                 <div class="hero-card-right">
                   <img 
-                    src="/images/dashboard_hero_car.png" 
+                    src="/images/heroes/dashboard-hero-car.png" 
                     alt="Futuristic Sports Car" 
                     class="hero-supercar-img" 
                   />
@@ -226,7 +226,7 @@ export class DashboardView {
                   <!-- Mode 1: Solo Practice -->
                   <div class="mode-card" data-mode="Solo Practice" data-nav="diagnostic">
                     <div class="mode-card-visual">
-                      <img src="/images/mode_solo.png" alt="Solo Practice" class="mode-card-img" />
+                      <img src="/images/game-modes/mode-solo.png" alt="Solo Practice" class="mode-card-img" />
                       <div class="mode-floating-badge badge-purple">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"></path><path d="M6 5h12v4a6 6 0 0 1-12 0V5z"></path></svg>
                       </div>
@@ -241,7 +241,7 @@ export class DashboardView {
                   <!-- Mode 2: Race Against AI -->
                   <div class="mode-card" data-mode="Race Against AI" data-nav="race">
                     <div class="mode-card-visual">
-                      <img src="/images/mode_ai.png" alt="Race Against AI" class="mode-card-img" />
+                      <img src="/images/game-modes/mode-ai.png" alt="Race Against AI" class="mode-card-img" />
                       <div class="mode-floating-badge badge-blue">
                         <span style="font-size: 8.5px; font-weight: 800; font-family: sans-serif;">AI</span>
                       </div>
@@ -256,7 +256,7 @@ export class DashboardView {
                   <!-- Mode 3: Local Multiplayer -->
                   <div class="mode-card" data-mode="Local Multiplayer" data-nav="multiplayer">
                     <div class="mode-card-visual">
-                      <img src="/images/mode_local.png" alt="Local Multiplayer" class="mode-card-img" />
+                      <img src="/images/game-modes/mode-local.png" alt="Local Multiplayer" class="mode-card-img" />
                       <div class="mode-floating-badge badge-green">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                       </div>
@@ -271,7 +271,7 @@ export class DashboardView {
                   <!-- Mode 4: Online Multiplayer -->
                   <div class="mode-card" data-mode="Online Multiplayer" data-nav="multiplayer">
                     <div class="mode-card-visual">
-                      <img src="/images/mode_online.png" alt="Online Multiplayer" class="mode-card-img" />
+                      <img src="/images/game-modes/mode-online.png" alt="Online Multiplayer" class="mode-card-img" />
                       <div class="mode-floating-badge badge-orange">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                       </div>
@@ -286,7 +286,7 @@ export class DashboardView {
                   <!-- Mode 5: Ranked Championship -->
                   <div class="mode-card" data-mode="Ranked Championship" data-nav="leaderboard">
                     <div class="mode-card-visual">
-                      <img src="/images/mode_ranked.png" alt="Ranked Championship" class="mode-card-img" />
+                      <img src="/images/game-modes/mode-ranked.png" alt="Ranked Championship" class="mode-card-img" />
                       <div class="mode-floating-badge badge-violet">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
                       </div>
@@ -465,7 +465,7 @@ export class DashboardView {
                     <!-- Rank 4 (YOU - HIGHLIGHTED) -->
                     <div class="lb-row lb-you-highlight">
                       <span class="lb-rank rank-you">4</span>
-                      <img src="/images/avatar_kartik.png" alt="You" class="lb-avatar-img" />
+                      <img src="/images/ui/avatar-kartik.png" alt="You" class="lb-avatar-img" />
                       <span class="lb-name font-bold">You</span>
                       <span class="lb-wpm font-mono font-bold">78 WPM</span>
                       <span class="lb-acc font-mono">96%</span>
@@ -571,7 +571,7 @@ export class DashboardView {
                 </div>
 
                 <div class="vehicle-preview-box">
-                  <img src="/images/vehicle_neon_blade.png" alt="Neon Blade" class="vehicle-preview-img" />
+                  <img src="/images/ui/vehicle-neon-blade.png" alt="Neon Blade" class="vehicle-preview-img" />
                 </div>
 
                 <div class="vehicle-meta-row">
