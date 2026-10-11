@@ -38,7 +38,21 @@ export const ASSETS = Object.freeze({
   },
   ui: {
     sidebarUnlockCars: '/images/ui/sidebar-unlock-cars.png',
-    vehicleNeonBlade: '/images/ui/vehicle-neon-blade.png'
+    vehicleNeonBlade: '/images/ui/vehicle-neon-blade.png',
+    pilotAvatar: '/images/ui/pilot-avatar.png'
+  },
+  heroes: {
+    dashboard: '/images/heroes/dashboard-hero-car.png',
+    landing: '/images/heroes/landing-hero-car.jpg',
+    raceGameplayBg: '/images/heroes/race-gameplay-bg.jpg'
+  },
+  thumbs: {
+    nitroPhantom: '/images/cars/thumb-nitro-phantom.png',
+    neuralAdaptive: '/images/cars/thumb-neural-adaptive.png',
+    streetCruiser: '/images/cars/thumb-street-cruiser.png',
+    viperDrift: '/images/cars/thumb-viper-drift.png',
+    you: '/images/cars/thumb-you.png',
+    talonGt: '/images/cars/thumb-talon-gt.png'
   },
   audio: {
     interior: '/audio/interior_music.mp3',

@@ -1,15 +1,15 @@
 /**
- * KeyRush Core Typing-Racing Gameplay Screen (Screen 03) — Complete AAA Overhaul
- * - 3D Cyberpunk Megacity race track with dynamic chase camera & procedural scenery
- * - Multi-opponent competitive grid (3-5 simultaneous AI racers) with independent telemetry
- * - Real-time esports race standings leaderboard (P1 to P5) with live overtake notifications
- * - Multi-vehicle track progress radar showing live positions of all competitors
- * - Advanced digital cockpit instrument cluster: speed (KM/H), RPM tachometer, active gear (1-6), nitro
- * - High-contrast readable teleprompter with smooth text streaming, active character caret, error feedback
- * - Cinematic race states: starting grid, 3-2-1-GO countdown, active race, victory podium & full standings
+ * KEYRUSH — Complete Photorealistic Cyberpunk Car Racing & Gameplay Screen
+ * - Fullscreen Photorealistic Cyberpunk Megacity Highway Racing Arena
+ * - Dynamic Canvas VFX Engine (speed lines, twin cyan nitro exhaust flames, wet asphalt specular reflection)
+ * - Top HUD: Logo, angled Position badge (5/5), track progress radar, lap timer, online race status, action buttons
+ * - Top-Left: Pilot Telemetry Card (pilot avatar, You / TALON GT, car thumbnail, 2x2 WPM/Accuracy/Errors/Streak grid)
+ * - Top-Right: Race Standings Card (5 racer rows with thumbnails, rank, WPM, accuracy %, gaps, highlighted player row)
+ * - Bottom: Typing Challenge Panel (⚡ TYPING CHALLENGE, character counter, legend, glowing box caret [T], keyboard guide)
+ * - Bottom-Right: Digital Cockpit (circular neon speedometer with KM/H and vertical angled 7-segment NITRO gauge)
  */
 
-import { Track3D } from '../graphics/track3D.js';
+import { RaceVfxEngine } from './raceVfxEngine.js';
 import { TypingEngine } from '../engine/typingEngine.js';
 import { getRandomPassage, getAcademyLesson } from '../engine/textGenerator.js';
 import { AiOpponentGrid } from '../engine/aiOpponent.js';
@@ -19,18 +19,34 @@ import { storage } from '../db/storage.js';
 import { downloadPerformanceCard } from '../utils/shareCard.js';
 import confetti from 'canvas-confetti';
 
+const CAR_THUMBNAILS = {
+  player: '/images/cars/thumb-you.png',
+  you: '/images/cars/thumb-you.png',
+  talon: '/images/cars/thumb-you.png',
+  talon_gt: '/images/cars/thumb-talon-gt.png',
+  nitro_phantom: '/images/cars/thumb-nitro-phantom.png',
+  neural_adaptive: '/images/cars/thumb-neural-adaptive.png',
+  street_cruiser: '/images/cars/thumb-street-cruiser.png',
+  drift_king: '/images/cars/thumb-viper-drift.png',
+  viper_drift: '/images/cars/thumb-viper-drift.png',
+  cyber_apex: '/images/cars/thumb-street-cruiser.png',
+  ghost_rider: '/images/cars/thumb-viper-drift.png',
+  titan_overdrive: '/images/cars/thumb-nitro-phantom.png',
+  rookie_bolt: '/images/cars/thumb-talon-gt.png'
+};
+
 export class RaceView {
   constructor(container, app) {
     this.container = container;
     this.app = app;
-    this.track3D = null;
+    this.vfxEngine = null;
     this.typingEngine = null;
     this.aiGrid = null;
     this.isRaceActive = false;
     this.isCountdown = false;
     this.isPaused = false;
     this.raceConfig = {
-      mode: 'AI Racing',
+      mode: 'Online Race',
       difficulty: 'AMATEUR',
       aiTier: 'intermediate',
       lessonId: null,
@@ -46,8 +62,8 @@ export class RaceView {
 
     // Grid Telemetry State
     this.currentStandings = [];
-    this.playerRank = 1;
-    this.previousPlayerRank = 1;
+    this.playerRank = 5;
+    this.previousPlayerRank = 5;
     this.overtakeTimeout = null;
 
     this.onKeyDownHandler = this.handleKeyDown.bind(this);
@@ -77,7 +93,7 @@ export class RaceView {
 
     this.initTypingEngine(passage);
     this.renderLayout();
-    this.init3DTrack();
+    this.initVisualStage();
     this.startCountdown();
   }
 
@@ -92,19 +108,19 @@ export class RaceView {
       onMistake: (expected, typed, stats) => {
         soundEffects.playKeyClick(false);
         soundEffects.playErrorMisfire();
-        if (this.track3D) {
-          this.track3D.triggerBrakeFeedback();
+        if (this.vfxEngine) {
+          this.vfxEngine.triggerBrakeFeedback();
         }
         this.updateTypingDisplay(true);
         this.updatePlayerHUD(stats);
       },
       onProgress: (progress, stats) => {
-        if (this.track3D) {
-          const isBoosting = stats.wpm >= 70;
-          this.track3D.updatePlayerProgress(progress, stats.wpm, isBoosting);
+        const kmh = Math.round(stats.wpm * 2.45);
+        if (this.vfxEngine) {
+          this.vfxEngine.updateSpeed(stats.wpm, kmh);
         }
         soundEffects.updateEngineSpeed(stats.wpm / 80, stats.penaltyMultiplier);
-        this.updateCockpitInstruments(stats.wpm);
+        this.updateCockpitInstruments(stats.wpm, stats);
         this.updateGridStandings();
       },
       onFinish: (finalStats) => {
@@ -118,182 +134,215 @@ export class RaceView {
   renderLayout() {
     this.container.innerHTML = `
       <div class="race-screen-wrapper">
-        <!-- 3D TRACK CANVAS CONTAINER (Upper 62%) -->
-        <div class="race-viewport-container">
-          <div id="race-3d-canvas" class="race-3d-scene"></div>
+        <!-- 1. FULLSCREEN PHOTOREALISTIC RACING ARENA STAGE -->
+        <div class="race-arena-stage">
+          <div class="race-arena-backdrop"></div>
+          <canvas id="race-vfx-canvas" class="race-vfx-canvas"></canvas>
+        </div>
 
-          <!-- TOP TELEMETRY HUD BAR -->
-          <div class="top-hud-strip">
-            <!-- Dynamic Race Position Badge -->
-            <div class="hud-pill race-pos-pill" id="hud-pos-pill">
-              <span class="hud-pos-prefix">POS</span>
-              <span class="hud-pos-rank" id="hud-pos-val">P1</span>
-              <span class="hud-pos-total" id="hud-pos-total">/ 5</span>
+        <!-- 2. TOP HUD STRIP -->
+        <header class="hud-top-strip">
+          <!-- Logo Brand & Tagline -->
+          <div class="hud-brand-container">
+            <div class="hud-brand-logo">
+              <span class="hud-brand-k">K</span>
+              <span class="hud-brand-text">KEYRUSH</span>
             </div>
-
-            <!-- Multi-Vehicle Track Progress Radar -->
-            <div class="race-track-radar-wrap">
-              <div class="track-radar-track" id="track-radar-bar">
-                <div class="track-progress-fill" id="track-progress-fill" style="width: 0%"></div>
-                <!-- Dynamic markers for player and opponents will be mounted here -->
-                <div class="radar-marker player-marker" id="radar-player-marker" style="left: 0%" title="You">
-                  <span class="marker-dot player-dot"></span>
-                  <span class="marker-label">YOU</span>
-                </div>
-              </div>
-              <div class="track-finish-flag" title="Finish Line">🏁</div>
-            </div>
-
-            <!-- Race Lap Stopwatch -->
-            <div class="hud-pill timer-pill">
-              <span class="hud-label">LAP TIME</span>
-              <span class="hud-val font-mono" id="hud-timer-val">00:00.0</span>
-            </div>
-
-            <!-- Network Status Pill -->
-            <div class="hud-pill network-pill" id="hud-network-pill">
-              <span class="status-dot online"></span>
-              <span id="hud-network-label">OFFLINE AI GRID</span>
-            </div>
-
-            <!-- Quick Action Buttons -->
-            <button class="btn btn-icon btn-small hud-pause-btn" id="race-pause-btn" title="Pause Lap (Esc)">
-              ⏸
-            </button>
-            <button class="btn btn-icon btn-small hud-restart-btn" id="race-restart-btn" title="Restart Lap">
-              ↺
-            </button>
+            <span class="hud-brand-tagline">Type. Race. Dominate.</span>
           </div>
 
-          <!-- LEFT HUD: PILOT TELEMETRY -->
-          <div class="hud-panel hud-left-pilot">
-            <div class="pilot-badge">
-              <span class="pilot-avatar">${this.profile?.avatar || '🏎️'}</span>
-              <div class="pilot-info">
-                <span class="pilot-name">${this.profile?.username || 'Pilot'}</span>
-                <span class="pilot-car">${this.playerCarId.toUpperCase()} GT</span>
-              </div>
-            </div>
-
-            <div class="telem-row main-wpm-row">
-              <div class="telem-block">
-                <span class="telem-label">SPEED (WPM)</span>
-                <span class="telem-val highlight-cyan font-mono" id="hud-wpm">0</span>
-              </div>
-              <div class="telem-badge-container">
-                <span class="speed-tier-badge" id="speed-tier-badge">IDLE</span>
-              </div>
-            </div>
-
-            <div class="telem-grid-metrics">
-              <div class="telem-block">
-                <span class="telem-label">ACCURACY</span>
-                <span class="telem-val text-positive font-mono" id="hud-acc">100%</span>
-              </div>
-              <div class="telem-block">
-                <span class="telem-label">ERRORS</span>
-                <span class="telem-val text-negative font-mono" id="hud-errors">0</span>
-              </div>
-              <div class="telem-block">
-                <span class="telem-label">STREAK</span>
-                <span class="telem-val text-gold font-mono" id="hud-streak">0 🔥</span>
-              </div>
+          <!-- Position Bracket Badge (e.g. POSITION 5/5) -->
+          <div class="hud-position-bracket" id="hud-pos-pill">
+            <span class="bracket-pos-label">POSITION</span>
+            <div class="bracket-pos-values">
+              <span class="pos-num" id="hud-pos-val">5</span>
+              <span class="pos-divider">/</span>
+              <span class="pos-total" id="hud-pos-total">5</span>
             </div>
           </div>
 
-          <!-- RIGHT HUD: LIVE ESPORTS LEADERBOARD -->
-          <div class="hud-panel hud-right-leaderboard" id="hud-leaderboard-panel">
-            <div class="leaderboard-header">
-              <span class="lb-title">⚡ RACE STANDINGS</span>
-              <span class="lb-mode">${this.raceConfig.difficulty}</span>
+          <!-- Mini Track Progress Radar -->
+          <div class="hud-mini-track-radar">
+            <div class="track-radar-groove" id="track-radar-bar">
+              <div class="track-radar-fill" id="track-progress-fill" style="width: 0%"></div>
+              <div class="track-radar-dot player-dot" id="radar-player-marker" style="left: 0%"></div>
             </div>
-            <div class="leaderboard-racers-list" id="leaderboard-racers-list">
-              <!-- Dynamically populated 5 racer rows -->
+            <span class="track-flag-ico" title="Finish Line">🏁</span>
+          </div>
+
+          <!-- Lap Time Stopwatch -->
+          <div class="hud-lap-timer-pill">
+            <span class="timer-tag">LAP TIME</span>
+            <span class="timer-readout font-mono" id="hud-timer-val">00:00.0</span>
+          </div>
+
+          <!-- Online Race Status -->
+          <div class="hud-online-badge">
+            <span class="status-pulse-dot"></span>
+            <span class="status-mode-label">ONLINE RACE</span>
+            <span class="latency-pill font-mono" id="hud-latency-pill">18ms</span>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="hud-action-controls">
+            <button class="hud-ctrl-btn" id="race-pause-btn" title="Pause Lap (Esc)">⏸</button>
+            <button class="hud-ctrl-btn" id="race-fullscreen-btn" title="Toggle Fullscreen">⛶</button>
+            <button class="hud-ctrl-btn" id="race-restart-btn" title="Restart Lap">↺</button>
+          </div>
+        </header>
+
+        <!-- 3. TOP-LEFT: PILOT TELEMETRY CARD -->
+        <aside class="hud-card hud-pilot-card">
+          <div class="pilot-identity-header">
+            <div class="pilot-avatar-frame">
+              <img src="/images/ui/pilot-avatar.png" alt="Pilot" class="pilot-avatar-img" />
+            </div>
+            <div class="pilot-labels">
+              <div class="pilot-name-text">You</div>
+              <div class="pilot-car-model">TALON GT</div>
+            </div>
+            <div class="pilot-vehicle-preview">
+              <img src="/images/cars/thumb-talon-gt.png" alt="Talon GT" class="pilot-car-thumb" />
             </div>
           </div>
 
-          <!-- OVERTAKE NOTIFICATION TOAST -->
-          <div class="overtake-toast hidden" id="overtake-toast">
-            <span class="overtake-icon">⚡</span>
-            <span class="overtake-text" id="overtake-text">OVERTAKING P2!</span>
+          <div class="pilot-stats-grid">
+            <div class="pilot-stat-box">
+              <div class="pilot-stat-number font-mono highlight-cyan" id="hud-wpm">0</div>
+              <div class="pilot-stat-caption">WPM</div>
+            </div>
+            <div class="pilot-stat-box">
+              <div class="pilot-stat-number font-mono" id="hud-acc">100%</div>
+              <div class="pilot-stat-caption">ACCURACY</div>
+            </div>
+            <div class="pilot-stat-box">
+              <div class="pilot-stat-number font-mono" id="hud-errors">0</div>
+              <div class="pilot-stat-caption">ERRORS</div>
+            </div>
+            <div class="pilot-stat-box">
+              <div class="pilot-stat-number font-mono" id="hud-streak"><span class="flame-ico">🔥</span> 0</div>
+              <div class="pilot-stat-caption">STREAK</div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 4. TOP-RIGHT: RACE STANDINGS CARD -->
+        <aside class="hud-card hud-standings-card" id="hud-leaderboard-panel">
+          <div class="standings-card-title">
+            <span class="trophy-ico">🏆</span>
+            <span class="standings-txt">RACE STANDINGS</span>
+          </div>
+          <div class="standings-rows-stack" id="leaderboard-racers-list">
+            <!-- 5 Dynamic Competitor Rows -->
+          </div>
+        </aside>
+
+        <!-- 5. BOTTOM: TYPING CHALLENGE HUD PANEL -->
+        <section class="hud-card hud-typing-challenge-panel" id="typing-teleprompter" tabindex="0">
+          <div class="typing-panel-header">
+            <div class="typing-title-group">
+              <span class="lightning-ico">⚡</span>
+              <span class="typing-challenge-tag">TYPING CHALLENGE</span>
+              <span class="typing-char-counter font-mono" id="hud-char-count">0 / 0 CHARACTERS</span>
+            </div>
+            <div class="typing-legend-group">
+              <span class="legend-chip"><span class="leg-dot correct"></span> Correct</span>
+              <span class="legend-chip"><span class="leg-dot current"></span> Current</span>
+              <span class="legend-chip"><span class="leg-dot error"></span> Error</span>
+              <span class="legend-chip"><span class="leg-dot upcoming"></span> Upcoming</span>
+            </div>
           </div>
 
-          <!-- COUNTDOWN OVERLAY (3-2-1-GO!) -->
-          <div class="countdown-overlay" id="race-countdown-overlay">
-            <div class="countdown-box">
-              <div class="starting-grid-info">
-                <span class="grid-circuit-name">NEO-METROPOLIS CIRCUIT</span>
-                <span class="grid-lap-desc">${this.raceConfig.mode} • 5 RACERS GRID</span>
-              </div>
-              <div class="countdown-lights">
-                <span class="light red" id="light-1"></span>
-                <span class="light yellow" id="light-2"></span>
-                <span class="light green" id="light-3"></span>
-              </div>
-              <div class="countdown-number" id="countdown-number">READY</div>
-              <div class="countdown-subtext">HANDS ON HOME ROW • TYPE TO ACCELERATE</div>
+          <div class="typing-stream-container">
+            <div class="typing-stream-text font-mono" id="text-passage-stream">
+              <!-- Live active text stream with [T] caret -->
             </div>
+          </div>
+
+          <div class="typing-panel-footer">
+            <div class="typing-hint-guide">
+              <span class="kbd-ico">⌨️</span>
+              <span class="hint-text">Type the text accurately to accelerate your car</span>
+            </div>
+            <div class="typing-esc-action">
+              <span class="esc-badge"><kbd>ESC</kbd> Pause</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. BOTTOM-RIGHT: DIGITAL COCKPIT INSTRUMENTS -->
+        <aside class="hud-cockpit-gauges">
+          <!-- Circular Speedometer Gauge -->
+          <div class="circular-speedometer-module">
+            <svg class="speedometer-svg-dial" viewBox="0 0 160 160">
+              <defs>
+                <linearGradient id="speedoArcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#a855f7" />
+                  <stop offset="45%" stop-color="#0091ff" />
+                  <stop offset="100%" stop-color="#00e5ff" />
+                </linearGradient>
+                <filter id="cyanDialGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle class="speedo-outer-ring" cx="80" cy="80" r="70" />
+              <!-- Track Background Arc -->
+              <circle class="speedo-track-arc" cx="80" cy="80" r="62" stroke-dasharray="320" stroke-dashoffset="65" />
+              <!-- Dynamic Glowing Speed Fill -->
+              <circle class="speedo-fill-arc" id="speed-arc-fill" cx="80" cy="80" r="62" stroke-dasharray="320" stroke-dashoffset="320" filter="url(#cyanDialGlow)" />
+            </svg>
+            <div class="speedometer-center-core">
+              <span class="speedometer-digits font-mono" id="digital-speed-val">0</span>
+              <span class="speedometer-unit-label">KM/H</span>
+            </div>
+          </div>
+
+          <!-- Vertical Angled Nitro Gauge -->
+          <div class="vertical-nitro-module">
+            <div class="nitro-badge-title">
+              <span class="nitro-bolt-ico">⚡</span>
+              <span class="nitro-text-label">NITRO</span>
+            </div>
+            <div class="nitro-segments-stack" id="nitro-segments-stack">
+              <div class="nitro-seg-bar" id="nitro-seg-6"></div>
+              <div class="nitro-seg-bar" id="nitro-seg-5"></div>
+              <div class="nitro-seg-bar" id="nitro-seg-4"></div>
+              <div class="nitro-seg-bar" id="nitro-seg-3"></div>
+              <div class="nitro-seg-bar" id="nitro-seg-2"></div>
+              <div class="nitro-seg-bar" id="nitro-seg-1"></div>
+              <div class="nitro-seg-bar" id="nitro-seg-0"></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 7. OVERTAKE NOTIFICATION TOAST -->
+        <div class="overtake-toast hidden" id="overtake-toast">
+          <span class="overtake-icon">⚡</span>
+          <span class="overtake-text" id="overtake-text">OVERTAKING P2!</span>
+        </div>
+
+        <!-- 8. COUNTDOWN OVERLAY (3-2-1-GO!) -->
+        <div class="countdown-overlay" id="race-countdown-overlay">
+          <div class="countdown-box">
+            <div class="starting-grid-info">
+              <span class="grid-circuit-name">NEO-METROPOLIS CIRCUIT</span>
+              <span class="grid-lap-desc">${this.raceConfig.mode} • 5 RACERS GRID</span>
+            </div>
+            <div class="countdown-lights">
+              <span class="light red" id="light-1"></span>
+              <span class="light yellow" id="light-2"></span>
+              <span class="light green" id="light-3"></span>
+            </div>
+            <div class="countdown-number" id="countdown-number">READY</div>
+            <div class="countdown-subtext">HANDS ON HOME ROW • TYPE TO ACCELERATE</div>
           </div>
         </div>
 
-        <!-- LOWER SECTION: REBUILT TYPING TELEPROMPTER & COCKPIT INSTRUMENTS -->
-        <div class="race-controls-dock">
-          <!-- TYPING TELEPROMPTER CARD -->
-          <div class="typing-teleprompter-card" id="typing-teleprompter" tabindex="0">
-            <div class="teleprompter-glass-header">
-              <span class="hud-term-dot"></span>
-              <span class="hud-term-title">HUD TELEMETRY FEED // KEYSTROKE SENSOR ACTIVE</span>
-              <span class="hud-focus-indicator">● KEYBOARD LOCKED</span>
-            </div>
-            <div class="text-passage-stream" id="text-passage-stream">
-              <!-- Dynamically populated character spans -->
-            </div>
-            <div class="typing-status-hint">
-              <span class="hint-key">⚡ Smooth, accurate cadence maximizes speed and downforce</span>
-              <span class="hint-shortcuts"><kbd>[ESC]</kbd> Pit Stop / Pause</span>
-            </div>
-          </div>
-
-          <!-- HIGH-TECH COCKPIT INSTRUMENT CLUSTER -->
-          <div class="dashboard-instrument-cluster">
-            <!-- Integrated Speedometer Arc & Gear Display -->
-            <div class="speedometer-gauge-box">
-              <div class="speed-arc-gauge">
-                <svg class="speed-svg-dial" viewBox="0 0 160 140">
-                  <path class="arc-bg" d="M 25 120 A 65 65 0 1 1 135 120" />
-                  <path class="arc-fill" id="speed-arc-fill" d="M 25 120 A 65 65 0 1 1 135 120" stroke-dasharray="280" stroke-dashoffset="280" />
-                </svg>
-                <div class="speed-center-readout">
-                  <div class="gear-indicator-badge" id="gear-val">GEAR 1</div>
-                  <span class="speed-number font-mono" id="digital-speed-val">000</span>
-                  <span class="speed-unit">KM/H</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Engine RPM Tachometer & Nitro Surge -->
-            <div class="tachometer-cluster">
-              <div class="tach-header">
-                <span>THROTTLE RPM</span>
-                <span class="tach-val font-mono" id="rpm-val">1,200 RPM</span>
-              </div>
-              <div class="tach-bars-container" id="tach-bars-container">
-                <!-- 24 dynamic rev segments -->
-              </div>
-              <div class="nitro-gauge-wrap">
-                <div class="nitro-header">
-                  <span class="nitro-label">NITRO SURGE</span>
-                  <span class="nitro-status-tag" id="nitro-status-tag">CHARGING</span>
-                </div>
-                <div class="nitro-bar">
-                  <div class="nitro-fill" id="nitro-fill" style="width: 15%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PAUSE MODAL OVERLAY -->
+        <!-- 9. PAUSE MODAL OVERLAY -->
         <div class="race-pause-modal hidden" id="race-pause-modal">
           <div class="pause-card card-dark">
             <span class="pause-badge">⏸ RACE PAUSED</span>
@@ -313,54 +362,32 @@ export class RaceView {
           </div>
         </div>
 
-        <!-- RESULTS MODAL (HIDDEN INITIALLY) -->
+        <!-- 10. RESULTS MODAL -->
         <div class="race-results-modal hidden" id="race-results-modal"></div>
       </div>
     `;
 
-    this.renderTachometerBars();
     this.updateTypingDisplay();
     this.bindEvents();
   }
 
-  renderTachometerBars() {
-    const container = document.getElementById('tach-bars-container');
-    if (!container) return;
-    let html = '';
-    for (let i = 0; i < 24; i++) {
-      const isRedline = i >= 19;
-      html += `<div class="tach-seg ${isRedline ? 'redline' : ''}" id="tach-seg-${i}"></div>`;
+  initVisualStage() {
+    const canvas = document.getElementById('race-vfx-canvas');
+    if (canvas) {
+      this.vfxEngine = new RaceVfxEngine(canvas);
     }
-    container.innerHTML = html;
-  }
-
-  init3DTrack() {
-    const canvasBox = document.getElementById('race-3d-canvas');
-    if (!canvasBox) return;
-
-    this.track3D = new Track3D(canvasBox);
-    this.track3D.setPlayerCar(this.playerCarId, this.paintColor, this.underglowColor);
 
     // Initialize 4-car AI Opponent Grid
-    if (this.raceConfig.mode !== 'Solo Practice') {
-      const oppCount = this.raceConfig.opponentCount || 4;
-      this.aiGrid = new AiOpponentGrid(
-        this.raceConfig.difficulty,
-        this.profile?.averageWpm || 65,
-        oppCount
-      );
+    const oppCount = this.raceConfig.opponentCount || 4;
+    this.aiGrid = new AiOpponentGrid(
+      this.raceConfig.difficulty,
+      this.profile?.averageWpm || 65,
+      oppCount
+    );
 
-      const opponentsData = this.aiGrid.getOpponentsData();
-      this.track3D.setOpponents(opponentsData);
-      this.initRadarMarkers(opponentsData);
-      this.updateGridStandings();
-    } else {
-      // Solo Practice
-      const lb = document.getElementById('hud-leaderboard-panel');
-      if (lb) lb.style.display = 'none';
-      const posPill = document.getElementById('hud-pos-pill');
-      if (posPill) posPill.innerHTML = `<span class="hud-pos-rank">SOLO</span>`;
-    }
+    const opponentsData = this.aiGrid.getOpponentsData();
+    this.initRadarMarkers(opponentsData);
+    this.updateGridStandings();
   }
 
   initRadarMarkers(opponentsData) {
@@ -369,13 +396,11 @@ export class RaceView {
 
     opponentsData.forEach(opp => {
       const marker = document.createElement('div');
-      marker.className = 'radar-marker opponent-marker';
+      marker.className = 'track-radar-dot opponent-dot';
       marker.id = `radar-opp-${opp.id}`;
       marker.style.left = '0%';
+      marker.style.background = opp.color || '#a855f7';
       marker.title = `${opp.name} (${opp.wpm} WPM)`;
-      marker.innerHTML = `
-        <span class="marker-dot" style="background: ${opp.color}"></span>
-      `;
       radarTrack.appendChild(marker);
     });
   }
@@ -384,10 +409,6 @@ export class RaceView {
     this.isCountdown = true;
     this.isRaceActive = false;
     let count = 3;
-
-    if (this.track3D) {
-      this.track3D.setCountdownState(true);
-    }
 
     const overlay = document.getElementById('race-countdown-overlay');
     const numberEl = document.getElementById('countdown-number');
@@ -428,9 +449,6 @@ export class RaceView {
           if (overlay) overlay.style.display = 'none';
           this.isCountdown = false;
           this.isRaceActive = true;
-          if (this.track3D) {
-            this.track3D.setCountdownState(false);
-          }
           this.startRaceTimer();
 
           // High-energy racing soundtrack
@@ -468,15 +486,20 @@ export class RaceView {
 
   updateTypingDisplay(hadError = false) {
     const stream = document.getElementById('text-passage-stream');
+    const counter = document.getElementById('hud-char-count');
     if (!stream || !this.typingEngine) return;
 
     const text = this.typingEngine.targetText;
     const curIdx = this.typingEngine.currentIndex;
 
+    if (counter) {
+      counter.textContent = `${curIdx} / ${text.length} CHARACTERS`;
+    }
+
     let html = '';
-    // Generous reading window (25 characters behind, 75 upcoming)
-    const startIdx = Math.max(0, curIdx - 25);
-    const endIdx = Math.min(text.length, curIdx + 75);
+    // Reading window (20 chars behind, 65 upcoming)
+    const startIdx = Math.max(0, curIdx - 20);
+    const endIdx = Math.min(text.length, curIdx + 65);
 
     for (let i = startIdx; i < endIdx; i++) {
       const ch = text[i];
@@ -500,102 +523,55 @@ export class RaceView {
     const accEl = document.getElementById('hud-acc');
     const errEl = document.getElementById('hud-errors');
     const streakEl = document.getElementById('hud-streak');
-    const speedTierEl = document.getElementById('speed-tier-badge');
     const progressFill = document.getElementById('track-progress-fill');
     const playerMarker = document.getElementById('radar-player-marker');
 
     if (wpmEl) wpmEl.textContent = stats.wpm;
     if (accEl) accEl.textContent = `${stats.accuracy}%`;
     if (errEl) errEl.textContent = stats.errorCount;
-    if (streakEl) streakEl.textContent = `${stats.currentStreak} 🔥`;
-
-    // Dynamic Speed Tier Badge
-    if (speedTierEl) {
-      if (stats.wpm >= 90) {
-        speedTierEl.textContent = 'HYPERDRIVE';
-        speedTierEl.className = 'speed-tier-badge hyper';
-      } else if (stats.wpm >= 70) {
-        speedTierEl.textContent = 'SUPERSONIC';
-        speedTierEl.className = 'speed-tier-badge supersonic';
-      } else if (stats.wpm >= 45) {
-        speedTierEl.textContent = 'CRUISING';
-        speedTierEl.className = 'speed-tier-badge cruising';
-      } else {
-        speedTierEl.textContent = 'WARMUP';
-        speedTierEl.className = 'speed-tier-badge warmup';
-      }
-    }
+    if (streakEl) streakEl.innerHTML = `<span class="flame-ico">🔥</span> ${stats.currentStreak}`;
 
     const progPercent = Math.min(100, Math.round(stats.progress * 100));
     if (progressFill) progressFill.style.width = `${progPercent}%`;
     if (playerMarker) playerMarker.style.left = `${progPercent}%`;
   }
 
-  updateCockpitInstruments(wpm) {
-    // Speed: 80 WPM ~ 180 km/h, max ~ 285 km/h
-    const kmh = Math.round(wpm * 2.3);
+  updateCockpitInstruments(wpm, stats = {}) {
+    // Speed: 68 WPM ~ 168 km/h, max ~ 280 km/h
+    const kmh = Math.round(wpm * 2.45);
     const digitalEl = document.getElementById('digital-speed-val');
-    const gearEl = document.getElementById('gear-val');
-    const rpmValEl = document.getElementById('rpm-val');
-    const nitroFill = document.getElementById('nitro-fill');
-    const nitroTag = document.getElementById('nitro-status-tag');
     const arcFill = document.getElementById('speed-arc-fill');
 
-    if (digitalEl) digitalEl.textContent = kmh.toString().padStart(3, '0');
+    if (digitalEl) digitalEl.textContent = kmh.toString();
 
-    // Gear calculation based on speed
-    if (gearEl) {
-      let gear = 1;
-      if (kmh >= 220) gear = 6;
-      else if (kmh >= 170) gear = 5;
-      else if (kmh >= 125) gear = 4;
-      else if (kmh >= 80) gear = 3;
-      else if (kmh >= 40) gear = 2;
-      gearEl.textContent = `GEAR ${gear}`;
-    }
-
-    // SVG Speedometer Arc
+    // SVG Circular Speedometer Fill Arc
+    // Dasharray: 320, active arc range is 255
     const ratio = Math.min(1.0, kmh / 260);
     if (arcFill) {
-      // Stroke dashoffset: 280 (empty) to 0 (full)
-      const offset = 280 - (ratio * 280);
+      const offset = 320 - (ratio * 255);
       arcFill.style.strokeDashoffset = offset;
     }
 
-    // RPM calculation: 1,200 to 9,200 RPM
-    const rpm = Math.round(1200 + ratio * 8000);
-    if (rpmValEl) rpmValEl.textContent = `${rpm.toLocaleString()} RPM`;
+    // 7-segment Vertical Nitro Gauge
+    const streak = stats.currentStreak || 0;
+    const nitroRatio = Math.min(1.0, (wpm / 80) * 0.7 + (streak / 25) * 0.3);
+    const activeSegments = Math.round(nitroRatio * 7);
 
-    // 24 Tachometer Segments
-    const activeSegs = Math.round(ratio * 24);
-    for (let i = 0; i < 24; i++) {
-      const seg = document.getElementById(`tach-seg-${i}`);
+    for (let i = 0; i < 7; i++) {
+      const seg = document.getElementById(`nitro-seg-${i}`);
       if (seg) {
-        seg.classList.toggle('active', i < activeSegs);
+        seg.classList.toggle('active', i < activeSegments);
       }
     }
 
-    // Nitro Surge Fill
-    const nitroPercent = Math.min(100, Math.round((wpm / 80) * 100));
-    if (nitroFill) nitroFill.style.width = `${nitroPercent}%`;
-    if (nitroTag) {
-      if (wpm >= 70) {
-        nitroTag.textContent = 'OVERDRIVE ACTIVE!';
-        nitroTag.className = 'nitro-status-tag active';
-      } else {
-        nitroTag.textContent = 'CHARGING';
-        nitroTag.className = 'nitro-status-tag';
-      }
+    // Trigger visual nitro surge flame burst on hyper speed
+    if (wpm >= 70 && this.vfxEngine) {
+      this.vfxEngine.triggerNitroSurge();
     }
   }
 
   handleGridUpdate(opponents) {
-    if (!this.track3D) return;
-
-    // Update 3D opponents & track radar markers
     opponents.forEach(opp => {
-      this.track3D.updateOpponentProgress(opp.id, opp.progress, opp.wpm);
-
       const marker = document.getElementById(`radar-opp-${opp.id}`);
       if (marker) {
         const pct = Math.min(100, Math.round(opp.progress * 100));
@@ -629,28 +605,36 @@ export class RaceView {
     }
     this.previousPlayerRank = this.playerRank;
 
-    // Update Top Position Badge
+    // Update Top Position Bracket Badge
     const posVal = document.getElementById('hud-pos-val');
     const posTotal = document.getElementById('hud-pos-total');
-    if (posVal) posVal.textContent = `P${this.playerRank}`;
-    if (posTotal) posTotal.textContent = `/ ${result.totalRacers}`;
+    if (posVal) posVal.textContent = this.playerRank;
+    if (posTotal) posTotal.textContent = result.totalRacers;
 
-    // Render Right Leaderboard Rows
+    // Render Right Standings List
     const listEl = document.getElementById('leaderboard-racers-list');
     if (!listEl) return;
 
     listEl.innerHTML = result.standings.map(r => {
       const isPlayer = r.isPlayer;
-      const rankBadge = r.rank === 1 ? 'gold' : (r.rank === 2 ? 'silver' : (r.rank === 3 ? 'bronze' : ''));
+      const thumbKey = isPlayer ? 'player' : (r.id || 'nitro_phantom');
+      const thumbSrc = CAR_THUMBNAILS[thumbKey] || CAR_THUMBNAILS[r.carModel] || '/images/cars/thumb-you.png';
+      const gapDisplay = isPlayer ? '--' : (r.rank === 1 ? '+0.0s' : `+${((r.rank - 1) * 0.4).toFixed(1)}s`);
+
       return `
-        <div class="lb-row ${isPlayer ? 'player-row' : ''}">
-          <span class="lb-rank ${rankBadge}">P${r.rank}</span>
-          <span class="lb-avatar">${r.avatar}</span>
-          <div class="lb-details">
-            <span class="lb-name">${r.name}</span>
-            <span class="lb-gap">${r.gapText}</span>
+        <div class="standings-row ${isPlayer ? 'player-active-row' : ''}">
+          <span class="racer-rank-num font-mono">${r.rank}</span>
+          <div class="racer-car-box">
+            <img src="${thumbSrc}" alt="${r.name}" class="racer-thumb-img" onerror="this.src='/images/cars/thumb-you.png'" />
           </div>
-          <span class="lb-wpm font-mono">${r.wpm} <small>WPM</small></span>
+          <div class="racer-info-cell">
+            <div class="racer-name">${isPlayer ? 'You' : r.name}</div>
+            <div class="racer-stats-sub font-mono">
+              <span class="racer-wpm highlight-cyan">${r.wpm} WPM</span>
+              <span class="racer-acc">${r.accuracy}%</span>
+            </div>
+          </div>
+          <div class="racer-gap font-mono ${r.rank === 1 ? 'leader' : ''}">${gapDisplay}</div>
         </div>
       `;
     }).join('');
@@ -946,24 +930,34 @@ export class RaceView {
       this.dispose();
       this.setup(this.raceConfig);
     });
+
+    // Fullscreen Toggle
+    document.getElementById('race-fullscreen-btn')?.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
   }
 
   handleKeyDown(e) {
     if (e.key === 'Escape') {
-      if (this.isRaceActive || this.isPaused) {
-        this.togglePause();
-        return;
-      }
-    }
-
-    if (!this.isRaceActive || this.isPaused) return;
-
-    // Prevent default scrolling for Spacebar
-    if (e.key === ' ') {
       e.preventDefault();
+      this.togglePause();
+      return;
     }
 
-    this.typingEngine.handleKey(e.key);
+    if (!this.isRaceActive || this.isPaused || this.isCountdown) {
+      return;
+    }
+
+    if (e.key.length === 1 || e.key === 'Backspace') {
+      if (e.key === ' ' || e.key === 'Backspace') {
+        e.preventDefault();
+      }
+      this.typingEngine.handleKey(e.key);
+    }
   }
 
   dispose() {
@@ -980,16 +974,11 @@ export class RaceView {
       this.aiGrid.stop();
       this.aiGrid = null;
     }
-    this.isRaceActive = false;
-    this.isPaused = false;
-    soundEffects.stopEngine();
-
-    // Crossfade smoothly back to ambient music
-    musicManager.playInterior(1500);
-
-    if (this.track3D) {
-      this.track3D.dispose();
-      this.track3D = null;
+    if (this.vfxEngine) {
+      this.vfxEngine.dispose();
+      this.vfxEngine = null;
     }
+    soundEffects.stopEngine();
+    clearTimeout(this.overtakeTimeout);
   }
 }
