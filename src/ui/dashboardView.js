@@ -46,228 +46,7 @@ export class DashboardView {
     const username = (this.profile.username && this.profile.username !== 'CyberRacer') ? this.profile.username : 'Kartik';
 
     this.container.innerHTML = `
-      <div class="dash-shell" id="dash-shell">
-        <!-- A. LEFT SIDEBAR -->
-        <aside class="dash-sidebar" id="dash-sidebar">
-          <!-- Logo Brand -->
-          <div class="dash-brand-block" id="dash-brand-btn" role="button" tabindex="0" title="Return to SP40 Concept Showcase">
-            <div class="dash-brand-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="url(#boltGrad)" stroke="#00D9FF" stroke-width="1.2" stroke-linejoin="round"/>
-                <defs>
-                  <linearGradient id="boltGrad" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
-                    <stop stop-color="#00D9FF"/>
-                    <stop offset="0.5" stop-color="#147BFF"/>
-                    <stop offset="1" stop-color="#8B35FF"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            <div class="dash-brand-text">
-              <span class="dash-brand-title">KEYRUSH</span>
-              <span class="dash-brand-tagline">Type. Race. Dominate.</span>
-            </div>
-          </div>
-
-          <!-- Navigation Menu Links -->
-          <nav class="dash-nav-menu" aria-label="Main Navigation">
-            <button class="dash-nav-btn active" data-nav="dashboard" title="Home Dashboard">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Home</span>
-            </button>
-
-            <button class="dash-nav-btn" data-nav="race" title="Race Mode">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
-                  <line x1="4" y1="22" x2="4" y2="15"></line>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Race Mode</span>
-            </button>
-
-            <button class="dash-nav-btn" data-nav="diagnostic" title="Practice Mode">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <circle cx="12" cy="12" r="6"></circle>
-                  <circle cx="12" cy="12" r="2"></circle>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Practice</span>
-            </button>
-
-            <button class="dash-nav-btn" data-nav="academy" title="Touch-Typing Academy">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                  <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Academy</span>
-            </button>
-
-            <button class="dash-nav-btn" data-nav="garage" title="Supercar Garage">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="6" width="20" height="8" rx="2"></rect>
-                  <circle cx="6" cy="17" r="2"></circle>
-                  <circle cx="18" cy="17" r="2"></circle>
-                  <path d="M6 6V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v2"></path>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Garage</span>
-            </button>
-
-            <button class="dash-nav-btn" data-nav="leaderboard" title="Global Leaderboard">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                  <path d="M4 22h16"></path>
-                  <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"></path>
-                  <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"></path>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Leaderboard</span>
-            </button>
-
-            <button class="dash-nav-btn" data-nav="analytics" title="Telemetry Statistics">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="20" x2="18" y2="10"></line>
-                  <line x1="12" y1="20" x2="12" y2="4"></line>
-                  <line x1="6" y1="20" x2="6" y2="14"></line>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Statistics</span>
-            </button>
-
-            <button class="dash-nav-btn" data-nav="multiplayer" title="Tournaments & Championships">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 2l8 4v6c0 5.25-3.5 10-8 11-4.5-1-8-5.75-8-11V6l8-4z"></path>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Tournaments</span>
-            </button>
-
-            <button class="dash-nav-btn" data-nav="settings" title="Audio & System Settings">
-              <span class="nav-btn-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-              </span>
-              <span class="nav-btn-label">Settings</span>
-            </button>
-          </nav>
-
-          <!-- Bottom Promotional & Status Cards -->
-          <div class="dash-sidebar-bottom">
-            <!-- Promo 1: Unlock New Cars -->
-            <div class="sidebar-promo-card">
-              <img src="/images/sidebar_unlock_cars.png" alt="Unlock New Cars" class="sidebar-promo-img" />
-              <div class="sidebar-promo-content">
-                <span class="sidebar-promo-title">Unlock New Cars</span>
-                <span class="sidebar-promo-sub">Complete challenges & earn rewards</span>
-                <button class="sidebar-promo-btn" data-nav="garage">
-                  View Garage →
-                </button>
-              </div>
-            </div>
-
-            <!-- Promo 2: Offline Mode Card -->
-            <div class="sidebar-status-card">
-              <div class="status-card-header">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                  <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-                  <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-                  <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
-                  <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                  <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                </svg>
-                <span class="status-card-title">You're Offline</span>
-              </div>
-              <p class="status-card-desc">Play locally, track progress, and enjoy full features offline.</p>
-              <button class="sidebar-status-btn" data-action="offline-info">
-                Offline Mode
-              </button>
-            </div>
-          </div>
-        </aside>
-
-        <!-- B. MAIN CONTENT CANVAS AREA -->
-        <div class="dash-main-area">
-          <!-- TOP NAVIGATION BAR -->
-          <header class="dash-top-bar">
-            <!-- Global Search Input -->
-            <div class="dash-search-box">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7B8EA8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input 
-                type="text" 
-                placeholder="Search races, vehicles, or anything..." 
-                class="dash-search-input"
-                id="dash-search-input"
-                aria-label="Search"
-              />
-              <span class="dash-search-kbd">Ctrl + K</span>
-            </div>
-
-            <!-- Top Right Profile & Status Controls -->
-            <div class="dash-top-right">
-              <!-- Offline Mode Status Pill -->
-              <div class="dash-status-pill" title="Offline-First Engine: Full Local Availability">
-                <span class="status-pulse-dot"></span>
-                <div class="status-pill-text">
-                  <strong>Offline Mode</strong>
-                  <small>Play anytime, anywhere</small>
-                </div>
-              </div>
-
-              <!-- Notification Bell with Badge 1 -->
-              <button class="dash-icon-btn" id="dash-notify-btn" title="Daily Directive Available (1)">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-                <span class="dash-notify-badge">1</span>
-              </button>
-
-              <!-- Settings Gear Shortcut -->
-              <button class="dash-icon-btn" data-nav="settings" title="System Settings">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-              </button>
-
-              <!-- Player Avatar & Profile -->
-              <div class="dash-user-chip" id="dash-user-chip" role="button" tabindex="0" title="Player Profile">
-                <img src="/images/avatar_kartik.png" alt="${username}" class="dash-user-avatar" />
-                <div class="dash-user-info">
-                  <span class="dash-user-name">${username}</span>
-                  <span class="dash-user-role">Racer</span>
-                </div>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7B8EA8" stroke-width="2.5" stroke-linecap="round">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-            </div>
-          </header>
-
-          <!-- DASHBOARD TWO-COLUMN CONTAINER -->
-          <div class="dash-body-container">
+      <div class="dash-body-container">
             <!-- CENTER CONTENT COLUMN -->
             <div class="dash-center-col">
               <!-- 1. HERO BANNER — MAIN ATTRACTION -->
@@ -290,10 +69,6 @@ export class DashboardView {
                       <span>Start Racing</span>
                       <span class="btn-arrow-right">→</span>
                     </button>
-                    <button class="hero-btn-secondary" id="hero-btn-trailer" data-action="trailer">
-                      <span class="btn-play-circle">▷</span>
-                      <span>Watch Trailer</span>
-                    </button>
                   </div>
                 </div>
 
@@ -303,11 +78,6 @@ export class DashboardView {
                     alt="Futuristic Sports Car" 
                     class="hero-supercar-img" 
                   />
-                  <!-- Bottom-right Tagline Badge -->
-                  <div class="hero-crown-badge">
-                    <span class="crown-icon">👑</span>
-                    <span class="crown-text">Type<br>Race<br>Dominate</span>
-                  </div>
                 </div>
               </section>
 
@@ -897,46 +667,7 @@ export class DashboardView {
             </aside>
           </div>
 
-          <!-- D. DASHBOARD FOOTER -->
-          <footer class="dash-footer-bar">
-            <div class="dash-footer-brand">
-              <span class="footer-logo">⚡ KEYRUSH</span>
-              <span class="footer-tagline">Type. Race. Dominate.</span>
-            </div>
-
-            <div class="dash-footer-features">
-              <div class="footer-feat-item">
-                <span class="feat-icon">🌐</span>
-                <div class="feat-text">
-                  <strong>Works Offline</strong>
-                  <small>Full features without internet</small>
-                </div>
-              </div>
-
-              <div class="footer-feat-item">
-                <span class="feat-icon">📱</span>
-                <div class="feat-text">
-                  <strong>PWA Ready</strong>
-                  <small>Install on your device</small>
-                </div>
-              </div>
-
-              <div class="footer-feat-item">
-                <span class="feat-icon">💻</span>
-                <div class="feat-text">
-                  <strong>Cross-Platform</strong>
-                  <small>Desktop • Tablet • Mobile</small>
-                </div>
-              </div>
-            </div>
-
-            <div class="dash-footer-right">
-              <span>👑 Level Up Your Typing Skills</span>
-            </div>
-          </footer>
-        </div>
-      </div>
-    `;
+              `;
 
     this.bindEvents();
   }
@@ -985,13 +716,7 @@ export class DashboardView {
       }
     });
 
-    // 4. Trailer modal trigger
-    document.getElementById('hero-btn-trailer')?.addEventListener('click', () => {
-      soundEffects.playUiClick();
-      this.app.showScreen('landing');
-    });
-
-    // 5. Offline info click
+    // 4. Offline info click
     this.container.querySelectorAll('[data-action="offline-info"]').forEach((btn) => {
       btn.addEventListener('click', () => {
         soundEffects.playUiClick();

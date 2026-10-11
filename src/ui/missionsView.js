@@ -23,14 +23,26 @@ export class MissionsView {
     const calendarDays = missions?.calendarDays || [true, true, true, true, false, false, false];
 
     this.container.innerHTML = `
-      <div class="missions-screen-wrapper">
-        <div class="screen-header">
-          <span class="section-tag">HABIT & GAMIFICATION</span>
-          <h1 class="screen-title">DAILY MISSIONS & STREAK CIRCUIT</h1>
-          <p class="screen-subtitle">
-            Consistent daily practice builds lightning-fast muscle memory.
-            Complete daily objectives to earn XP, level up, and unlock cosmetic hypercars.
-          </p>
+      <div class="dash-page-container">
+        <!-- Section Hero Banner -->
+        <div class="dash-section-hero card-dark">
+          <div class="section-hero-content">
+            <span class="section-tag-pill">HABIT & TOURNAMENTS</span>
+            <h1 class="dash-page-title">DAILY MISSIONS & TOURNAMENT CIRCUIT</h1>
+            <p class="dash-page-desc">
+              Consistent daily practice builds lightning-fast muscle memory. Complete daily objectives to earn XP, level up, and unlock cosmetic hypercars.
+            </p>
+          </div>
+          <div class="section-hero-stats">
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">DAILY STREAK</span>
+              <span class="stat-pill-val highlight-cyan font-mono">${streak} DAYS</span>
+            </div>
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">AVAILABLE MISSIONS</span>
+              <span class="stat-pill-val text-gold font-mono">3 DIRECTIVES</span>
+            </div>
+          </div>
         </div>
 
         <!-- STREAK BANNER WITH FLAME -->

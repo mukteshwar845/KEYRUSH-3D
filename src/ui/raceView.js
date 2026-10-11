@@ -1,13 +1,18 @@
 /**
- * KeyRush Core Typing-Racing Gameplay Screen (Screen 03)
- * Full 3D Three.js race track, precision telemetry HUD, high-contrast typing panel,
- * analog/digital speedometer, RPM gauge, countdown overlay, and post-race victory results.
+ * KeyRush Core Typing-Racing Gameplay Screen (Screen 03) — Complete AAA Overhaul
+ * - 3D Cyberpunk Megacity race track with dynamic chase camera & procedural scenery
+ * - Multi-opponent competitive grid (3-5 simultaneous AI racers) with independent telemetry
+ * - Real-time esports race standings leaderboard (P1 to P5) with live overtake notifications
+ * - Multi-vehicle track progress radar showing live positions of all competitors
+ * - Advanced digital cockpit instrument cluster: speed (KM/H), RPM tachometer, active gear (1-6), nitro
+ * - High-contrast readable teleprompter with smooth text streaming, active character caret, error feedback
+ * - Cinematic race states: starting grid, 3-2-1-GO countdown, active race, victory podium & full standings
  */
 
 import { Track3D } from '../graphics/track3D.js';
 import { TypingEngine } from '../engine/typingEngine.js';
 import { getRandomPassage, getAcademyLesson } from '../engine/textGenerator.js';
-import { AiOpponent } from '../engine/aiOpponent.js';
+import { AiOpponentGrid } from '../engine/aiOpponent.js';
 import { soundEffects } from '../audio/soundEffects.js';
 import { musicManager } from '../audio/musicManager.js';
 import { storage } from '../db/storage.js';
@@ -20,7 +25,7 @@ export class RaceView {
     this.app = app;
     this.track3D = null;
     this.typingEngine = null;
-    this.aiOpponent = null;
+    this.aiGrid = null;
     this.isRaceActive = false;
     this.isCountdown = false;
     this.isPaused = false;
@@ -29,7 +34,8 @@ export class RaceView {
       difficulty: 'AMATEUR',
       aiTier: 'intermediate',
       lessonId: null,
-      customText: null
+      customText: null,
+      opponentCount: 4
     };
 
     this.playerCarId = 'talon';
@@ -37,7 +43,12 @@ export class RaceView {
     this.underglowColor = '#a855f7';
     this.settings = null;
     this.profile = null;
-    this.opponentStats = { wpm: 0, progress: 0, accuracy: 95 };
+
+    // Grid Telemetry State
+    this.currentStandings = [];
+    this.playerRank = 1;
+    this.previousPlayerRank = 1;
+    this.overtakeTimeout = null;
 
     this.onKeyDownHandler = this.handleKeyDown.bind(this);
   }
@@ -76,13 +87,16 @@ export class RaceView {
       onCharTyped: (char, isCorrect, stats) => {
         soundEffects.playKeyClick(true);
         this.updateTypingDisplay();
-        this.updateHUD(stats);
+        this.updatePlayerHUD(stats);
       },
       onMistake: (expected, typed, stats) => {
         soundEffects.playKeyClick(false);
         soundEffects.playErrorMisfire();
-        this.updateTypingDisplay();
-        this.updateHUD(stats);
+        if (this.track3D) {
+          this.track3D.triggerBrakeFeedback();
+        }
+        this.updateTypingDisplay(true);
+        this.updatePlayerHUD(stats);
       },
       onProgress: (progress, stats) => {
         if (this.track3D) {
@@ -90,7 +104,8 @@ export class RaceView {
           this.track3D.updatePlayerProgress(progress, stats.wpm, isBoosting);
         }
         soundEffects.updateEngineSpeed(stats.wpm / 80, stats.penaltyMultiplier);
-        this.updateSpeedometer(stats.wpm);
+        this.updateCockpitInstruments(stats.wpm);
+        this.updateGridStandings();
       },
       onFinish: (finalStats) => {
         this.handleRaceFinish(finalStats);
@@ -103,163 +118,186 @@ export class RaceView {
   renderLayout() {
     this.container.innerHTML = `
       <div class="race-screen-wrapper">
-        <!-- 3D TRACK CANVAS CONTAINER (Upper 65%) -->
+        <!-- 3D TRACK CANVAS CONTAINER (Upper 62%) -->
         <div class="race-viewport-container">
           <div id="race-3d-canvas" class="race-3d-scene"></div>
 
           <!-- TOP TELEMETRY HUD BAR -->
           <div class="top-hud-strip">
-            <div class="hud-pill race-pos-pill">
-              <span class="hud-label">POSITION</span>
-              <span class="hud-val" id="hud-pos-val">1<small>/2</small></span>
+            <!-- Dynamic Race Position Badge -->
+            <div class="hud-pill race-pos-pill" id="hud-pos-pill">
+              <span class="hud-pos-prefix">POS</span>
+              <span class="hud-pos-rank" id="hud-pos-val">P1</span>
+              <span class="hud-pos-total" id="hud-pos-total">/ 5</span>
             </div>
 
-            <!-- Race Distance Progress Tracker -->
-            <div class="race-track-progress-bar">
-              <div class="track-progress-fill" id="track-progress-fill" style="width: 0%"></div>
-              <div class="player-marker" id="track-player-marker" style="left: 0%">🏎️</div>
-              <div class="opponent-marker" id="track-opponent-marker" style="left: 0%">🤖</div>
-              <div class="track-finish-flag">🏁</div>
+            <!-- Multi-Vehicle Track Progress Radar -->
+            <div class="race-track-radar-wrap">
+              <div class="track-radar-track" id="track-radar-bar">
+                <div class="track-progress-fill" id="track-progress-fill" style="width: 0%"></div>
+                <!-- Dynamic markers for player and opponents will be mounted here -->
+                <div class="radar-marker player-marker" id="radar-player-marker" style="left: 0%" title="You">
+                  <span class="marker-dot player-dot"></span>
+                  <span class="marker-label">YOU</span>
+                </div>
+              </div>
+              <div class="track-finish-flag" title="Finish Line">🏁</div>
             </div>
 
+            <!-- Race Lap Stopwatch -->
             <div class="hud-pill timer-pill">
-              <span class="hud-label">RACE TIME</span>
+              <span class="hud-label">LAP TIME</span>
               <span class="hud-val font-mono" id="hud-timer-val">00:00.0</span>
             </div>
 
-            <div class="hud-pill latency-pill">
+            <!-- Network Status Pill -->
+            <div class="hud-pill network-pill" id="hud-network-pill">
               <span class="status-dot online"></span>
-              <span id="hud-ping-val">18ms</span>
+              <span id="hud-network-label">OFFLINE AI GRID</span>
             </div>
 
-            <button class="btn btn-icon btn-small hud-pause-btn" id="race-pause-btn" title="Pause / Resume Race (Esc)">
+            <!-- Quick Action Buttons -->
+            <button class="btn btn-icon btn-small hud-pause-btn" id="race-pause-btn" title="Pause Lap (Esc)">
               ⏸
             </button>
-            <button class="btn btn-icon btn-small hud-restart-btn" id="race-restart-btn" title="Restart Race">
+            <button class="btn btn-icon btn-small hud-restart-btn" id="race-restart-btn" title="Restart Lap">
               ↺
             </button>
           </div>
 
-          <!-- LEFT HUD: PLAYER TELEMETRY -->
+          <!-- LEFT HUD: PILOT TELEMETRY -->
           <div class="hud-panel hud-left-pilot">
             <div class="pilot-badge">
               <span class="pilot-avatar">${this.profile?.avatar || '🏎️'}</span>
               <div class="pilot-info">
                 <span class="pilot-name">${this.profile?.username || 'Pilot'}</span>
-                <span class="pilot-car">${this.playerCarId.toUpperCase()}</span>
+                <span class="pilot-car">${this.playerCarId.toUpperCase()} GT</span>
               </div>
             </div>
 
-            <div class="telem-row">
+            <div class="telem-row main-wpm-row">
               <div class="telem-block">
-                <span class="telem-label">WPM</span>
+                <span class="telem-label">SPEED (WPM)</span>
                 <span class="telem-val highlight-cyan font-mono" id="hud-wpm">0</span>
               </div>
+              <div class="telem-badge-container">
+                <span class="speed-tier-badge" id="speed-tier-badge">IDLE</span>
+              </div>
+            </div>
+
+            <div class="telem-grid-metrics">
               <div class="telem-block">
                 <span class="telem-label">ACCURACY</span>
                 <span class="telem-val text-positive font-mono" id="hud-acc">100%</span>
               </div>
-            </div>
-
-            <div class="telem-row mini">
               <div class="telem-block">
                 <span class="telem-label">ERRORS</span>
                 <span class="telem-val text-negative font-mono" id="hud-errors">0</span>
               </div>
               <div class="telem-block">
                 <span class="telem-label">STREAK</span>
-                <span class="telem-val text-gold font-mono" id="hud-streak">0</span>
+                <span class="telem-val text-gold font-mono" id="hud-streak">0 🔥</span>
               </div>
             </div>
           </div>
 
-          <!-- RIGHT HUD: OPPONENT TELEMETRY -->
-          <div class="hud-panel hud-right-opponent">
-            <div class="pilot-badge opponent-badge">
-              <span class="pilot-avatar" id="opp-avatar">🤖</span>
-              <div class="pilot-info">
-                <span class="pilot-name" id="opp-name">AI Racer</span>
-                <span class="pilot-car" id="opp-difficulty">${this.raceConfig.difficulty}</span>
-              </div>
+          <!-- RIGHT HUD: LIVE ESPORTS LEADERBOARD -->
+          <div class="hud-panel hud-right-leaderboard" id="hud-leaderboard-panel">
+            <div class="leaderboard-header">
+              <span class="lb-title">⚡ RACE STANDINGS</span>
+              <span class="lb-mode">${this.raceConfig.difficulty}</span>
             </div>
+            <div class="leaderboard-racers-list" id="leaderboard-racers-list">
+              <!-- Dynamically populated 5 racer rows -->
+            </div>
+          </div>
 
-            <div class="telem-row">
-              <div class="telem-block">
-                <span class="telem-label">OPPONENT WPM</span>
-                <span class="telem-val text-warning font-mono" id="opp-wpm">0</span>
-              </div>
-              <div class="telem-block">
-                <span class="telem-label">GAP</span>
-                <span class="telem-val font-mono" id="opp-gap">+0.0s</span>
-              </div>
-            </div>
+          <!-- OVERTAKE NOTIFICATION TOAST -->
+          <div class="overtake-toast hidden" id="overtake-toast">
+            <span class="overtake-icon">⚡</span>
+            <span class="overtake-text" id="overtake-text">OVERTAKING P2!</span>
           </div>
 
           <!-- COUNTDOWN OVERLAY (3-2-1-GO!) -->
           <div class="countdown-overlay" id="race-countdown-overlay">
             <div class="countdown-box">
+              <div class="starting-grid-info">
+                <span class="grid-circuit-name">NEO-METROPOLIS CIRCUIT</span>
+                <span class="grid-lap-desc">${this.raceConfig.mode} • 5 RACERS GRID</span>
+              </div>
               <div class="countdown-lights">
                 <span class="light red" id="light-1"></span>
                 <span class="light yellow" id="light-2"></span>
                 <span class="light green" id="light-3"></span>
               </div>
               <div class="countdown-number" id="countdown-number">READY</div>
-              <div class="countdown-subtext">GET YOUR HANDS ON THE HOME ROW</div>
+              <div class="countdown-subtext">HANDS ON HOME ROW • TYPE TO ACCELERATE</div>
             </div>
           </div>
         </div>
 
-        <!-- LOWER SECTION: TYPING PANEL & SPEEDOMETERS -->
+        <!-- LOWER SECTION: REBUILT TYPING TELEPROMPTER & COCKPIT INSTRUMENTS -->
         <div class="race-controls-dock">
-          <!-- TYPING TEXT PANEL (HIGH READABILITY & FOCUS) -->
+          <!-- TYPING TELEPROMPTER CARD -->
           <div class="typing-teleprompter-card" id="typing-teleprompter" tabindex="0">
+            <div class="teleprompter-glass-header">
+              <span class="hud-term-dot"></span>
+              <span class="hud-term-title">HUD TELEMETRY FEED // KEYSTROKE SENSOR ACTIVE</span>
+              <span class="hud-focus-indicator">● KEYBOARD LOCKED</span>
+            </div>
             <div class="text-passage-stream" id="text-passage-stream">
               <!-- Dynamically populated character spans -->
             </div>
             <div class="typing-status-hint">
-              <span class="hint-key">Type naturally to accelerate</span>
-              <span class="hint-shortcuts">Press [ESC] to restart lap</span>
+              <span class="hint-key">⚡ Smooth, accurate cadence maximizes speed and downforce</span>
+              <span class="hint-shortcuts"><kbd>[ESC]</kbd> Pit Stop / Pause</span>
             </div>
           </div>
 
-          <!-- ANALOG & DIGITAL SPEEDOMETER + RPM CLUSTER -->
+          <!-- HIGH-TECH COCKPIT INSTRUMENT CLUSTER -->
           <div class="dashboard-instrument-cluster">
-            <!-- Analog/Digital Speedometer Gauge -->
-            <div class="speedometer-gauge">
-              <div class="gauge-dial">
-                <div class="gauge-arc"></div>
-                <div class="gauge-needle" id="gauge-needle" style="transform: rotate(-120deg)"></div>
-                <div class="digital-speed-readout">
+            <!-- Integrated Speedometer Arc & Gear Display -->
+            <div class="speedometer-gauge-box">
+              <div class="speed-arc-gauge">
+                <svg class="speed-svg-dial" viewBox="0 0 160 140">
+                  <path class="arc-bg" d="M 25 120 A 65 65 0 1 1 135 120" />
+                  <path class="arc-fill" id="speed-arc-fill" d="M 25 120 A 65 65 0 1 1 135 120" stroke-dasharray="280" stroke-dashoffset="280" />
+                </svg>
+                <div class="speed-center-readout">
+                  <div class="gear-indicator-badge" id="gear-val">GEAR 1</div>
                   <span class="speed-number font-mono" id="digital-speed-val">000</span>
                   <span class="speed-unit">KM/H</span>
                 </div>
               </div>
             </div>
 
-            <!-- RPM Tachometer & Redline -->
+            <!-- Engine RPM Tachometer & Nitro Surge -->
             <div class="tachometer-cluster">
               <div class="tach-header">
-                <span>ENGINE THROTTLE</span>
+                <span>THROTTLE RPM</span>
                 <span class="tach-val font-mono" id="rpm-val">1,200 RPM</span>
               </div>
               <div class="tach-bars-container" id="tach-bars-container">
-                <!-- 20 dynamic rev bars -->
+                <!-- 24 dynamic rev segments -->
               </div>
               <div class="nitro-gauge-wrap">
-                <div class="nitro-label">NITRO BOOST</div>
+                <div class="nitro-header">
+                  <span class="nitro-label">NITRO SURGE</span>
+                  <span class="nitro-status-tag" id="nitro-status-tag">CHARGING</span>
+                </div>
                 <div class="nitro-bar">
-                  <div class="nitro-fill" id="nitro-fill" style="width: 20%"></div>
+                  <div class="nitro-fill" id="nitro-fill" style="width: 15%"></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- PAUSE OVERLAY (HIDDEN INITIALLY) -->
+        <!-- PAUSE MODAL OVERLAY -->
         <div class="race-pause-modal hidden" id="race-pause-modal">
           <div class="pause-card card-dark">
             <span class="pause-badge">⏸ RACE PAUSED</span>
-            <h2 class="pause-title">PIT STOP</h2>
+            <h2 class="pause-title">PIT STOP CREW ACTIVE</h2>
             <p class="pause-subtitle">Telemetry recording suspended. Audio and engine idle.</p>
             <div class="pause-actions">
               <button class="btn btn-primary btn-large glow-primary" id="btn-pause-resume">
@@ -268,14 +306,14 @@ export class RaceView {
               <button class="btn btn-secondary" id="btn-pause-restart">
                 ↺ RESTART LAP
               </button>
-              <button class="btn btn-ghost" id="btn-pause-exit" data-nav="dashboard">
+              <button class="btn btn-ghost" id="btn-pause-exit">
                 ✕ RETURN TO DASHBOARD
               </button>
             </div>
           </div>
         </div>
 
-        <!-- RESULTS OVERLAY (HIDDEN INITIALLY) -->
+        <!-- RESULTS MODAL (HIDDEN INITIALLY) -->
         <div class="race-results-modal hidden" id="race-results-modal"></div>
       </div>
     `;
@@ -290,7 +328,7 @@ export class RaceView {
     if (!container) return;
     let html = '';
     for (let i = 0; i < 24; i++) {
-      const isRedline = i >= 18;
+      const isRedline = i >= 19;
       html += `<div class="tach-seg ${isRedline ? 'redline' : ''}" id="tach-seg-${i}"></div>`;
     }
     container.innerHTML = html;
@@ -303,34 +341,53 @@ export class RaceView {
     this.track3D = new Track3D(canvasBox);
     this.track3D.setPlayerCar(this.playerCarId, this.paintColor, this.underglowColor);
 
-    // If AI or Multiplayer mode, configure opponent car
+    // Initialize 4-car AI Opponent Grid
     if (this.raceConfig.mode !== 'Solo Practice') {
-      const oppTier = this.raceConfig.aiTier || 'intermediate';
-      this.aiOpponent = new AiOpponent(oppTier, this.profile?.averageWpm || 65);
+      const oppCount = this.raceConfig.opponentCount || 4;
+      this.aiGrid = new AiOpponentGrid(
+        this.raceConfig.difficulty,
+        this.profile?.averageWpm || 65,
+        oppCount
+      );
 
-      this.track3D.setOpponents([{
-        id: this.aiOpponent.config.id,
-        carModel: this.aiOpponent.config.carModel,
-        color: this.aiOpponent.config.color
-      }]);
-
-      const oppName = document.getElementById('opp-name');
-      const oppAvatar = document.getElementById('opp-avatar');
-      const oppDifficulty = document.getElementById('opp-difficulty');
-      if (oppName) oppName.textContent = this.aiOpponent.config.name;
-      if (oppAvatar) oppAvatar.textContent = this.aiOpponent.config.avatar;
-      if (oppDifficulty) oppDifficulty.textContent = `${this.aiOpponent.config.targetWpm} WPM TARGET`;
+      const opponentsData = this.aiGrid.getOpponentsData();
+      this.track3D.setOpponents(opponentsData);
+      this.initRadarMarkers(opponentsData);
+      this.updateGridStandings();
     } else {
-      // Solo Practice: Hide opponent HUD
-      const oppHud = document.querySelector('.hud-right-opponent');
-      if (oppHud) oppHud.style.display = 'none';
+      // Solo Practice
+      const lb = document.getElementById('hud-leaderboard-panel');
+      if (lb) lb.style.display = 'none';
+      const posPill = document.getElementById('hud-pos-pill');
+      if (posPill) posPill.innerHTML = `<span class="hud-pos-rank">SOLO</span>`;
     }
+  }
+
+  initRadarMarkers(opponentsData) {
+    const radarTrack = document.getElementById('track-radar-bar');
+    if (!radarTrack) return;
+
+    opponentsData.forEach(opp => {
+      const marker = document.createElement('div');
+      marker.className = 'radar-marker opponent-marker';
+      marker.id = `radar-opp-${opp.id}`;
+      marker.style.left = '0%';
+      marker.title = `${opp.name} (${opp.wpm} WPM)`;
+      marker.innerHTML = `
+        <span class="marker-dot" style="background: ${opp.color}"></span>
+      `;
+      radarTrack.appendChild(marker);
+    });
   }
 
   startCountdown() {
     this.isCountdown = true;
     this.isRaceActive = false;
     let count = 3;
+
+    if (this.track3D) {
+      this.track3D.setCountdownState(true);
+    }
 
     const overlay = document.getElementById('race-countdown-overlay');
     const numberEl = document.getElementById('countdown-number');
@@ -371,17 +428,20 @@ export class RaceView {
           if (overlay) overlay.style.display = 'none';
           this.isCountdown = false;
           this.isRaceActive = true;
+          if (this.track3D) {
+            this.track3D.setCountdownState(false);
+          }
           this.startRaceTimer();
 
-          // Seamless transition into high-energy racing music
+          // High-energy racing soundtrack
           musicManager.playRacing(1200);
 
-          // Start AI Opponent if present
-          if (this.aiOpponent) {
-            this.aiOpponent.start(
+          // Start multi-car AI Grid simulation
+          if (this.aiGrid) {
+            this.aiGrid.start(
               this.typingEngine.targetText.length,
-              (oppStats) => this.handleOpponentUpdate(oppStats),
-              (oppFinal) => this.handleOpponentFinish(oppFinal)
+              (updatedOpponents) => this.handleGridUpdate(updatedOpponents),
+              (finalOpponents) => this.handleGridFinish(finalOpponents)
             );
           }
 
@@ -406,7 +466,7 @@ export class RaceView {
     }, 100);
   }
 
-  updateTypingDisplay() {
+  updateTypingDisplay(hadError = false) {
     const stream = document.getElementById('text-passage-stream');
     if (!stream || !this.typingEngine) return;
 
@@ -414,71 +474,99 @@ export class RaceView {
     const curIdx = this.typingEngine.currentIndex;
 
     let html = '';
-    // Window around current index for optimal reading flow
-    const startIdx = Math.max(0, curIdx - 20);
-    const endIdx = Math.min(text.length, curIdx + 60);
+    // Generous reading window (25 characters behind, 75 upcoming)
+    const startIdx = Math.max(0, curIdx - 25);
+    const endIdx = Math.min(text.length, curIdx + 75);
 
     for (let i = startIdx; i < endIdx; i++) {
       const ch = text[i];
-      const displayChar = ch === ' ' ? '&nbsp;' : ch;
+      const displayChar = ch === ' ' ? ' ' : ch;
 
       if (i < curIdx) {
-        html += `<span class="char typed-correct">${displayChar}</span>`;
+        html += `<span class="char typed-correct">${displayChar === ' ' ? '&nbsp;' : displayChar}</span>`;
       } else if (i === curIdx) {
-        html += `<span class="char current-char-caret">${displayChar}</span>`;
+        const errorCls = hadError ? 'char-error' : '';
+        html += `<span class="char current-char-caret ${errorCls}">${displayChar === ' ' ? '&nbsp;' : displayChar}</span>`;
       } else {
-        html += `<span class="char upcoming-char">${displayChar}</span>`;
+        html += `<span class="char upcoming-char">${displayChar === ' ' ? '&nbsp;' : displayChar}</span>`;
       }
     }
 
     stream.innerHTML = html;
   }
 
-  updateHUD(stats) {
+  updatePlayerHUD(stats) {
     const wpmEl = document.getElementById('hud-wpm');
     const accEl = document.getElementById('hud-acc');
     const errEl = document.getElementById('hud-errors');
     const streakEl = document.getElementById('hud-streak');
+    const speedTierEl = document.getElementById('speed-tier-badge');
     const progressFill = document.getElementById('track-progress-fill');
-    const playerMarker = document.getElementById('track-player-marker');
+    const playerMarker = document.getElementById('radar-player-marker');
 
     if (wpmEl) wpmEl.textContent = stats.wpm;
     if (accEl) accEl.textContent = `${stats.accuracy}%`;
     if (errEl) errEl.textContent = stats.errorCount;
-    if (streakEl) streakEl.textContent = stats.currentStreak;
+    if (streakEl) streakEl.textContent = `${stats.currentStreak} 🔥`;
+
+    // Dynamic Speed Tier Badge
+    if (speedTierEl) {
+      if (stats.wpm >= 90) {
+        speedTierEl.textContent = 'HYPERDRIVE';
+        speedTierEl.className = 'speed-tier-badge hyper';
+      } else if (stats.wpm >= 70) {
+        speedTierEl.textContent = 'SUPERSONIC';
+        speedTierEl.className = 'speed-tier-badge supersonic';
+      } else if (stats.wpm >= 45) {
+        speedTierEl.textContent = 'CRUISING';
+        speedTierEl.className = 'speed-tier-badge cruising';
+      } else {
+        speedTierEl.textContent = 'WARMUP';
+        speedTierEl.className = 'speed-tier-badge warmup';
+      }
+    }
 
     const progPercent = Math.min(100, Math.round(stats.progress * 100));
     if (progressFill) progressFill.style.width = `${progPercent}%`;
     if (playerMarker) playerMarker.style.left = `${progPercent}%`;
-
-    // Update position indicator (1st or 2nd)
-    const posVal = document.getElementById('hud-pos-val');
-    if (posVal && this.aiOpponent) {
-      const isAhead = stats.progress >= (this.opponentStats.progress || 0);
-      posVal.innerHTML = isAhead ? `1<small>/2</small>` : `2<small>/2</small>`;
-    }
   }
 
-  updateSpeedometer(wpm) {
-    // Speed: 80 WPM ~ 176 km/h, max 280 km/h
-    const kmh = Math.round(wpm * 2.2);
+  updateCockpitInstruments(wpm) {
+    // Speed: 80 WPM ~ 180 km/h, max ~ 285 km/h
+    const kmh = Math.round(wpm * 2.3);
     const digitalEl = document.getElementById('digital-speed-val');
-    const needleEl = document.getElementById('gauge-needle');
+    const gearEl = document.getElementById('gear-val');
     const rpmValEl = document.getElementById('rpm-val');
     const nitroFill = document.getElementById('nitro-fill');
+    const nitroTag = document.getElementById('nitro-status-tag');
+    const arcFill = document.getElementById('speed-arc-fill');
 
     if (digitalEl) digitalEl.textContent = kmh.toString().padStart(3, '0');
 
-    // Needle rotation: -120 deg (0 km/h) to +120 deg (260 km/h)
-    const ratio = Math.min(1.0, kmh / 240);
-    const deg = -120 + (ratio * 240);
-    if (needleEl) needleEl.style.transform = `rotate(${deg}deg)`;
+    // Gear calculation based on speed
+    if (gearEl) {
+      let gear = 1;
+      if (kmh >= 220) gear = 6;
+      else if (kmh >= 170) gear = 5;
+      else if (kmh >= 125) gear = 4;
+      else if (kmh >= 80) gear = 3;
+      else if (kmh >= 40) gear = 2;
+      gearEl.textContent = `GEAR ${gear}`;
+    }
 
-    // RPM: 1,000 to 9,000 RPM
-    const rpm = Math.round(1000 + ratio * 7800);
+    // SVG Speedometer Arc
+    const ratio = Math.min(1.0, kmh / 260);
+    if (arcFill) {
+      // Stroke dashoffset: 280 (empty) to 0 (full)
+      const offset = 280 - (ratio * 280);
+      arcFill.style.strokeDashoffset = offset;
+    }
+
+    // RPM calculation: 1,200 to 9,200 RPM
+    const rpm = Math.round(1200 + ratio * 8000);
     if (rpmValEl) rpmValEl.textContent = `${rpm.toLocaleString()} RPM`;
 
-    // Tachometer segments
+    // 24 Tachometer Segments
     const activeSegs = Math.round(ratio * 24);
     for (let i = 0; i < 24; i++) {
       const seg = document.getElementById(`tach-seg-${i}`);
@@ -487,76 +575,134 @@ export class RaceView {
       }
     }
 
-    // Nitro gauge
+    // Nitro Surge Fill
     const nitroPercent = Math.min(100, Math.round((wpm / 80) * 100));
     if (nitroFill) nitroFill.style.width = `${nitroPercent}%`;
-  }
-
-  handleOpponentUpdate(stats) {
-    this.opponentStats = stats;
-    const oppWpm = document.getElementById('opp-wpm');
-    const oppMarker = document.getElementById('track-opponent-marker');
-    const oppGap = document.getElementById('opp-gap');
-
-    if (oppWpm) oppWpm.textContent = stats.wpm;
-
-    const progPercent = Math.min(100, Math.round(stats.progress * 100));
-    if (oppMarker) oppMarker.style.left = `${progPercent}%`;
-
-    if (this.track3D) {
-      this.track3D.updateOpponentProgress(stats.id, stats.progress, stats.wpm);
-    }
-
-    if (oppGap && this.typingEngine) {
-      const pProg = this.typingEngine.getProgress();
-      const diff = Math.round((pProg - stats.progress) * 100);
-      if (diff >= 0) {
-        oppGap.textContent = `+${diff}% ahead`;
-        oppGap.className = 'telem-val text-positive font-mono';
+    if (nitroTag) {
+      if (wpm >= 70) {
+        nitroTag.textContent = 'OVERDRIVE ACTIVE!';
+        nitroTag.className = 'nitro-status-tag active';
       } else {
-        oppGap.textContent = `${diff}% behind`;
-        oppGap.className = 'telem-val text-negative font-mono';
+        nitroTag.textContent = 'CHARGING';
+        nitroTag.className = 'nitro-status-tag';
       }
     }
   }
 
-  handleOpponentFinish(oppFinal) {
-    // If AI finishes first and player hasn't
-    if (this.isRaceActive) {
-      const posVal = document.getElementById('hud-pos-val');
-      if (posVal) posVal.innerHTML = `2<small>/2</small>`;
+  handleGridUpdate(opponents) {
+    if (!this.track3D) return;
+
+    // Update 3D opponents & track radar markers
+    opponents.forEach(opp => {
+      this.track3D.updateOpponentProgress(opp.id, opp.progress, opp.wpm);
+
+      const marker = document.getElementById(`radar-opp-${opp.id}`);
+      if (marker) {
+        const pct = Math.min(100, Math.round(opp.progress * 100));
+        marker.style.left = `${pct}%`;
+      }
+    });
+
+    this.updateGridStandings();
+  }
+
+  updateGridStandings() {
+    if (!this.aiGrid || !this.typingEngine) return;
+
+    const playerStats = this.typingEngine.getStats();
+    const result = this.aiGrid.calculateStandings({
+      name: this.profile?.username || 'You',
+      avatar: this.profile?.avatar || '🏎️',
+      carId: this.playerCarId,
+      progress: playerStats.progress,
+      wpm: playerStats.wpm,
+      accuracy: playerStats.accuracy,
+      isFinished: this.typingEngine.isFinished
+    });
+
+    this.currentStandings = result.standings;
+    this.playerRank = result.playerPosition;
+
+    // Check for Overtake event
+    if (this.previousPlayerRank > this.playerRank) {
+      this.showOvertakeNotification(`P${this.previousPlayerRank} ➔ P${this.playerRank}: OVERTAKE!`);
     }
+    this.previousPlayerRank = this.playerRank;
+
+    // Update Top Position Badge
+    const posVal = document.getElementById('hud-pos-val');
+    const posTotal = document.getElementById('hud-pos-total');
+    if (posVal) posVal.textContent = `P${this.playerRank}`;
+    if (posTotal) posTotal.textContent = `/ ${result.totalRacers}`;
+
+    // Render Right Leaderboard Rows
+    const listEl = document.getElementById('leaderboard-racers-list');
+    if (!listEl) return;
+
+    listEl.innerHTML = result.standings.map(r => {
+      const isPlayer = r.isPlayer;
+      const rankBadge = r.rank === 1 ? 'gold' : (r.rank === 2 ? 'silver' : (r.rank === 3 ? 'bronze' : ''));
+      return `
+        <div class="lb-row ${isPlayer ? 'player-row' : ''}">
+          <span class="lb-rank ${rankBadge}">P${r.rank}</span>
+          <span class="lb-avatar">${r.avatar}</span>
+          <div class="lb-details">
+            <span class="lb-name">${r.name}</span>
+            <span class="lb-gap">${r.gapText}</span>
+          </div>
+          <span class="lb-wpm font-mono">${r.wpm} <small>WPM</small></span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  showOvertakeNotification(text) {
+    const toast = document.getElementById('overtake-toast');
+    const toastText = document.getElementById('overtake-text');
+    if (!toast || !toastText) return;
+
+    toastText.textContent = text;
+    toast.classList.remove('hidden');
+
+    clearTimeout(this.overtakeTimeout);
+    this.overtakeTimeout = setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 2200);
+  }
+
+  handleGridFinish(finalOpponents) {
+    this.updateGridStandings();
   }
 
   async handleRaceFinish(finalStats) {
     this.isRaceActive = false;
     clearInterval(this.raceTimerInterval);
-    if (this.aiOpponent) this.aiOpponent.stop();
+    if (this.aiGrid) this.aiGrid.stop();
 
     soundEffects.stopEngine();
     musicManager.duck(0.50, 1100);
     soundEffects.playVictoryFanfare();
 
-    // Crossfade smoothly back to ambient interior music
+    // Crossfade back to ambient music
     musicManager.playInterior(1500);
 
-    const won = !this.aiOpponent || (finalStats.progress >= (this.opponentStats.progress || 0));
+    const isWinner = this.playerRank === 1;
 
-    if (won) {
+    if (isWinner) {
       confetti({
-        particleCount: 100,
-        spread: 80,
+        particleCount: 120,
+        spread: 90,
         origin: { y: 0.6 }
       });
     }
 
-    // Calculate XP earned
+    // XP calculation
     const baseExp = Math.round(finalStats.wpm * 2.5);
     const accuracyBonus = Math.round(finalStats.accuracy * 1.5);
-    const winBonus = won ? 150 : 50;
-    const totalXp = baseExp + accuracyBonus + winBonus;
+    const rankBonus = this.playerRank === 1 ? 180 : (this.playerRank === 2 ? 100 : 50);
+    const totalXp = baseExp + accuracyBonus + rankBonus;
 
-    // Save session to IndexedDB
+    // Save race session to IndexedDB
     const sessionRecord = {
       timestamp: Date.now(),
       mode: this.raceConfig.mode,
@@ -566,21 +712,21 @@ export class RaceView {
       accuracy: finalStats.accuracy,
       errorCount: finalStats.errorCount,
       duration: Math.round(finalStats.elapsedSeconds),
-      won,
-      opponentWpm: this.opponentStats.wpm || 0,
+      won: isWinner,
+      finishRank: this.playerRank,
       cpm: finalStats.cpm,
       consistency: finalStats.consistency,
       keyErrors: finalStats.keyErrors
     };
     await storage.addSession(sessionRecord);
 
-    // Update Player Profile in DB
+    // Update Player Profile
     const profile = await storage.getProfile();
     if (profile) {
       profile.xp = (profile.xp || 0) + totalXp;
       profile.level = Math.floor(profile.xp / 500) + 1;
       profile.racesPlayed = (profile.racesPlayed || 0) + 1;
-      if (won) profile.racesWon = (profile.racesWon || 0) + 1;
+      if (isWinner) profile.racesWon = (profile.racesWon || 0) + 1;
       if (finalStats.wpm > (profile.bestWpm || 0)) {
         profile.bestWpm = finalStats.wpm;
       }
@@ -595,7 +741,7 @@ export class RaceView {
       this.profile = profile;
     }
 
-    // Check unlocks
+    // Vehicle unlocks
     let unlockedVehicleName = null;
     const garage = await storage.getGarage();
     if (garage) {
@@ -611,7 +757,7 @@ export class RaceView {
       }
     }
 
-    this.showResultsModal(finalStats, won, totalXp, unlockedVehicleName);
+    this.showResultsModal(finalStats, isWinner, totalXp, unlockedVehicleName);
   }
 
   showResultsModal(stats, won, xpEarned, unlockedVehicleName) {
@@ -619,11 +765,16 @@ export class RaceView {
     if (!modal) return;
 
     modal.classList.remove('hidden');
+
+    const rankTitle = this.playerRank === 1
+      ? '🏆 1ST PLACE CHAMPION'
+      : (this.playerRank === 2 ? '🥈 2ND PLACE PODIUM' : `🏁 P${this.playerRank} FINISH`);
+
     modal.innerHTML = `
       <div class="results-card card-dark">
-        <div class="results-header ${won ? 'victory' : 'defeat'}">
-          <span class="results-badge">${won ? '🏆 1ST PLACE VICTORY' : '🥈 2ND PLACE FINISH'}</span>
-          <h2 class="results-title">${won ? 'CIRCUIT DOMINATED!' : 'STRONG LAP TIME!'}</h2>
+        <div class="results-header ${won ? 'victory' : 'podium'}">
+          <span class="results-badge">${rankTitle}</span>
+          <h2 class="results-title">${won ? 'CIRCUIT DOMINATED!' : 'STRONG LAP TELEMETRY!'}</h2>
           <p class="results-subtitle">Lap telemetry analyzed and recorded to offline database.</p>
         </div>
 
@@ -645,12 +796,28 @@ export class RaceView {
             <span class="m-val text-negative font-mono">${stats.errorCount}</span>
           </div>
           <div class="metric-cell">
-            <span class="m-label">TIME</span>
+            <span class="m-label">LAP TIME</span>
             <span class="m-val font-mono">${stats.elapsedSeconds}s</span>
           </div>
           <div class="metric-cell">
             <span class="m-label">XP EARNED</span>
             <span class="m-val text-positive font-mono">+${xpEarned} XP</span>
+          </div>
+        </div>
+
+        <!-- Full Grid Standings Table -->
+        <div class="results-standings-section">
+          <h3 class="results-standings-title">FINAL GRID STANDINGS</h3>
+          <div class="results-table">
+            ${this.currentStandings.map(r => `
+              <div class="results-table-row ${r.isPlayer ? 'player-row' : ''}">
+                <span class="res-rank">P${r.rank}</span>
+                <span class="res-avatar">${r.avatar}</span>
+                <span class="res-name">${r.name}</span>
+                <span class="res-wpm font-mono">${r.wpm} WPM</span>
+                <span class="res-acc font-mono">${r.accuracy}% ACC</span>
+              </div>
+            `).join('')}
           </div>
         </div>
 
@@ -675,7 +842,7 @@ export class RaceView {
           <button class="btn btn-outline" id="btn-share-results">
             <span class="btn-icon">📸</span> EXPORT SHARE CARD
           </button>
-          <button class="btn btn-ghost" data-nav="dashboard">
+          <button class="btn btn-ghost" id="btn-results-dashboard">
             RETURN TO DASHBOARD
           </button>
         </div>
@@ -688,7 +855,6 @@ export class RaceView {
     });
 
     document.getElementById('btn-practice-weak-keys')?.addEventListener('click', () => {
-      // Collect weak keys
       const weakKeys = Object.keys(stats.keyErrors);
       const drillText = weakKeys.length > 0
         ? weakKeys.map(k => `${k}${k}${k} ${k}a${k} ${k}e${k} ${k}o${k}`).join(' ')
@@ -703,10 +869,15 @@ export class RaceView {
         wpm: stats.wpm,
         accuracy: stats.accuracy,
         consistency: stats.consistency,
-        rank: this.profile?.league || 'Silver II',
+        rank: `P${this.playerRank}`,
         carName: this.playerCarId.toUpperCase(),
         mode: this.raceConfig.mode
       });
+    });
+
+    document.getElementById('btn-results-dashboard')?.addEventListener('click', () => {
+      this.dispose();
+      this.app.showScreen('dashboard');
     });
   }
 
@@ -805,15 +976,15 @@ export class RaceView {
       clearInterval(this.raceTimerInterval);
       this.raceTimerInterval = null;
     }
-    if (this.aiOpponent) {
-      this.aiOpponent.stop();
-      this.aiOpponent = null;
+    if (this.aiGrid) {
+      this.aiGrid.stop();
+      this.aiGrid = null;
     }
     this.isRaceActive = false;
     this.isPaused = false;
     soundEffects.stopEngine();
 
-    // Ensure safe return to interior ambient music when exiting or resetting race
+    // Crossfade smoothly back to ambient music
     musicManager.playInterior(1500);
 
     if (this.track3D) {

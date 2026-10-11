@@ -10,6 +10,7 @@ import { musicManager } from './audio/musicManager.js';
 import { NavigationManager } from './ui/navigation.js';
 import { LandingView } from './ui/landingView.js';
 import { DashboardView } from './ui/dashboardView.js';
+import { RaceModesView } from './ui/raceModesView.js';
 import { RaceView } from './ui/raceView.js';
 import { DiagnosticView } from './ui/diagnosticView.js';
 import { MultiplayerView } from './ui/multiplayerView.js';
@@ -25,7 +26,7 @@ class KeyRushApp {
   constructor() {
     this.navManager = null;
     this.currentViewInstance = null;
-    this.currentScreen = 'landing';
+    this.currentScreen = 'dashboard';
     this.profile = null;
     this.settings = null;
   }
@@ -46,12 +47,26 @@ class KeyRushApp {
     // 3. Setup Navigation Controller
     this.navManager = new NavigationManager(this);
 
-    // 4. Render Layout Shell
+    // 4. Render Layout Shell (Persistent Master Navigation)
     this.renderShell();
     this.navManager.bindEvents();
 
-    // 5. Initial View Route
-    this.showScreen('landing');
+    // 5. Initial View Route — check hash or default to Home Dashboard
+    const validScreens = ['landing', 'dashboard', 'race', 'race-modes', 'diagnostic', 'academy', 'garage', 'leaderboard', 'analytics', 'missions', 'settings'];
+    const initialHash = window.location.hash.replace('#', '').trim();
+    if (initialHash && validScreens.includes(initialHash)) {
+      this.showScreen(initialHash);
+    } else {
+      this.showScreen('dashboard');
+    }
+
+    // Support browser back/forward buttons
+    window.addEventListener('hashchange', () => {
+      const targetHash = window.location.hash.replace('#', '').trim();
+      if (targetHash && validScreens.includes(targetHash) && targetHash !== this.currentScreen) {
+        this.showScreen(targetHash);
+      }
+    });
 
     // 6. Register PWA Service Worker if supported
     this.registerServiceWorker();
@@ -60,20 +75,15 @@ class KeyRushApp {
   renderShell() {
     const appEl = document.getElementById('app');
     if (!appEl) return;
-
-    appEl.innerHTML = `
-      <div id="header-mount">
-        ${this.navManager.renderHeader(this.profile)}
-      </div>
-      <main id="main-content" class="main-content-area"></main>
-    `;
+    appEl.innerHTML = this.navManager.renderShell(this.profile);
   }
 
   async updateHeader() {
     this.profile = await storage.getProfile();
-    const headerMount = document.getElementById('header-mount');
-    if (headerMount && this.navManager) {
-      headerMount.innerHTML = this.navManager.renderHeader(this.profile);
+    const userChip = document.getElementById('dash-user-chip');
+    if (userChip && this.profile) {
+      const nameEl = userChip.querySelector('.dash-user-name');
+      if (nameEl) nameEl.textContent = this.profile.username || 'Kartik';
     }
   }
 
@@ -85,42 +95,36 @@ class KeyRushApp {
     }
 
     this.currentScreen = screenId;
+    if (window.location.hash !== `#${screenId}`) {
+      history.replaceState(null, '', `#${screenId}`);
+    }
     const mainEl = document.getElementById('main-content');
     if (!mainEl) return;
 
     // Refresh profile in case stats changed
     this.profile = await storage.getProfile();
 
-    const headerMount = document.getElementById('header-mount');
-    if (headerMount) {
-      if (screenId === 'landing' || screenId === 'dashboard') {
-        headerMount.style.display = 'none';
-      } else {
-        headerMount.style.display = 'block';
-        await this.updateHeader();
-      }
+    // Highlight current active tab in left sidebar and handle race mode full-width
+    if (this.navManager) {
+      this.navManager.setActiveScreen(screenId);
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Music Management:
-    // User requirement: No song/music on the landing page!
-    if (screenId === 'landing') {
-      musicManager.fadeOutAndStop(400);
-    } else if (screenId !== 'race') {
-      // Non-landing, non-race screens play ambient interior music
+    if (screenId !== 'race') {
       musicManager.playInterior();
     }
 
     switch (screenId) {
-      case 'landing':
-        this.currentViewInstance = new LandingView(mainEl, this);
-        this.currentViewInstance.render(this.profile);
-        break;
-
       case 'dashboard':
         this.currentViewInstance = new DashboardView(mainEl, this);
         await this.currentViewInstance.render(this.profile);
+        break;
+
+      case 'race-modes':
+        this.currentViewInstance = new RaceModesView(mainEl, this);
+        await this.currentViewInstance.render();
         break;
 
       case 'race':
@@ -130,16 +134,6 @@ class KeyRushApp {
 
       case 'diagnostic':
         this.currentViewInstance = new DiagnosticView(mainEl, this);
-        await this.currentViewInstance.render();
-        break;
-
-      case 'multiplayer':
-        this.currentViewInstance = new MultiplayerView(mainEl, this);
-        await this.currentViewInstance.render();
-        break;
-
-      case 'ai-select':
-        this.currentViewInstance = new AiSelectView(mainEl, this);
         await this.currentViewInstance.render();
         break;
 
@@ -173,9 +167,24 @@ class KeyRushApp {
         await this.currentViewInstance.render();
         break;
 
-      default:
+      case 'multiplayer':
+        this.currentViewInstance = new MultiplayerView(mainEl, this);
+        await this.currentViewInstance.render();
+        break;
+
+      case 'ai-select':
+        this.currentViewInstance = new AiSelectView(mainEl, this);
+        await this.currentViewInstance.render();
+        break;
+
+      case 'landing':
         this.currentViewInstance = new LandingView(mainEl, this);
         this.currentViewInstance.render(this.profile);
+        break;
+
+      default:
+        this.currentViewInstance = new DashboardView(mainEl, this);
+        await this.currentViewInstance.render(this.profile);
         break;
     }
   }

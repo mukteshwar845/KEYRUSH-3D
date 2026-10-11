@@ -21,14 +21,26 @@ export class SettingsView {
     const notifPermission = NotificationManager.getPermissionState();
 
     this.container.innerHTML = `
-      <div class="settings-screen-wrapper">
-        <div class="screen-header">
-          <span class="section-tag">SYSTEM CONFIGURATION</span>
-          <h1 class="screen-title">SETTINGS & OFFLINE PREFERENCES</h1>
-          <p class="screen-subtitle">
-            Configure audio synthesis, mechanical switch tones, difficulty penalties,
-            and manage your local offline database.
-          </p>
+      <div class="dash-page-container">
+        <!-- Section Hero Banner -->
+        <div class="dash-section-hero card-dark">
+          <div class="section-hero-content">
+            <span class="section-tag-pill">SYSTEM CONFIGURATION</span>
+            <h1 class="dash-page-title">SETTINGS & OFFLINE PREFERENCES</h1>
+            <p class="dash-page-desc">
+              Configure audio synthesis, mechanical switch tones, difficulty penalties, and manage your local offline database.
+            </p>
+          </div>
+          <div class="section-hero-stats">
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">OFFLINE DATABASE</span>
+              <span class="stat-pill-val highlight-cyan font-mono">INDEXEDDB OK</span>
+            </div>
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">AUDIO ENGINE</span>
+              <span class="stat-pill-val text-gold font-mono">WEB AUDIO SYNTH</span>
+            </div>
+          </div>
         </div>
 
         <div class="settings-grid">
@@ -96,10 +108,15 @@ export class SettingsView {
 
             <div class="setting-item">
               <div class="s-info">
-                <strong>Audio Mute</strong>
-                <span>Silence all music and sound effects (preserves chosen volume levels)</span>
+                <strong>Background Music</strong>
+                <span>Atmospheric cyberpunk soundtrack across menus, garage, academy and landing</span>
               </div>
-              <input type="checkbox" id="setting-audio-muted" ${settings?.musicMuted ? 'checked' : ''} class="custom-toggle">
+              <div class="setting-toggle-wrapper">
+                <input type="checkbox" id="setting-music-enabled" ${!settings?.musicMuted ? 'checked' : ''} class="custom-toggle">
+                <span class="setting-toggle-badge ${!settings?.musicMuted ? 'badge-active' : 'badge-muted'}" id="setting-music-badge">
+                  ${!settings?.musicMuted ? '🔊 Active' : '🔇 Muted'}
+                </span>
+              </div>
             </div>
 
             <div class="setting-item">
@@ -108,8 +125,8 @@ export class SettingsView {
                 <span>Overall game volume level</span>
               </div>
               <div class="slider-with-label">
-                <input type="range" id="setting-master-vol" min="0" max="1" step="0.05" value="${settings?.masterVolume ?? 0.70}" class="custom-slider">
-                <span class="vol-label-val font-mono" id="master-vol-val">${Math.round((settings?.masterVolume ?? 0.70) * 100)}%</span>
+                <input type="range" id="setting-master-vol" min="0" max="1" step="0.05" value="${settings?.masterVolume ?? 0.80}" class="custom-slider">
+                <span class="vol-label-val font-mono" id="master-vol-val">${Math.round((settings?.masterVolume ?? 0.80) * 100)}%</span>
               </div>
             </div>
 
@@ -119,8 +136,8 @@ export class SettingsView {
                 <span>Menu, dashboard, garage, and academy soundtrack (interior_music.mp3)</span>
               </div>
               <div class="slider-with-label">
-                <input type="range" id="setting-interior-vol" min="0" max="1" step="0.01" value="${settings?.interiorVolume ?? 0.15}" class="custom-slider">
-                <span class="vol-label-val font-mono" id="interior-vol-val">${Math.round((settings?.interiorVolume ?? 0.15) * 100)}%</span>
+                <input type="range" id="setting-interior-vol" min="0" max="1" step="0.01" value="${settings?.interiorVolume ?? 0.55}" class="custom-slider">
+                <span class="vol-label-val font-mono" id="interior-vol-val">${Math.round((settings?.interiorVolume ?? 0.55) * 100)}%</span>
               </div>
             </div>
 
@@ -130,8 +147,8 @@ export class SettingsView {
                 <span>Active race soundtrack (racing_music.mp3)</span>
               </div>
               <div class="slider-with-label">
-                <input type="range" id="setting-racing-vol" min="0" max="1" step="0.01" value="${settings?.racingVolume ?? 0.22}" class="custom-slider">
-                <span class="vol-label-val font-mono" id="racing-vol-val">${Math.round((settings?.racingVolume ?? 0.22) * 100)}%</span>
+                <input type="range" id="setting-racing-vol" min="0" max="1" step="0.01" value="${settings?.racingVolume ?? 0.65}" class="custom-slider">
+                <span class="vol-label-val font-mono" id="racing-vol-val">${Math.round((settings?.racingVolume ?? 0.65) * 100)}%</span>
               </div>
             </div>
 
@@ -141,8 +158,8 @@ export class SettingsView {
                 <span>Countdown beeps, nitro turbo, mechanical switches, and victory fanfare</span>
               </div>
               <div class="slider-with-label">
-                <input type="range" id="setting-sfx-vol" min="0" max="1" step="0.05" value="${settings?.sfxVolume ?? 0.35}" class="custom-slider">
-                <span class="vol-label-val font-mono" id="sfx-vol-val">${Math.round((settings?.sfxVolume ?? 0.35) * 100)}%</span>
+                <input type="range" id="setting-sfx-vol" min="0" max="1" step="0.05" value="${settings?.sfxVolume ?? 0.60}" class="custom-slider">
+                <span class="vol-label-val font-mono" id="sfx-vol-val">${Math.round((settings?.sfxVolume ?? 0.60) * 100)}%</span>
               </div>
             </div>
 
@@ -275,19 +292,26 @@ export class SettingsView {
   }
 
   bindEvents(settings, profile) {
-    // Live Volume Sliders & Mute
+    // Live Volume Sliders & Background Music Toggle
     const masterSlider = document.getElementById('setting-master-vol');
     const interiorSlider = document.getElementById('setting-interior-vol');
     const racingSlider = document.getElementById('setting-racing-vol');
     const sfxSlider = document.getElementById('setting-sfx-vol');
-    const muteToggle = document.getElementById('setting-audio-muted');
+    const musicToggle = document.getElementById('setting-music-enabled');
+    const musicBadge = document.getElementById('setting-music-badge');
 
     const handleLiveAudioUpdate = () => {
-      const masterVolume = parseFloat(masterSlider?.value ?? 0.70);
-      const interiorVolume = parseFloat(interiorSlider?.value ?? 0.15);
-      const racingVolume = parseFloat(racingSlider?.value ?? 0.22);
-      const sfxVolume = parseFloat(sfxSlider?.value ?? 0.35);
-      const musicMuted = Boolean(muteToggle?.checked);
+      const masterVolume = parseFloat(masterSlider?.value ?? 0.80);
+      const interiorVolume = parseFloat(interiorSlider?.value ?? 0.55);
+      const racingVolume = parseFloat(racingSlider?.value ?? 0.65);
+      const sfxVolume = parseFloat(sfxSlider?.value ?? 0.60);
+      const isMusicEnabled = Boolean(musicToggle?.checked);
+      const musicMuted = !isMusicEnabled;
+
+      if (musicBadge) {
+        musicBadge.textContent = isMusicEnabled ? '🔊 Active' : '🔇 Muted';
+        musicBadge.className = `setting-toggle-badge ${isMusicEnabled ? 'badge-active' : 'badge-muted'}`;
+      }
 
       const masterLabel = document.getElementById('master-vol-val');
       const interiorLabel = document.getElementById('interior-vol-val');
@@ -316,7 +340,7 @@ export class SettingsView {
     interiorSlider?.addEventListener('input', handleLiveAudioUpdate);
     racingSlider?.addEventListener('input', handleLiveAudioUpdate);
     sfxSlider?.addEventListener('input', handleLiveAudioUpdate);
-    muteToggle?.addEventListener('change', handleLiveAudioUpdate);
+    musicToggle?.addEventListener('change', handleLiveAudioUpdate);
 
     // Audio Preview buttons
     document.getElementById('btn-preview-interior')?.addEventListener('click', () => {
@@ -339,7 +363,11 @@ export class SettingsView {
       if (interiorSlider) interiorSlider.value = defs.interiorVolume.toString();
       if (racingSlider) racingSlider.value = defs.racingVolume.toString();
       if (sfxSlider) sfxSlider.value = defs.sfxVolume.toString();
-      if (muteToggle) muteToggle.checked = defs.musicMuted;
+      if (musicToggle) musicToggle.checked = !defs.musicMuted;
+      if (musicBadge) {
+        musicBadge.textContent = !defs.musicMuted ? '🔊 Active' : '🔇 Muted';
+        musicBadge.className = `setting-toggle-badge ${!defs.musicMuted ? 'badge-active' : 'badge-muted'}`;
+      }
 
       const masterLabel = document.getElementById('master-vol-val');
       const interiorLabel = document.getElementById('interior-vol-val');
@@ -363,11 +391,12 @@ export class SettingsView {
       const dailyGoal = parseInt(document.getElementById('setting-daily-goal')?.value, 10) || 15;
       const keyboardClickSound = document.getElementById('setting-click-sound')?.value || 'cherry-blue';
       const engineAudio = document.getElementById('setting-engine-audio')?.checked ?? true;
-      const sfxVolume = parseFloat(document.getElementById('setting-sfx-vol')?.value) || 0.35;
-      const masterVolume = parseFloat(document.getElementById('setting-master-vol')?.value) || 0.70;
-      const interiorVolume = parseFloat(document.getElementById('setting-interior-vol')?.value) || 0.15;
-      const racingVolume = parseFloat(document.getElementById('setting-racing-vol')?.value) || 0.22;
-      const musicMuted = Boolean(document.getElementById('setting-audio-muted')?.checked);
+      const sfxVolume = parseFloat(document.getElementById('setting-sfx-vol')?.value) || 0.60;
+      const masterVolume = parseFloat(document.getElementById('setting-master-vol')?.value) || 0.80;
+      const interiorVolume = parseFloat(document.getElementById('setting-interior-vol')?.value) || 0.55;
+      const racingVolume = parseFloat(document.getElementById('setting-racing-vol')?.value) || 0.65;
+      const isMusicEnabled = Boolean(document.getElementById('setting-music-enabled')?.checked);
+      const musicMuted = !isMusicEnabled;
       const notifs = document.getElementById('setting-notifs-enabled')?.checked ?? true;
 
       const newSettings = {

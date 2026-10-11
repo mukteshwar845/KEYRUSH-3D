@@ -20,14 +20,26 @@ export class DiagnosticView {
 
   render() {
     this.container.innerHTML = `
-      <div class="diagnostic-screen-wrapper">
-        <div class="screen-header text-center">
-          <span class="section-tag">CALIBRATION & GRADING</span>
-          <h1 class="screen-title">SKILL ASSESSMENT & DIFFICULTY</h1>
-          <p class="screen-subtitle">
-            Choose your competitive circuit tier manually or complete a 45-second diagnostic telemetry run
-            to receive an algorithmically recommended skill tier based on speed, accuracy, and cadence.
-          </p>
+      <div class="dash-page-container">
+        <!-- Section Hero Banner -->
+        <div class="dash-section-hero card-dark">
+          <div class="section-hero-content">
+            <span class="section-tag-pill">CALIBRATION & GRADING</span>
+            <h1 class="dash-page-title">PRACTICE & SKILL ASSESSMENT</h1>
+            <p class="dash-page-desc">
+              Choose your competitive circuit tier manually or complete a 45-second diagnostic telemetry run to calibrate your recommended AI opponent challenge.
+            </p>
+          </div>
+          <div class="section-hero-stats">
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">BENCHMARK TEST</span>
+              <span class="stat-pill-val highlight-cyan font-mono">45 SECONDS</span>
+            </div>
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">SKILL TIERS</span>
+              <span class="stat-pill-val text-gold font-mono">4 TIERS</span>
+            </div>
+          </div>
         </div>
 
         <!-- TWO PATHWAYS TABS -->

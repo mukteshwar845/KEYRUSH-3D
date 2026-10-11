@@ -32,13 +32,26 @@ export class LeaderboardView {
     const garage = await storage.getGarage();
 
     this.container.innerHTML = `
-      <div class="leaderboard-screen-wrapper">
-        <div class="screen-header">
-          <span class="section-tag">GLOBAL COMPETITIVE STANDINGS</span>
-          <h1 class="screen-title">RANKED CHAMPIONSHIP LEAGUES</h1>
-          <p class="screen-subtitle">
-            Verified typing telemetry across worldwide circuits. Compete to ascend the ranked tiers from Bronze to Apex Legend.
-          </p>
+      <div class="dash-page-container">
+        <!-- Section Hero Banner -->
+        <div class="dash-section-hero card-dark">
+          <div class="section-hero-content">
+            <span class="section-tag-pill">GLOBAL ESPORTS STANDINGS</span>
+            <h1 class="dash-page-title">RANKED CHAMPIONSHIP LEAGUES</h1>
+            <p class="dash-page-desc">
+              Verified typing telemetry across worldwide circuits. Compete to ascend the ranked tiers from Bronze to Apex Legend.
+            </p>
+          </div>
+          <div class="section-hero-stats">
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">YOUR RANK</span>
+              <span class="stat-pill-val highlight-cyan font-mono">#4 GLOBAL</span>
+            </div>
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">ACTIVE TIER</span>
+              <span class="stat-pill-val text-gold font-mono">SILVER II</span>
+            </div>
+          </div>
         </div>
 
         <!-- LEAGUE TIERS STRIP -->

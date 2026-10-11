@@ -23,11 +23,11 @@ export const AUDIO_PATHS = {
 };
 
 export const RECOMMENDED_AUDIO_MIX = {
-  masterVolume: 0.70,   // 70% Master
-  interiorVolume: 0.15, // 15% of Master (Effective: ~10.5% output)
-  racingVolume: 0.22,   // 22% of Master (Effective: ~15.4% output)
-  sfxVolume: 0.35,      // 35% of Master (Effective: ~24.5% output)
-  engineVolume: 0.40,   // 40% of Master (Effective: ~28.0% output)
+  masterVolume: 0.80,   // 80% Master
+  interiorVolume: 0.55, // 55% of Master (Effective: ~44% output — rich ambient soundtrack)
+  racingVolume: 0.65,   // 65% of Master (Effective: ~52% output — energetic race soundtrack)
+  sfxVolume: 0.60,      // 60% of Master
+  engineVolume: 0.50,   // 50% of Master
   musicMuted: false
 };
 
@@ -79,36 +79,56 @@ class MusicManager {
     this.racingAudio.addEventListener('error', (e) => {
       console.warn('[MusicManager] Racing audio element load warning:', e);
     });
+
+    // Seamless loop watchdog: automatically re-triggers if browser loop glitches
+    this.interiorAudio.addEventListener('ended', () => {
+      if (this.currentMode === 'interior' && !this.muted) {
+        this.interiorAudio.currentTime = 0;
+        this.interiorAudio.play().catch(() => {});
+      }
+    });
+    this.racingAudio.addEventListener('ended', () => {
+      if (this.currentMode === 'racing' && !this.muted) {
+        this.racingAudio.currentTime = 0;
+        this.racingAudio.play().catch(() => {});
+      }
+    });
   }
 
   _setupAutoplayUnlock() {
     const unlockHandler = () => {
       this.unlock();
-      ['pointerdown', 'keydown', 'click', 'touchstart'].forEach((evt) => {
-        window.removeEventListener(evt, unlockHandler);
-      });
+      // Only remove global event listeners when audio playback has verified active
+      const isInteriorPlaying = this.currentMode === 'interior' && !this.interiorAudio.paused;
+      const isRacingPlaying = this.currentMode === 'racing' && !this.racingAudio.paused;
+      if (isInteriorPlaying || isRacingPlaying || this.muted) {
+        ['pointerdown', 'keydown', 'click', 'touchstart'].forEach((evt) => {
+          window.removeEventListener(evt, unlockHandler);
+        });
+      }
     };
 
     ['pointerdown', 'keydown', 'click', 'touchstart'].forEach((evt) => {
-      window.addEventListener(evt, unlockHandler, { once: true, passive: true });
+      window.addEventListener(evt, unlockHandler, { passive: true });
     });
   }
 
   unlock() {
-    if (this._isUnlocked) return;
     this._isUnlocked = true;
 
     // Prime Web Audio synthesizer
     soundEffects.ensureContext();
 
-    // Start pending track if one was queued prior to first interaction
-    if (this._pendingMode) {
-      const mode = this._pendingMode;
-      this._pendingMode = null;
-      if (mode === 'interior') {
-        this.playInterior(1500, true);
-      } else if (mode === 'racing') {
-        this.playRacing(1200);
+    // Start playback if not muted
+    if (!this.muted) {
+      if (this.currentMode === 'racing') {
+        if (this.racingAudio.paused) {
+          this.playRacing(1000);
+        }
+      } else {
+        if (this.interiorAudio.paused) {
+          this.playInterior(1200, true);
+        }
       }
     }
   }
@@ -522,10 +542,23 @@ class MusicManager {
 
     // Update active tracks immediately if not mid-crossfade
     if (!this._fadeAnimationId) {
-      if (this.currentMode === 'interior' && !this.interiorAudio.paused) {
-        this.interiorAudio.volume = this.getTargetInteriorVolume();
-      } else if (this.currentMode === 'racing' && !this.racingAudio.paused) {
-        this.racingAudio.volume = this.getTargetRacingVolume();
+      if (!this.muted) {
+        if (this.currentMode === 'interior') {
+          if (this.interiorAudio.paused) {
+            this.playInterior(1000, true);
+          } else {
+            this.interiorAudio.volume = this.getTargetInteriorVolume();
+          }
+        } else if (this.currentMode === 'racing') {
+          if (this.racingAudio.paused) {
+            this.playRacing(1000);
+          } else {
+            this.racingAudio.volume = this.getTargetRacingVolume();
+          }
+        }
+      } else {
+        this.interiorAudio.volume = 0;
+        this.racingAudio.volume = 0;
       }
     }
   }
@@ -559,15 +592,18 @@ class MusicManager {
 
   async toggleMute(persist = true) {
     this.muted = !this.muted;
-    this.applySettings();
+    this.applySettings({ musicMuted: this.muted });
     if (persist) await this._persistSettings();
+    window.dispatchEvent(new CustomEvent('keyrush:audio-toggle', { detail: { muted: this.muted } }));
     return this.muted;
   }
 
   async setMuted(isMuted, persist = true) {
     this.muted = Boolean(isMuted);
-    this.applySettings();
+    this.applySettings({ musicMuted: this.muted });
     if (persist) await this._persistSettings();
+    window.dispatchEvent(new CustomEvent('keyrush:audio-toggle', { detail: { muted: this.muted } }));
+    return this.muted;
   }
 
   /**

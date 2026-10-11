@@ -117,11 +117,11 @@ class KeyRushStorage {
         theme: 'cyber-dark',
         soundEffects: true,
         engineAudio: true,
-        sfxVolume: 0.35,
-        engineVolume: 0.40,
-        masterVolume: 0.70,
-        interiorVolume: 0.15,
-        racingVolume: 0.22,
+        sfxVolume: 0.60,
+        engineVolume: 0.50,
+        masterVolume: 0.80,
+        interiorVolume: 0.55,
+        racingVolume: 0.65,
         musicMuted: false,
         keyboardClickSound: 'cherry-blue', // cherry-blue, mx-red, cyber-blip, off
         errorPenalty: 'standard', // forgiving, standard, hardcore
@@ -267,11 +267,11 @@ class KeyRushStorage {
       req.onsuccess = () => {
         const res = req.result;
         if (res) {
-          if (res.masterVolume === undefined) res.masterVolume = 0.70;
-          if (res.interiorVolume === undefined) res.interiorVolume = 0.15;
-          if (res.racingVolume === undefined) res.racingVolume = 0.22;
-          if (res.sfxVolume === undefined) res.sfxVolume = 0.35;
-          if (res.engineVolume === undefined) res.engineVolume = 0.40;
+          if (res.masterVolume === undefined) res.masterVolume = 0.80;
+          if (res.interiorVolume === undefined) res.interiorVolume = 0.55;
+          if (res.racingVolume === undefined) res.racingVolume = 0.65;
+          if (res.sfxVolume === undefined) res.sfxVolume = 0.60;
+          if (res.engineVolume === undefined) res.engineVolume = 0.50;
           if (res.musicMuted === undefined) res.musicMuted = false;
         }
         resolve(res || null);

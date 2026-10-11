@@ -26,26 +26,28 @@ export class AnalyticsView {
     const weakKeysMap = profile?.weakKeys || {};
 
     this.container.innerHTML = `
-      <div class="analytics-screen-wrapper">
-        <div class="screen-header flex-between">
-          <div>
-            <span class="section-tag">TELEMETRY & DATA SCIENCE</span>
-            <h1 class="screen-title">PERFORMANCE ANALYTICS</h1>
-            <p class="screen-subtitle">
-              Comprehensive telemetry derived from local session logs. Zero external tracking.
+      <div class="dash-page-container">
+        <!-- Section Hero Banner -->
+        <div class="dash-section-hero card-dark">
+          <div class="section-hero-content">
+            <span class="section-tag-pill">TELEMETRY & DATA SCIENCE</span>
+            <h1 class="dash-page-title">PERFORMANCE ANALYTICS & TELEMETRY</h1>
+            <p class="dash-page-desc">
+              Comprehensive telemetry derived from local session logs. Zero external tracking. Analyze speed progression, cadence stability, and key accuracy.
             </p>
           </div>
-
-          <div class="export-actions-group">
-            <button class="btn btn-outline" id="btn-export-csv">
-              📥 Export CSV
-            </button>
-            <button class="btn btn-outline" id="btn-export-json">
-              📥 Export JSON
-            </button>
-            <button class="btn btn-primary glow-primary" id="btn-export-share-card">
-              📸 Share Card
-            </button>
+          <div class="section-hero-stats">
+            <div class="export-actions-group">
+              <button class="btn btn-outline" id="btn-export-csv">
+                📥 Export CSV
+              </button>
+              <button class="btn btn-outline" id="btn-export-json">
+                📥 Export JSON
+              </button>
+              <button class="btn btn-primary glow-primary" id="btn-export-share-card">
+                📸 Share Card
+              </button>
+            </div>
           </div>
         </div>
 

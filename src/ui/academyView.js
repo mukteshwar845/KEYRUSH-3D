@@ -15,14 +15,26 @@ export class AcademyView {
 
   render() {
     this.container.innerHTML = `
-      <div class="academy-screen-wrapper">
-        <div class="screen-header">
-          <span class="section-tag">TOUCH-TYPING ACADEMY</span>
-          <h1 class="screen-title">FINGER POSTURE & AGILITY LABORATORY</h1>
-          <p class="screen-subtitle">
-            Master the ergonomic home-row discipline used by professional esports touch-typists.
-            Eliminate sight-typing, minimize finger displacement, and maximize muscle memory.
-          </p>
+      <div class="dash-page-container">
+        <!-- Section Hero Banner -->
+        <div class="dash-section-hero card-dark">
+          <div class="section-hero-content">
+            <span class="section-tag-pill">TOUCH-TYPING ACADEMY</span>
+            <h1 class="dash-page-title">FINGER POSTURE & AGILITY LABORATORY</h1>
+            <p class="dash-page-desc">
+              Master the ergonomic home-row discipline used by professional esports touch-typists. Eliminate sight-typing, minimize displacement, and maximize muscle memory.
+            </p>
+          </div>
+          <div class="section-hero-stats">
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">LESSON TRACK</span>
+              <span class="stat-pill-val highlight-cyan font-mono">5 MODULES</span>
+            </div>
+            <div class="stat-pill-item">
+              <span class="stat-pill-label">ERGONOMIC STANDARD</span>
+              <span class="stat-pill-val text-gold font-mono">QWERTY 10-FINGER</span>
+            </div>
+          </div>
         </div>
 
         <!-- FINGER COLOR-CODE LEGEND -->
