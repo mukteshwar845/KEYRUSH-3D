@@ -1,60 +1,42 @@
 /**
- * KEYRUSH — Next-Gen 3D Esports Motorsport Typing Simulator
- * High-Impact Modern Landing Page Showcase
- * Features:
- * - Floating glassmorphic navigation header with quick links & instant game launch
- * - Cyberpunk hero section with live telemetry chips, glowing hypercar centerpiece & instant CTAs
- * - Interactive "Type-To-Accelerate" live speed playground demo right on the landing page
- * - 5-Supercar interactive showroom with live stat meters & garage links
- * - 5 Game Modes arena cards (Solo, AI, Local, Online, Ranked)
- * - Ranked Leagues ladder (Bronze to Apex Legend) & global leaderboard preview
- * - Technology & engineering pillars (Three.js 3D, Offline-First, Audio Synthesis, Telemetry)
- * - High-energy CTA finale & responsive esports footer
+ * KEYRUSH — Next-Gen Esports Motorsport Typing Simulator
+ * Landing & Overview Page
+ * Redesigned to match reference specifications:
+ * - Top Navbar: Brand, 7 Navigation Links, Offline Status, Notifications, Settings, Login, Get Started
+ * - Hero Stage: Cyberpunk night city hypercar showcase, "TYPE FASTER. RACE HARDER.", CTAs & 4 Feature Badges
+ * - Game Modes: "Choose Your Challenge" 5-column grid (Solo, AI, Local, Online, Ranked)
+ * - Value Proposition Bar: Unlock Epic Cars, Global Leaderboard, Daily Tournaments, Works Offline, Banner Card
+ * - Interactive Trailer & Login Modals
  */
 
 import { soundEffects } from '../audio/soundEffects.js';
 import { musicManager } from '../audio/musicManager.js';
-import { VEHICLE_CATALOG } from '../graphics/carModels.js';
+import { storage } from '../db/storage.js';
 
 export class LandingView {
   constructor(container, app) {
     this.container = container;
     this.app = app;
     this.profile = null;
-    this.activeCarIndex = 0;
-    
-    // Interactive Mini-Demo Sprint State
-    this.demoText = 'type with lightning cadence to engage turbo nitro and cross the finish line';
-    this.typedChars = 0;
-    this.demoStartTime = null;
-    this.demoWpm = 0;
-    this.demoCompleted = false;
-    this.onKeyDownDemo = null;
+    this.trailerOpen = false;
   }
 
-  render(profile) {
-    this.profile = profile || {};
-    // Ensure calm interior music plays on landing showcase
+  async render(profile) {
+    this.profile = profile || (await storage.getProfile()) || {};
     musicManager.playInterior(1500, true);
-
-    const cars = VEHICLE_CATALOG || [
-      { id: 'talon', name: 'Apex Talon', tier: 'Tier 1 Starter', rarity: 'Common', baseTopSpeed: '160 KM/H', acceleration: '4.2s (0-100)', handling: 'Aero Grip A+', description: 'Agile cyber-coupe engineered for crisp responsiveness and novice racers.' },
-      { id: 'vortex', name: 'Vortex R34', tier: 'Tier 2 Street', rarity: 'Rare', baseTopSpeed: '210 KM/H', acceleration: '3.4s (0-100)', handling: 'Drift Spec S', description: 'Twin-turbo grand tourer built for high-cadence cornering and drift recovery.' },
-      { id: 'phantom', name: 'Phantom GT', tier: 'Tier 3 Pro', rarity: 'Epic', baseTopSpeed: '260 KM/H', acceleration: '2.8s (0-100)', handling: 'Downforce SS', description: 'Track-focused aerodynamic missile engineered with active ground effects.' },
-      { id: 'nebula', name: 'Nebula ZX', tier: 'Tier 4 Elite', rarity: 'Legendary', baseTopSpeed: '320 KM/H', acceleration: '2.2s (0-100)', handling: 'Active Vector SSS', description: 'Quad-motor electric prototype delivering instant acceleration and raw speed.' },
-      { id: 'chronos', name: 'Chronos V12', tier: 'Tier 5 Apex', rarity: 'Mythic', baseTopSpeed: '380 KM/H', acceleration: '1.8s (0-100)', handling: 'Apex Ground Effect', description: 'The undisputed championship hypercar reserved exclusively for Apex Legends.' }
-    ];
 
     this.container.innerHTML = `
       <div class="landing-universe" id="landing-root">
-        <!-- 1. FLOATING MODERN GLASS NAVBAR -->
-        <header class="landing-navbar">
-          <div class="nav-brand" role="button" tabindex="0" data-nav="landing">
+        
+        <!-- 1. TOP NAVBAR (GLASSMORPHIC FULL-WIDTH) -->
+        <header class="landing-navbar" id="landing-navbar">
+          <!-- Left Logo -->
+          <div class="nav-brand" role="button" tabindex="0" data-nav="landing" title="KEYRUSH Home">
             <div class="nav-brand-bolt">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="url(#brandGrad)" stroke="#00D9FF" stroke-width="1.2" stroke-linejoin="round"/>
+                <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="url(#navBoltGrad)" stroke="#00D9FF" stroke-width="1.2" stroke-linejoin="round"/>
                 <defs>
-                  <linearGradient id="brandGrad" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+                  <linearGradient id="navBoltGrad" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
                     <stop stop-color="#00D9FF"/>
                     <stop offset="0.5" stop-color="#147BFF"/>
                     <stop offset="1" stop-color="#8B35FF"/>
@@ -68,692 +50,420 @@ export class LandingView {
             </div>
           </div>
 
-          <nav class="nav-links">
-            <a href="#section-hero" class="nav-link active">Overview</a>
-            <a href="#section-demo" class="nav-link">Live Sprint Demo</a>
-            <a href="#section-supercars" class="nav-link">Supercars</a>
-            <a href="#section-modes" class="nav-link">Game Modes</a>
-            <a href="#section-leagues" class="nav-link">Ranked Leagues</a>
-            <a href="#section-features" class="nav-link">Engineering</a>
+          <!-- Center Navigation Links -->
+          <nav class="nav-links" aria-label="Main Landing Links">
+            <a href="#section-hero" class="nav-link active" data-nav="landing">Home</a>
+            <a href="#section-modes" class="nav-link" data-scroll="section-modes">Features</a>
+            <a href="#section-modes" class="nav-link" data-scroll="section-modes">Game Modes</a>
+            <a href="#garage" class="nav-link" data-nav="garage">Garage</a>
+            <a href="#leaderboard" class="nav-link" data-nav="leaderboard">Leaderboard</a>
+            <a href="#missions" class="nav-link" data-nav="missions">Tournaments</a>
+            <a href="#section-footer" class="nav-link" data-scroll="section-footer">About</a>
           </nav>
 
+          <!-- Right Action Controls -->
           <div class="nav-actions">
-            <button class="nav-audio-btn" id="landing-audio-toggle" title="Atmospheric Background Music: Click to Toggle">
-              <span class="audio-btn-icon">🔊</span>
-              <span class="audio-btn-text" id="landing-audio-text">MUSIC ON</span>
-            </button>
-            <div class="nav-offline-pill" title="100% Offline-First Architecture">
-              <span class="nav-pulse-dot"></span>
-              <span>Offline Ready</span>
+            <!-- Offline Status Pill -->
+            <div class="nav-status-pill" title="Offline-First Engine: Full Local Availability">
+              <span class="nav-status-dot"></span>
+              <div class="nav-status-text">
+                <strong>Offline Mode</strong>
+                <small>Play anytime, anywhere</small>
+              </div>
             </div>
-            <button class="btn btn-secondary nav-btn-dash" data-nav="dashboard" title="Go to Pilot Dashboard">
-              <span>Dashboard</span>
-              <span class="btn-arrow-right">↗</span>
+
+            <!-- Notifications Bell -->
+            <button class="nav-icon-btn" id="landing-notify-btn" title="3 Notifications">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span class="nav-badge-count">3</span>
             </button>
-            <button class="btn btn-primary glow-primary nav-btn-play" data-nav="race-modes" title="Launch Game Arena">
-              <span class="btn-play-triangle">▶</span>
-              <span>PLAY NOW</span>
+
+            <!-- Settings Gear -->
+            <button class="nav-icon-btn" data-nav="settings" title="System Settings">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
+
+            <!-- Login Outline Pill Button -->
+            <button class="nav-btn-login" id="landing-login-btn">
+              Login
+            </button>
+
+            <!-- Get Started Vibrant Gradient CTA -->
+            <button class="nav-btn-get-started" data-nav="race-modes">
+              <span>Get Started</span>
+              <span class="btn-arrow-right">→</span>
             </button>
           </div>
         </header>
 
-        <!-- 2. HIGH-OCTANE HERO SECTION -->
-        <section class="landing-hero-section" id="section-hero">
-          <div class="hero-backdrop-glow"></div>
-          <div class="hero-grid-canvas"></div>
+        <!-- 2. HERO SHOWCASE SECTION -->
+        <section class="landing-hero-stage" id="section-hero">
+          <!-- Cyberpunk Street Background Visual & Hypercar (from mockup) -->
+          <div class="hero-stage-bg-wrap">
+            <img 
+              src="/images/landing_hero_car.jpg" 
+              alt="KEYRUSH Cyberpunk Night Racing Hypercar" 
+              class="hero-stage-car-backdrop"
+            />
+            <div class="hero-stage-gradient-overlay"></div>
+          </div>
 
-          <div class="hero-container">
-            <div class="hero-content">
-              <div class="hero-badge-pill">
-                <span class="badge-bolt">⚡</span>
-                <span>NEXT-GEN 3D ESPORTS MOTORSPORT SIMULATOR</span>
-                <span class="badge-v">v2.4</span>
+          <div class="hero-stage-container">
+            <div class="hero-stage-left-content">
+              <!-- Top Kicker Pill Badge -->
+              <div class="hero-experience-badge">
+                <span class="badge-bolt-icon">⚡</span>
+                <span class="badge-text">THE ULTIMATE TYPING RACING EXPERIENCE</span>
               </div>
 
-              <h1 class="hero-headline">
-                TYPE AT LIGHTSPEED.<br>
-                <span class="headline-gradient">DOMINATE THE GRID.</span>
+              <!-- Main Hero Typography -->
+              <h1 class="hero-main-title">
+                <span class="title-line-white">TYPE FASTER.</span>
+                <span class="title-line-gradient">RACE HARDER.</span>
               </h1>
 
-              <p class="hero-subhead">
-                Turn your typing cadence into pure mechanical horsepower. Accelerate 3D hypercars through 
-                neon-drenched megacities, overtake competitive AI grids in real time, and climb worldwide 
-                ranked esports leagues with verified local telemetry.
+              <!-- Hero Tagline / Subtitle -->
+              <p class="hero-description-text">
+                Turn your typing skills into real speed. Race, improve, and become a legend in the ultimate typing racing game.
               </p>
 
-              <div class="hero-cta-cluster">
-                <button class="hero-btn-launch glow-primary" data-nav="race" id="hero-btn-start-race">
-                  <span class="btn-play-triangle">▶</span>
-                  <span>START 3D RACE NOW</span>
-                  <span class="btn-arrow-right">→</span>
+              <!-- Hero CTA Buttons -->
+              <div class="hero-actions-row">
+                <button class="hero-btn-start-racing" data-nav="race" id="hero-btn-play-race">
+                  <span class="btn-play-circle">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                  </span>
+                  <span>Start Racing</span>
+                  <span class="btn-arrow-glyph">→</span>
                 </button>
-                <button class="hero-btn-dashboard" data-nav="dashboard" id="hero-btn-go-dash">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="14" width="7" height="7"></rect>
-                    <rect x="3" y="14" width="7" height="7"></rect>
-                  </svg>
-                  <span>Open Pilot Dashboard</span>
+
+                <button class="hero-btn-trailer" id="hero-btn-watch-trailer">
+                  <span class="trailer-play-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polygon points="10 8 16 12 10 16 10 8" fill="currentColor"></polygon>
+                    </svg>
+                  </span>
+                  <span>Watch Trailer</span>
                 </button>
-                <a href="#section-demo" class="hero-btn-demo">
-                  <span>Try 10s Live Sprint</span>
-                  <span class="arrow-down">↓</span>
-                </a>
               </div>
 
-              <!-- Hero Telemetry Matrix -->
-              <div class="hero-telemetry-strip">
-                <div class="hero-stat-box">
-                  <span class="h-stat-label">MAX WPM BENCHMARK</span>
-                  <span class="h-stat-val font-mono highlight-cyan">154+ <small>WPM</small></span>
-                  <span class="h-stat-sub">Cadence Overtake</span>
+              <!-- 4 Feature Quick Badges Row -->
+              <div class="hero-features-quad-row">
+                <div class="hero-feat-chip">
+                  <div class="feat-chip-icon-box">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                  </div>
+                  <div class="feat-chip-text">
+                    <span class="chip-main">Improve</span>
+                    <span class="chip-sub">Typing Speed</span>
+                  </div>
                 </div>
-                <div class="hero-stat-box">
-                  <span class="h-stat-label">HYPERCAR COLLECTION</span>
-                  <span class="h-stat-val font-mono text-gold">5 <small>SUPERCARS</small></span>
-                  <span class="h-stat-sub">3D Turntable Studio</span>
+
+                <div class="hero-feat-chip">
+                  <div class="feat-chip-icon-box">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EC4899" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <circle cx="12" cy="12" r="6"></circle>
+                      <circle cx="12" cy="12" r="2"></circle>
+                    </svg>
+                  </div>
+                  <div class="feat-chip-text">
+                    <span class="chip-main">Boost</span>
+                    <span class="chip-sub">Accuracy</span>
+                  </div>
                 </div>
-                <div class="hero-stat-box">
-                  <span class="h-stat-label">LOCAL LATENCY</span>
-                  <span class="h-stat-val font-mono text-positive">0<small>ms</small></span>
-                  <span class="h-stat-sub">100% Offline-First</span>
+
+                <div class="hero-feat-chip">
+                  <div class="feat-chip-icon-box">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                      <path d="M4 22h16"></path>
+                      <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"></path>
+                      <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"></path>
+                    </svg>
+                  </div>
+                  <div class="feat-chip-text">
+                    <span class="chip-main">Earn Rewards</span>
+                    <span class="chip-sub">& Unlock Cars</span>
+                  </div>
                 </div>
-                <div class="hero-stat-box">
-                  <span class="h-stat-label">COMPETITIVE TIERS</span>
-                  <span class="h-stat-val font-mono highlight-purple">6 <small>LEAGUES</small></span>
-                  <span class="h-stat-sub">Bronze to Apex Legend</span>
+
+                <div class="hero-feat-chip">
+                  <div class="feat-chip-icon-box">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                  </div>
+                  <div class="feat-chip-text">
+                    <span class="chip-main">Play Online</span>
+                    <span class="chip-sub">or Offline</span>
+                  </div>
                 </div>
               </div>
+
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. CHOOSE YOUR CHALLENGE (GAME MODES) SECTION -->
+        <section class="landing-modes-section" id="section-modes">
+          <div class="modes-section-container">
+            <!-- Header Row -->
+            <div class="modes-section-header">
+              <div class="modes-header-left">
+                <span class="modes-kicker-tag">&lt;GAME MODES&gt;</span>
+                <h2 class="modes-title-heading">Choose Your Challenge</h2>
+                <p class="modes-sub-heading">Pick your mode and start your journey to become a typing champion.</p>
+              </div>
+              <button class="modes-view-all-link" data-nav="race-modes">
+                <span>View All Modes</span>
+                <span class="view-all-arrow">→</span>
+              </button>
             </div>
 
-            <!-- Hero Visual Car Stage with Floating HUD Chips -->
-            <div class="hero-visual-stage">
-              <div class="hero-car-halo"></div>
+            <!-- 5-Column Game Modes Cards Grid -->
+            <div class="modes-cards-row-grid">
               
-              <img 
-                src="/images/sp40_car_clean.png" 
-                alt="KEYRUSH Concept Hypercar" 
-                class="hero-supercar-img" 
-                id="hero-car-img"
-              />
-
-              <!-- Floating Live HUD Card 1: Velocity -->
-              <div class="floating-hud-card hud-top-left">
-                <div class="hud-card-icon">⚡</div>
-                <div class="hud-card-info">
-                  <span class="hud-card-lbl">LIVE TELEMETRY</span>
-                  <strong class="hud-card-val font-mono">112 WPM • 284 KM/H</strong>
+              <!-- 1. Solo Practice -->
+              <div class="mode-showcase-card" data-nav="diagnostic" role="button" tabindex="0">
+                <div class="mode-card-thumb-wrap">
+                  <img src="/images/landing_mode_solo.jpg" alt="Solo Practice" class="mode-card-img" />
+                </div>
+                <div class="mode-card-footer-info">
+                  <div class="mode-icon-circle purple-glow">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                  </div>
+                  <div class="mode-text-details">
+                    <h3 class="mode-card-name">Solo Practice</h3>
+                    <span class="mode-card-desc">Improve at your own pace.</span>
+                  </div>
+                  <span class="mode-arrow-action">→</span>
                 </div>
               </div>
 
-              <!-- Floating Live HUD Card 2: Position -->
-              <div class="floating-hud-card hud-bottom-right">
-                <div class="hud-card-icon">🏆</div>
-                <div class="hud-card-info">
-                  <span class="hud-card-lbl">GRID STANDINGS</span>
-                  <strong class="hud-card-val font-mono text-gold">P1 LEADER (OVERTAKE)</strong>
+              <!-- 2. Race Against AI -->
+              <div class="mode-showcase-card" data-nav="race" data-mode="AI Racing" role="button" tabindex="0">
+                <div class="mode-card-thumb-wrap">
+                  <img src="/images/landing_mode_ai.jpg" alt="Race Against AI" class="mode-card-img" />
+                </div>
+                <div class="mode-card-footer-info">
+                  <div class="mode-icon-circle purple-glow">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                      <circle cx="12" cy="5" r="2"></circle>
+                      <path d="M12 7v4"></path>
+                      <line x1="8" y1="16" x2="8.01" y2="16"></line>
+                      <line x1="16" y1="16" x2="16.01" y2="16"></line>
+                    </svg>
+                  </div>
+                  <div class="mode-text-details">
+                    <h3 class="mode-card-name">Race Against AI</h3>
+                    <span class="mode-card-desc">Challenge computer opponents.</span>
+                  </div>
+                  <span class="mode-arrow-action">→</span>
                 </div>
               </div>
 
-              <!-- Floating Live HUD Card 3: Nitro -->
-              <div class="floating-hud-card hud-bottom-left">
-                <div class="hud-card-icon">🔥</div>
-                <div class="hud-card-info">
-                  <span class="hud-card-lbl">NITRO BOOST</span>
-                  <strong class="hud-card-val font-mono text-positive">100% ARMED • CADENCE BOOST</strong>
+              <!-- 3. Local Multiplayer -->
+              <div class="mode-showcase-card" data-nav="race-modes" role="button" tabindex="0">
+                <div class="mode-card-thumb-wrap">
+                  <img src="/images/landing_mode_local.jpg" alt="Local Multiplayer" class="mode-card-img" />
+                </div>
+                <div class="mode-card-footer-info">
+                  <div class="mode-icon-circle purple-glow">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                  </div>
+                  <div class="mode-text-details">
+                    <h3 class="mode-card-name">Local Multiplayer</h3>
+                    <span class="mode-card-desc">Play with friends (offline).</span>
+                  </div>
+                  <span class="mode-arrow-action">→</span>
                 </div>
               </div>
+
+              <!-- 4. Online Multiplayer -->
+              <div class="mode-showcase-card" data-nav="race-modes" role="button" tabindex="0">
+                <div class="mode-card-thumb-wrap">
+                  <img src="/images/landing_mode_online.jpg" alt="Online Multiplayer" class="mode-card-img" />
+                </div>
+                <div class="mode-card-footer-info">
+                  <div class="mode-icon-circle purple-glow">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                    </svg>
+                  </div>
+                  <div class="mode-text-details">
+                    <h3 class="mode-card-name">Online Multiplayer</h3>
+                    <span class="mode-card-desc">Race real players worldwide.</span>
+                  </div>
+                  <span class="mode-arrow-action">→</span>
+                </div>
+              </div>
+
+              <!-- 5. Ranked Championship -->
+              <div class="mode-showcase-card" data-nav="leaderboard" role="button" tabindex="0">
+                <div class="mode-card-thumb-wrap">
+                  <img src="/images/landing_mode_ranked.jpg" alt="Ranked Championship" class="mode-card-img" />
+                </div>
+                <div class="mode-card-footer-info">
+                  <div class="mode-icon-circle purple-glow">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                      <path d="M4 22h16"></path>
+                      <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"></path>
+                      <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"></path>
+                    </svg>
+                  </div>
+                  <div class="mode-text-details">
+                    <h3 class="mode-card-name">Ranked Championship</h3>
+                    <span class="mode-card-desc">Climb the global ranks.</span>
+                  </div>
+                  <span class="mode-arrow-action">→</span>
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
 
-        <!-- 3. INTERACTIVE "TYPE-TO-ACCELERATE" SPRINT PLAYGROUND -->
-        <section class="landing-section demo-section" id="section-demo">
-          <div class="section-container">
-            <div class="section-title-wrap text-center">
-              <span class="section-tag-pill">LIVE PLAYGROUND DEMO</span>
-              <h2 class="section-headline">TEST DRIVE THE KEYRUSH ENGINE</h2>
-              <p class="section-desc">
-                Type the passage below directly to generate horsepower. Watch your speedometer climb, 
-                rev the synthetic engine, and propel the hypercar across the finish line.
-              </p>
-            </div>
-
-            <div class="sprint-playground-card card-dark">
-              <!-- Top Telemetry Meters -->
-              <div class="playground-telemetry-bar">
-                <div class="play-meter-item">
-                  <span class="meter-label">CURRENT SPEED</span>
-                  <div class="meter-val-row">
-                    <span class="meter-number font-mono" id="demo-wpm-val">0</span>
-                    <span class="meter-unit">WPM</span>
-                  </div>
-                </div>
-
-                <div class="play-meter-item">
-                  <span class="meter-label">VELOCITY (KM/H)</span>
-                  <div class="meter-val-row">
-                    <span class="meter-number font-mono text-gold" id="demo-kmh-val">0</span>
-                    <span class="meter-unit">KM/H</span>
-                  </div>
-                </div>
-
-                <div class="play-meter-item">
-                  <span class="meter-label">ACCURACY</span>
-                  <div class="meter-val-row">
-                    <span class="meter-number font-mono text-positive" id="demo-acc-val">100</span>
-                    <span class="meter-unit">%</span>
-                  </div>
-                </div>
-
-                <div class="play-meter-item">
-                  <span class="meter-label">ENGINE STATUS</span>
-                  <span class="engine-state-pill" id="demo-engine-state">READY ON GRID</span>
-                </div>
-              </div>
-
-              <!-- Mini Visual Track Runway -->
-              <div class="mini-track-runway">
-                <div class="runway-road">
-                  <div class="runway-lanes"></div>
-                  <!-- Player Car on Runway -->
-                  <div class="runway-car" id="demo-runway-car" style="left: 2%">
-                    <span class="runway-car-sprite">🏎️</span>
-                    <span class="runway-car-tail"></span>
-                  </div>
-                  <div class="runway-finish-line">🏁</div>
-                </div>
-              </div>
-
-              <!-- Interactive Prompt Box -->
-              <div class="sprint-prompt-display" id="demo-prompt-box">
-                <!-- Dynamically populated character spans -->
-              </div>
-
-              <!-- Hidden/Active input trigger -->
-              <div class="sprint-input-wrap">
-                <input 
-                  type="text" 
-                  id="demo-typing-input" 
-                  class="sprint-real-input" 
-                  placeholder="Click here or start typing to accelerate..." 
-                  autocomplete="off" 
-                  autocorrect="off" 
-                  autocapitalize="off" 
-                  spellcheck="false"
-                />
-                <button class="btn btn-outline btn-reset-demo" id="demo-reset-btn" title="Reset Sprint">
-                  🔄 Reset Sprint
-                </button>
-              </div>
-
-              <!-- Completion Banner (hidden by default) -->
-              <div class="sprint-win-toast hidden" id="demo-win-toast">
-                <div class="toast-left">
-                  <span class="toast-trophy">🏆</span>
-                  <div>
-                    <h4 class="toast-title">FINISH LINE CROSSED!</h4>
-                    <p class="toast-desc" id="demo-win-stats">Sprint completed at 85 WPM with 100% precision.</p>
-                  </div>
-                </div>
-                <button class="btn btn-primary glow-primary" data-nav="race">
-                  LAUNCH FULL 5-CAR 3D RACE →
-                </button>
+        <!-- 4. BOTTOM VALUE PROPOSITION & FEATURE HIGHLIGHTS BAR -->
+        <section class="landing-values-strip-section" id="section-footer">
+          <div class="values-strip-container">
+            
+            <div class="value-item" data-nav="garage" role="button" tabindex="0">
+              <span class="value-icon gold">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#F59E0B">
+                  <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"></path>
+                </svg>
+              </span>
+              <div class="value-text">
+                <strong class="value-title">Unlock Epic Cars</strong>
+                <span class="value-desc">Collect, upgrade, and customize your dream vehicles.</span>
               </div>
             </div>
+
+            <div class="value-item" data-nav="leaderboard" role="button" tabindex="0">
+              <span class="value-icon star">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#F59E0B">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </span>
+              <div class="value-text">
+                <strong class="value-title">Global Leaderboard</strong>
+                <span class="value-desc">Compete with players around the world.</span>
+              </div>
+            </div>
+
+            <div class="value-item" data-nav="missions" role="button" tabindex="0">
+              <span class="value-icon bolt">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#00D9FF">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </span>
+              <div class="value-text">
+                <strong class="value-title">Daily Tournaments</strong>
+                <span class="value-desc">Special events, bigger rewards.</span>
+              </div>
+            </div>
+
+            <div class="value-item">
+              <span class="value-icon device">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+              </span>
+              <div class="value-text">
+                <strong class="value-title">Works Offline</strong>
+                <span class="value-desc">Full features without internet.</span>
+              </div>
+            </div>
+
+            <!-- Banner Card on the Right (YOUR SKILLS. YOUR RIDE.) -->
+            <div class="value-banner-card" data-nav="garage" role="button" tabindex="0" title="Explore Supercar Garage">
+              <img src="/images/landing_banner_car.jpg" alt="Your Skills Your Ride" class="banner-car-thumb" />
+              <div class="banner-card-text">
+                <span class="banner-line-1">YOUR SKILLS.</span>
+                <span class="banner-line-2">YOUR RIDE.</span>
+              </div>
+              <div class="banner-card-arrow">→</div>
+            </div>
+
           </div>
         </section>
 
-        <!-- 4. 3D SUPERCARS SHOWROOM CAROUSEL -->
-        <section class="landing-section supercars-section" id="section-supercars">
-          <div class="section-container">
-            <div class="section-title-wrap">
-              <span class="section-tag-pill">3D MOTORSPORT FLEET</span>
-              <h2 class="section-headline">FIVE PRECISION HYPERCARS</h2>
-              <p class="section-desc">
-                From nimble starter coupes to 380 KM/H mythic hypercars. Every vehicle features 
-                unique acceleration curves, handling physics, and fully customizable liveries in the 3D Garage.
-              </p>
+        <!-- CINEMATIC TRAILER MODAL -->
+        <div class="trailer-modal-backdrop hidden" id="trailer-modal-backdrop">
+          <div class="trailer-modal-card">
+            <div class="trailer-modal-header">
+              <div class="trailer-header-brand">
+                <span class="modal-badge-tag">CINEMATIC TRAILER</span>
+                <h3>KEYRUSH — TYPE. RACE. DOMINATE.</h3>
+              </div>
+              <button class="modal-close-btn" id="trailer-modal-close" aria-label="Close Trailer">✕</button>
             </div>
-
-            <div class="supercars-stage-card card-dark">
-              <!-- Left Car Switcher Column -->
-              <div class="car-selector-col">
-                <span class="selector-lbl">CHOOSE SUPERCAR</span>
-                <div class="car-nav-list" id="showroom-car-list">
-                  ${cars.map((car, idx) => `
-                    <button class="car-nav-item ${idx === 0 ? 'active' : ''}" data-car-idx="${idx}">
-                      <div class="car-nav-icon">🏎️</div>
-                      <div class="car-nav-meta">
-                        <span class="car-nav-name">${car.name}</span>
-                        <span class="car-nav-tier">${car.tier}</span>
-                      </div>
-                      <span class="car-nav-arrow">›</span>
-                    </button>
-                  `).join('')}
-                </div>
-              </div>
-
-              <!-- Center Showcase Presentation -->
-              <div class="car-display-center">
-                <div class="showroom-car-preview" id="showroom-car-preview">
-                  <div class="showroom-underglow" id="showroom-glow"></div>
-                  <img 
-                    src="/images/sp40_car_clean.png" 
-                    alt="Supercar Display" 
-                    class="showroom-car-img" 
-                    id="showroom-car-img" 
-                  />
-                </div>
-
-                <div class="showroom-car-details" id="showroom-details">
-                  <div class="details-header">
-                    <div>
-                      <span class="car-rarity-pill common" id="show-car-rarity">COMMON • TIER 1</span>
-                      <h3 class="show-car-title" id="show-car-title">Apex Talon</h3>
-                    </div>
-                    <button class="btn btn-primary glow-primary" data-nav="garage">
-                      CUSTOMIZE IN 3D GARAGE →
-                    </button>
-                  </div>
-
-                  <p class="show-car-desc" id="show-car-desc">
-                    Agile cyber-coupe engineered for crisp responsiveness and novice racers.
-                  </p>
-
-                  <div class="show-specs-grid">
-                    <div class="spec-meter-box">
-                      <span class="spec-lbl">TOP SPEED</span>
-                      <strong class="spec-val font-mono" id="show-car-speed">160 KM/H</strong>
-                      <div class="spec-bar"><div class="spec-fill" id="show-bar-speed" style="width: 45%"></div></div>
-                    </div>
-
-                    <div class="spec-meter-box">
-                      <span class="spec-lbl">ACCELERATION</span>
-                      <strong class="spec-val font-mono" id="show-car-accel">4.2s (0-100)</strong>
-                      <div class="spec-bar"><div class="spec-fill" id="show-bar-accel" style="width: 60%"></div></div>
-                    </div>
-
-                    <div class="spec-meter-box">
-                      <span class="spec-lbl">AERO GRIP</span>
-                      <strong class="spec-val font-mono" id="show-car-handling">Aero Grip A+</strong>
-                      <div class="spec-bar"><div class="spec-fill" id="show-bar-handling" style="width: 75%"></div></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 5. FIVE GAME MODES ARENA -->
-        <section class="landing-section modes-section" id="section-modes">
-          <div class="section-container">
-            <div class="section-title-wrap text-center">
-              <span class="section-tag-pill">MULTIPLE COMPETITIVE FORMATS</span>
-              <h2 class="section-headline">RACE YOUR WAY</h2>
-              <p class="section-desc">
-                Whether mastering ergonomic finger posture solo or battling real racers across global lobbies, 
-                KEYRUSH offers competitive arenas for every typing discipline.
-              </p>
-            </div>
-
-            <div class="landing-modes-grid">
-              <!-- Mode 1: Solo Practice -->
-              <div class="landing-mode-card card-dark" data-nav="diagnostic">
-                <div class="mode-top-row">
-                  <span class="mode-badge purple">TRAINING</span>
-                  <span class="mode-icon">🎯</span>
-                </div>
-                <h3 class="mode-card-title">Solo Practice</h3>
-                <p class="mode-card-desc">
-                  Train at your own pace without pressure. Zero in on finger agility, accuracy pacing, and personalized weak key drills.
-                </p>
-                <div class="mode-highlights">
-                  <span>✓ 45s Diagnostic benchmark</span>
-                  <span>✓ Detailed accuracy scorecard</span>
-                </div>
-                <button class="mode-action-link" data-nav="diagnostic">
-                  Start Solo Practice →
-                </button>
-              </div>
-
-              <!-- Mode 2: Race Against AI -->
-              <div class="landing-mode-card card-dark active-featured" data-nav="race">
-                <div class="mode-top-row">
-                  <span class="mode-badge cyan">RECOMMENDED</span>
-                  <span class="mode-icon">🤖</span>
-                </div>
-                <h3 class="mode-card-title">Race Against AI</h3>
-                <p class="mode-card-desc">
-                  Populated 5-car grid with autonomous AI opponents simulating human cadence variations, slipstream drafting, and overtakes.
-                </p>
-                <div class="mode-highlights">
-                  <span>✓ 4 Simultaneous AI rivals</span>
-                  <span>✓ 5 Difficulty tiers (Amateur to Apex)</span>
-                </div>
-                <button class="mode-action-link" data-nav="race">
-                  Enter AI Race Grid →
-                </button>
-              </div>
-
-              <!-- Mode 3: Local Multiplayer -->
-              <div class="landing-mode-card card-dark" data-nav="race-modes">
-                <div class="mode-top-row">
-                  <span class="mode-badge green">OFFLINE CO-OP</span>
-                  <span class="mode-icon">👥</span>
-                </div>
-                <h3 class="mode-card-title">Local Multiplayer</h3>
-                <p class="mode-card-desc">
-                  Challenge friends on the same device. Pass-and-play ghost racers with side-by-side telemetry and speed curves.
-                </p>
-                <div class="mode-highlights">
-                  <span>✓ 100% Offline availability</span>
-                  <span>✓ Instant rematch system</span>
-                </div>
-                <button class="mode-action-link" data-nav="race-modes">
-                  Launch Local Race →
-                </button>
-              </div>
-
-              <!-- Mode 4: Online Multiplayer -->
-              <div class="landing-mode-card card-dark" data-nav="race-modes">
-                <div class="mode-top-row">
-                  <span class="mode-badge gold">ESPORTS LOBBY</span>
-                  <span class="mode-icon">🌐</span>
-                </div>
-                <h3 class="mode-card-title">Online Multiplayer</h3>
-                <p class="mode-card-desc">
-                  Battle racers worldwide in synchronized race lobbies with live netcode telemetry, ping monitoring, and podium results.
-                </p>
-                <div class="mode-highlights">
-                  <span>✓ Real-time spectator radar</span>
-                  <span>✓ Worldwide matchmaking</span>
-                </div>
-                <button class="mode-action-link" data-nav="race-modes">
-                  Join Online Lobby →
-                </button>
-              </div>
-
-              <!-- Mode 5: Ranked Championship -->
-              <div class="landing-mode-card card-dark" data-nav="leaderboard">
-                <div class="mode-top-row">
-                  <span class="mode-badge red">COMPETITIVE</span>
-                  <span class="mode-icon">🏆</span>
-                </div>
-                <h3 class="mode-card-title">Ranked Championship</h3>
-                <p class="mode-card-desc">
-                  Compete in high-stakes ranked cups. Ascend league tiers from Bronze to Apex Legend to unlock legendary hypercars.
-                </p>
-                <div class="mode-highlights">
-                  <span>✓ Global ranked standings</span>
-                  <span>✓ Exclusive cosmetic liveries</span>
-                </div>
-                <button class="mode-action-link" data-nav="leaderboard">
-                  View Ranked Tiers →
+            <div class="trailer-video-stage">
+              <img src="/images/landing_reference.jpg" alt="KeyRush Trailer" class="trailer-preview-frame" />
+              <div class="trailer-overlay-hud">
+                <div class="hud-pulse-ring"></div>
+                <button class="hud-launch-race-btn" data-nav="race">
+                  ▶ START 3D RACE NOW
                 </button>
               </div>
             </div>
-          </div>
-        </section>
-
-        <!-- 6. RANKED ESPORTS LEAGUES LADDER -->
-        <section class="landing-section leagues-section" id="section-leagues">
-          <div class="section-container">
-            <div class="section-title-wrap">
-              <span class="section-tag-pill">COMPETITIVE TIERS</span>
-              <h2 class="section-headline">ASCEND THE ESPORTS LADDER</h2>
-              <p class="section-desc">
-                Every typed character is verified by local telemetry. Push your raw speed and consistency 
-                to advance from the rookie paddock to the highest tier of motorsport typing.
-              </p>
-            </div>
-
-            <div class="leagues-ladder-row">
-              <div class="league-tier-card bronze">
-                <span class="tier-icon">🥉</span>
-                <span class="tier-title">BRONZE</span>
-                <span class="tier-range font-mono">0 - 45 WPM</span>
-                <p class="tier-desc">Mastering home-row keys & ergonomics.</p>
-              </div>
-
-              <div class="league-tier-card silver">
-                <span class="tier-icon">🥈</span>
-                <span class="tier-title">SILVER</span>
-                <span class="tier-range font-mono">46 - 70 WPM</span>
-                <p class="tier-desc">Developing continuous cadence & flow.</p>
-              </div>
-
-              <div class="league-tier-card gold">
-                <span class="tier-icon">🥇</span>
-                <span class="tier-title">GOLD</span>
-                <span class="tier-range font-mono">71 - 90 WPM</span>
-                <p class="tier-desc">High-speed precision with punctuation.</p>
-              </div>
-
-              <div class="league-tier-card platinum">
-                <span class="tier-icon">💎</span>
-                <span class="tier-title">PLATINUM</span>
-                <span class="tier-range font-mono">91 - 110 WPM</span>
-                <p class="tier-desc">Competitive esports tournament speed.</p>
-              </div>
-
-              <div class="league-tier-card diamond">
-                <span class="tier-icon">✨</span>
-                <span class="tier-title">DIAMOND</span>
-                <span class="tier-range font-mono">111 - 130 WPM</span>
-                <p class="tier-desc">Elite typing velocity under pressure.</p>
-              </div>
-
-              <div class="league-tier-card apex">
-                <span class="tier-icon">👑</span>
-                <span class="tier-title">APEX LEGEND</span>
-                <span class="tier-range font-mono">131+ WPM</span>
-                <p class="tier-desc">The absolute pinnacle of motorsport typing.</p>
-              </div>
-            </div>
-
-            <!-- Global Leaderboard Teaser -->
-            <div class="leaderboard-teaser-box card-dark">
-              <div class="teaser-header">
-                <div>
-                  <span class="teaser-sub">GLOBAL TOP RACERS SNAPSHOT</span>
-                  <h4 class="teaser-title">WORLD CHAMPIONSHIP STANDINGS</h4>
-                </div>
-                <button class="btn btn-outline" data-nav="leaderboard">
-                  View Full Standings →
-                </button>
-              </div>
-
-              <div class="teaser-table">
-                <div class="teaser-row rank-1">
-                  <span class="t-rank">👑 P1</span>
-                  <span class="t-pilot">QuantumRacer (SE)</span>
-                  <span class="t-car">CHRONOS V12</span>
-                  <span class="t-wpm font-mono highlight-cyan">154 WPM</span>
-                  <span class="t-acc font-mono">99.4%</span>
-                </div>
-                <div class="teaser-row rank-2">
-                  <span class="t-rank">🥈 P2</span>
-                  <span class="t-pilot">NeonSpectre (JP)</span>
-                  <span class="t-car">NEBULA ZX</span>
-                  <span class="t-wpm font-mono highlight-cyan">148 WPM</span>
-                  <span class="t-acc font-mono">99.1%</span>
-                </div>
-                <div class="teaser-row rank-3">
-                  <span class="t-rank">🥉 P3</span>
-                  <span class="t-pilot">Veloce_God (US)</span>
-                  <span class="t-car">PHANTOM GT</span>
-                  <span class="t-wpm font-mono highlight-cyan">139 WPM</span>
-                  <span class="t-acc font-mono">98.8%</span>
-                </div>
-              </div>
+            <div class="trailer-modal-footer">
+              <span>High-speed touch typing simulator powered by Three.js procedural motorsport engine.</span>
+              <button class="btn btn-primary" data-nav="race-modes">Select Mode →</button>
             </div>
           </div>
-        </section>
+        </div>
 
-        <!-- 7. CORE ENGINEERING & FEATURES -->
-        <section class="landing-section features-section" id="section-features">
-          <div class="section-container">
-            <div class="section-title-wrap text-center">
-              <span class="section-tag-pill">ENGINEERED FOR MOTORSPORT PERFECTION</span>
-              <h2 class="section-headline">STATE-OF-THE-ART SIMULATOR ARCHITECTURE</h2>
-              <p class="section-desc">
-                Built from the ground up for zero-latency competition, maximum visual immersion, 
-                and comprehensive biomechanical typing improvement.
-              </p>
+        <!-- QUICK LOGIN / RACER MONIKER MODAL -->
+        <div class="login-modal-backdrop hidden" id="login-modal-backdrop">
+          <div class="login-modal-card">
+            <div class="login-modal-header">
+              <h3>PILOT AUTHENTICATION</h3>
+              <button class="modal-close-btn" id="login-modal-close">✕</button>
             </div>
-
-            <div class="features-cards-grid">
-              <div class="feature-card card-dark">
-                <div class="feat-card-icon">🏎️</div>
-                <h4 class="feat-card-title">Three.js 3D Kinetic Engine</h4>
-                <p class="feat-card-desc">
-                  Procedural cyberpunk megacities, dynamic chase cameras, wet asphalt reflections, and tunnel archways designed for high frame rate rendering.
-                </p>
-              </div>
-
-              <div class="feature-card card-dark">
-                <div class="feat-card-icon">⚡</div>
-                <h4 class="feat-card-title">Typing Cadence Acceleration</h4>
-                <p class="feat-card-desc">
-                  Typing speed directly modulates synthetic horsepower, gear shifts (1st through 6th), and exhaust flames. Mistypes trigger engine deceleration.
-                </p>
-              </div>
-
-              <div class="feature-card card-dark">
-                <div class="feat-card-icon">📶</div>
-                <h4 class="feat-card-title">100% Offline-First (IndexedDB)</h4>
-                <p class="feat-card-desc">
-                  Complete offline autonomy. All session telemetry, garage customizations, academy drills, and streak milestones persist locally with zero server dependency.
-                </p>
-              </div>
-
-              <div class="feature-card card-dark">
-                <div class="feat-card-icon">🎓</div>
-                <h4 class="feat-card-title">Ergonomic Touch Academy</h4>
-                <p class="feat-card-desc">
-                  Master the 10-finger home-row discipline. Color-coded finger zones and tactile bump guides eliminate sight-typing and skyrocket cadence.
-                </p>
-              </div>
-
-              <div class="feature-card card-dark">
-                <div class="feat-card-icon">📊</div>
-                <h4 class="feat-card-title">Data Science Telemetry</h4>
-                <p class="feat-card-desc">
-                  Deep analytics with WPM progression charts, cadence stability scatter plots, keystroke error heatmaps, and downloadable verified pilot cards.
-                </p>
-              </div>
-
-              <div class="feature-card card-dark">
-                <div class="feat-card-icon">🔊</div>
-                <h4 class="feat-card-title">Web Audio Synthesizer</h4>
-                <p class="feat-card-desc">
-                  Custom oscillator sound engine synthesizing mechanical switch click clacks, accelerating engine throttles, nitro burns, and ambient interior soundscapes.
-                </p>
-              </div>
+            <div class="login-modal-body">
+              <label for="input-pilot-callsign">Racer Callsign / Moniker:</label>
+              <input type="text" id="input-pilot-callsign" value="${this.profile.username || 'Kartik'}" placeholder="Enter callsign..." />
+              <button class="btn btn-primary" id="btn-save-pilot-callsign">Save & Enter Grid</button>
             </div>
           </div>
-        </section>
+        </div>
 
-        <!-- 8. HIGH-ENERGY FINALE CTA -->
-        <section class="landing-finale-cta">
-          <div class="finale-glow-ring"></div>
-          <div class="finale-card card-dark">
-            <span class="section-tag-pill">THE STARTING GRID AWAITS</span>
-            <h2 class="finale-headline">READY TO CLAIM POLE POSITION?</h2>
-            <p class="finale-subhead">
-              No installs, no accounts required. Launch directly into the 3D cockpit or open your 
-              pilot dashboard to start your motorsport typing journey.
-            </p>
-            <div class="finale-btn-group">
-              <button class="btn btn-primary btn-large glow-primary" data-nav="race">
-                <span class="btn-play-triangle">▶</span>
-                <span>ENTER 3D RACE COCKPIT</span>
-                <span class="btn-arrow-right">→</span>
-              </button>
-              <button class="btn btn-secondary btn-large" data-nav="dashboard">
-                <span>OPEN PILOT DASHBOARD ↗</span>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- 9. RESPONSIVE MODERN FOOTER -->
-        <footer class="landing-footer">
-          <div class="footer-inner">
-            <div class="footer-col-brand">
-              <div class="f-brand-logo">
-                <span class="f-logo-bolt">⚡</span>
-                <span class="f-logo-title">KEYRUSH</span>
-              </div>
-              <p class="f-brand-tagline">
-                Next-Gen 3D Esports Motorsport Typing Simulator.<br>
-                Type. Race. Dominate.
-              </p>
-              <div class="f-badges-row">
-                <span class="f-badge">🌐 Works 100% Offline</span>
-                <span class="f-badge">📱 Installable PWA</span>
-                <span class="f-badge">💻 60 FPS Three.js</span>
-              </div>
-            </div>
-
-            <div class="footer-col-nav">
-              <span class="f-nav-title">GAME NAVIGATION</span>
-              <a href="#section-hero" class="f-link">Showcase Overview</a>
-              <button class="f-link-btn" data-nav="dashboard">Pilot Dashboard</button>
-              <button class="f-link-btn" data-nav="race-modes">Race Modes Hub</button>
-              <button class="f-link-btn" data-nav="garage">Supercar Garage</button>
-              <button class="f-link-btn" data-nav="leaderboard">Global Leaderboard</button>
-            </div>
-
-            <div class="footer-col-nav">
-              <span class="f-nav-title">TRAINING & LABS</span>
-              <button class="f-link-btn" data-nav="diagnostic">45s Practice Benchmark</button>
-              <button class="f-link-btn" data-nav="academy">Touch-Typing Academy</button>
-              <button class="f-link-btn" data-nav="analytics">Telemetry Analytics</button>
-              <button class="f-link-btn" data-nav="missions">Daily Directives</button>
-              <button class="f-link-btn" data-nav="settings">Audio & System Settings</button>
-            </div>
-
-            <div class="footer-col-shortcuts">
-              <span class="f-nav-title">KEYBOARD CONTROLS</span>
-              <div class="f-shortcut-item">
-                <kbd>Ctrl + K</kbd>
-                <span>Command Search Palette</span>
-              </div>
-              <div class="f-shortcut-item">
-                <kbd>ESC</kbd>
-                <span>Pause Race & Cockpit HUD</span>
-              </div>
-              <div class="f-shortcut-item">
-                <kbd>Space</kbd>
-                <span>Smooth Passage Advance</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="footer-bottom-bar">
-            <span>© 2026 KEYRUSH Motorsport Esports. All rights reserved. Zero external tracking.</span>
-            <span class="f-crown">👑 Level Up Your Typing Speed</span>
-          </div>
-        </footer>
       </div>
     `;
 
-    this.initDemoPrompt();
-    this.bindEvents();
-  }
-
-  initDemoPrompt() {
-    const box = document.getElementById('demo-prompt-box');
-    if (!box) return;
-
-    box.innerHTML = this.demoText.split('').map((ch, idx) => {
-      const displayChar = ch === ' ' ? '&nbsp;' : ch;
-      return `<span class="demo-char ${idx === 0 ? 'current' : ''}" data-idx="${idx}">${displayChar}</span>`;
-    }).join('');
+    setTimeout(() => {
+      this.bindEvents();
+    }, 40);
   }
 
   bindEvents() {
@@ -771,219 +481,88 @@ export class LandingView {
       });
     });
 
-    // Audio quick toggle in landing navbar
-    const audioBtn = document.getElementById('landing-audio-toggle');
-    const updateAudioBtnUI = (isMuted) => {
-      const text = document.getElementById('landing-audio-text');
-      const icon = audioBtn?.querySelector('.audio-btn-icon');
-      if (!audioBtn || !text) return;
-      if (!isMuted) {
-        audioBtn.classList.remove('muted');
-        text.textContent = 'MUSIC ON';
-        if (icon) icon.textContent = '🔊';
-      } else {
-        audioBtn.classList.add('muted');
-        text.textContent = 'MUTED';
-        if (icon) icon.textContent = '🔇';
-      }
-    };
+    // 2. Smooth internal scroll anchors
+    this.container.querySelectorAll('[data-scroll]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = btn.getAttribute('data-scroll');
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          soundEffects.playUiClick();
+          targetEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
 
+    // 3. Audio toggle
+    const audioBtn = document.getElementById('landing-audio-toggle');
     audioBtn?.addEventListener('click', async (e) => {
       e.preventDefault();
       soundEffects.playUiClick();
       const isMuted = await musicManager.toggleMute(true);
-      updateAudioBtnUI(isMuted);
-    });
-
-    window.addEventListener('keyrush:audio-toggle', (e) => {
-      updateAudioBtnUI(e.detail.muted);
-    });
-    updateAudioBtnUI(musicManager.muted);
-
-    // 2. Smooth anchor scrolling for navigation links
-    this.container.querySelectorAll('.nav-link').forEach((link) => {
-      link.addEventListener('click', (e) => {
-        const href = link.getAttribute('href');
-        if (href && href.startsWith('#')) {
-          e.preventDefault();
-          const target = document.querySelector(href);
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            this.container.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-          }
-        }
-      });
-    });
-
-    // 3. Interactive Showroom Car Selection
-    const carListBtns = this.container.querySelectorAll('.car-nav-item');
-    const cars = VEHICLE_CATALOG || [];
-
-    carListBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const idx = Number(btn.getAttribute('data-car-idx'));
-        this.activeCarIndex = idx;
-        soundEffects.playKeyClick(true);
-
-        carListBtns.forEach(b => b.classList.toggle('active', b === btn));
-        const car = cars[idx];
-        if (!car) return;
-
-        // Update presentation elements
-        const titleEl = document.getElementById('show-car-title');
-        const rarityEl = document.getElementById('show-car-rarity');
-        const descEl = document.getElementById('show-car-desc');
-        const speedEl = document.getElementById('show-car-speed');
-        const accelEl = document.getElementById('show-car-accel');
-        const handlingEl = document.getElementById('show-car-handling');
-        const barSpeed = document.getElementById('show-bar-speed');
-        const barAccel = document.getElementById('show-bar-accel');
-        const barHandling = document.getElementById('show-bar-handling');
-        const glowEl = document.getElementById('showroom-glow');
-
-        if (titleEl) titleEl.textContent = car.name;
-        if (rarityEl) {
-          rarityEl.className = `car-rarity-pill ${car.rarity.toLowerCase()}`;
-          rarityEl.textContent = `${car.rarity.toUpperCase()} • ${car.tier.toUpperCase()}`;
-        }
-        if (descEl) descEl.textContent = car.description;
-        if (speedEl) speedEl.textContent = car.baseTopSpeed;
-        if (accelEl) accelEl.textContent = car.acceleration;
-        if (handlingEl) handlingEl.textContent = car.handling;
-
-        const speedPerc = [45, 60, 75, 88, 98][idx] || 50;
-        const accelPerc = [55, 65, 80, 92, 99][idx] || 60;
-        const gripPerc = [65, 70, 85, 94, 99][idx] || 70;
-        const glowColors = ['#00D9FF', '#8B35FF', '#FF3500', '#10B981', '#FFB800'];
-
-        if (barSpeed) barSpeed.style.width = `${speedPerc}%`;
-        if (barAccel) barAccel.style.width = `${accelPerc}%`;
-        if (barHandling) barHandling.style.width = `${gripPerc}%`;
-        if (glowEl) glowEl.style.background = glowColors[idx] || '#00D9FF';
-      });
-    });
-
-    // 4. Interactive Live Sprint Demo Logic
-    const demoInput = document.getElementById('demo-typing-input');
-    const demoResetBtn = document.getElementById('demo-reset-btn');
-
-    if (demoInput) {
-      demoInput.addEventListener('input', (e) => {
-        const val = e.target.value;
-        const lastChar = val.slice(-1);
-        e.target.value = ''; // clear for next character
-
-        if (this.demoCompleted || !lastChar) return;
-
-        if (!this.demoStartTime) {
-          this.demoStartTime = performance.now();
-          const stateEl = document.getElementById('demo-engine-state');
-          if (stateEl) {
-            stateEl.textContent = 'ACCELERATING';
-            stateEl.className = 'engine-state-pill accelerating';
-          }
-        }
-
-        const expectedChar = this.demoText[this.typedChars];
-        const charSpans = this.container.querySelectorAll('.demo-char');
-
-        if (lastChar === expectedChar) {
-          soundEffects.playKeyClick(true);
-          if (charSpans[this.typedChars]) {
-            charSpans[this.typedChars].className = 'demo-char correct';
-          }
-          this.typedChars++;
-
-          if (charSpans[this.typedChars]) {
-            charSpans[this.typedChars].className = 'demo-char current';
-          }
-
-          // Calculate WPM and Runway progress
-          const elapsedMin = (performance.now() - this.demoStartTime) / 60000;
-          this.demoWpm = Math.max(15, Math.round((this.typedChars / 5) / (elapsedMin || 0.01)));
-          const kmh = Math.round(this.demoWpm * 2.6);
-
-          const wpmEl = document.getElementById('demo-wpm-val');
-          const kmhEl = document.getElementById('demo-kmh-val');
-          if (wpmEl) wpmEl.textContent = this.demoWpm;
-          if (kmhEl) kmhEl.textContent = kmh;
-
-          // Move runway car forward
-          const progressPerc = Math.min(94, (this.typedChars / this.demoText.length) * 92 + 2);
-          const runwayCar = document.getElementById('demo-runway-car');
-          if (runwayCar) runwayCar.style.left = `${progressPerc}%`;
-
-          // Check completion
-          if (this.typedChars >= this.demoText.length) {
-            this.demoCompleted = true;
-            soundEffects.playVictoryFanfare();
-            const winToast = document.getElementById('demo-win-toast');
-            const winStats = document.getElementById('demo-win-stats');
-            const stateEl = document.getElementById('demo-engine-state');
-            if (winToast) winToast.classList.remove('hidden');
-            if (winStats) winStats.textContent = `Sprint completed at ${this.demoWpm} WPM with 100% precision. You qualify for Tier 3 PRO Circuit!`;
-            if (stateEl) {
-              stateEl.textContent = 'POLE POSITION';
-              stateEl.className = 'engine-state-pill pole';
-            }
-          }
-        } else {
-          // Error feedback
-          soundEffects.playKeyClick(false);
-          if (charSpans[this.typedChars]) {
-            charSpans[this.typedChars].classList.add('error');
-            setTimeout(() => charSpans[this.typedChars]?.classList.remove('error'), 300);
-          }
-        }
-      });
-    }
-
-    // Reset Demo Button
-    demoResetBtn?.addEventListener('click', () => {
-      this.typedChars = 0;
-      this.demoStartTime = null;
-      this.demoWpm = 0;
-      this.demoCompleted = false;
-
-      const wpmEl = document.getElementById('demo-wpm-val');
-      const kmhEl = document.getElementById('demo-kmh-val');
-      const winToast = document.getElementById('demo-win-toast');
-      const runwayCar = document.getElementById('demo-runway-car');
-      const stateEl = document.getElementById('demo-engine-state');
-
-      if (wpmEl) wpmEl.textContent = '0';
-      if (kmhEl) kmhEl.textContent = '0';
-      if (winToast) winToast.classList.add('hidden');
-      if (runwayCar) runwayCar.style.left = '2%';
-      if (stateEl) {
-        stateEl.textContent = 'READY ON GRID';
-        stateEl.className = 'engine-state-pill';
+      if (audioBtn) {
+        audioBtn.classList.toggle('is-muted', isMuted);
       }
-
-      this.initDemoPrompt();
-      if (demoInput) demoInput.focus();
     });
 
-    // 5. Hero 3D Car subtle parallax tilt on mouse move
-    const heroStage = document.querySelector('.hero-visual-stage');
-    const heroImg = document.getElementById('hero-car-img');
+    // 4. Trailer Modal
+    const trailerBtn = document.getElementById('hero-btn-watch-trailer');
+    const trailerModal = document.getElementById('trailer-modal-backdrop');
+    const trailerClose = document.getElementById('trailer-modal-close');
 
-    if (heroStage && heroImg) {
-      heroStage.addEventListener('mousemove', (e) => {
-        const rect = heroStage.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        heroImg.style.transform = `perspective(800px) rotateY(${x * 12}deg) rotateX(${-y * 8}deg) scale(1.02)`;
-      });
+    trailerBtn?.addEventListener('click', () => {
+      soundEffects.playUiClick();
+      if (trailerModal) trailerModal.classList.remove('hidden');
+    });
 
-      heroStage.addEventListener('mouseleave', () => {
-        heroImg.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg) scale(1)';
-      });
-    }
+    trailerClose?.addEventListener('click', () => {
+      soundEffects.playUiClick();
+      if (trailerModal) trailerModal.classList.add('hidden');
+    });
+
+    trailerModal?.addEventListener('click', (e) => {
+      if (e.target === trailerModal) {
+        trailerModal.classList.add('hidden');
+      }
+    });
+
+    // 5. Login Modal
+    const loginBtn = document.getElementById('landing-login-btn');
+    const loginModal = document.getElementById('login-modal-backdrop');
+    const loginClose = document.getElementById('login-modal-close');
+    const saveCallsignBtn = document.getElementById('btn-save-pilot-callsign');
+
+    loginBtn?.addEventListener('click', () => {
+      soundEffects.playUiClick();
+      if (loginModal) loginModal.classList.remove('hidden');
+    });
+
+    loginClose?.addEventListener('click', () => {
+      soundEffects.playUiClick();
+      if (loginModal) loginModal.classList.add('hidden');
+    });
+
+    saveCallsignBtn?.addEventListener('click', async () => {
+      const input = document.getElementById('input-pilot-callsign');
+      const val = input ? input.value.trim() : '';
+      if (val) {
+        this.profile.username = val;
+        await storage.saveProfile(this.profile);
+        soundEffects.playVictoryFanfare();
+        this.app.updateHeader();
+        if (loginModal) loginModal.classList.add('hidden');
+      }
+    });
+
+    // 6. Notifications popover trigger
+    const notifyBtn = document.getElementById('landing-notify-btn');
+    notifyBtn?.addEventListener('click', () => {
+      soundEffects.playUiClick();
+      alert('🔔 Notifications (3):\n\n1. Daily Streak Active (7 Days)\n2. Vortex R34 Prototype Available in Garage\n3. Season 1 Championships Open');
+    });
   }
 
   dispose() {
-    // cleanup
+    // Cleanup if needed
   }
 }
