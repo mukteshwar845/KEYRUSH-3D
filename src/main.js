@@ -21,6 +21,7 @@ import { LeaderboardView } from './ui/leaderboardView.js';
 import { AnalyticsView } from './ui/analyticsView.js';
 import { MissionsView } from './ui/missionsView.js';
 import { SettingsView } from './ui/settingsView.js';
+import { ProfileView } from './ui/profileView.js';
 
 class KeyRushApp {
   constructor() {
@@ -52,7 +53,7 @@ class KeyRushApp {
     this.navManager.bindEvents();
 
     // 5. Initial View Route — Stop direct access to main page; must enter via Get Started button
-    const validScreens = ['landing', 'dashboard', 'race', 'race-modes', 'diagnostic', 'academy', 'garage', 'leaderboard', 'analytics', 'missions', 'settings'];
+    const validScreens = ['landing', 'dashboard', 'race', 'race-modes', 'diagnostic', 'academy', 'garage', 'leaderboard', 'analytics', 'missions', 'settings', 'profile'];
     const initialHash = window.location.hash.replace('#', '').trim();
     const hasEntered = sessionStorage.getItem('keyrush_entered') === 'true';
 
@@ -94,6 +95,17 @@ class KeyRushApp {
     if (userChip && this.profile) {
       const nameEl = userChip.querySelector('.dash-user-name');
       if (nameEl) nameEl.textContent = this.profile.username || 'Kartik';
+
+      const roleEl = userChip.querySelector('.dash-user-role');
+      if (roleEl) roleEl.textContent = this.profile.callsign || this.profile.role || 'Apex Pilot';
+
+      const avatarEl = userChip.querySelector('.dash-user-avatar');
+      if (avatarEl) {
+        const src = this.profile.avatar || '/images/ui/avatar-kartik.png';
+        if (src.startsWith('data:') || src.startsWith('/') || src.startsWith('http')) {
+          avatarEl.src = src;
+        }
+      }
     }
   }
 
@@ -125,6 +137,10 @@ class KeyRushApp {
       this.navManager.setActiveScreen(screenId);
     }
 
+    const mainArea = document.getElementById('dash-main-area');
+    if (mainArea) {
+      mainArea.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Music Management:
@@ -180,6 +196,11 @@ class KeyRushApp {
 
       case 'settings':
         this.currentViewInstance = new SettingsView(mainEl, this);
+        await this.currentViewInstance.render();
+        break;
+
+      case 'profile':
+        this.currentViewInstance = new ProfileView(mainEl, this);
         await this.currentViewInstance.render();
         break;
 

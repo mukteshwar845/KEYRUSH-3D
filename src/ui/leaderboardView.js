@@ -179,7 +179,7 @@ export class LeaderboardView {
               <button class="btn btn-primary btn-full glow-primary" id="btn-export-profile-card">
                 📸 DOWNLOAD PERFORMANCE CARD
               </button>
-              <button class="btn btn-outline btn-full" data-nav="settings">
+              <button class="btn btn-outline btn-full" data-nav="profile">
                 Edit Pilot Profile & Avatar
               </button>
             </div>

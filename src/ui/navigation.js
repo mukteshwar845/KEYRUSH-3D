@@ -12,40 +12,6 @@ export class NavigationManager {
   constructor(app) {
     this.app = app;
     this.currentScreen = 'dashboard';
-    this.isOnline = navigator.onLine;
-    this.currentLatencyMs = 18;
-    this.pingInterval = null;
-    this.searchOpen = false;
-    this.notifyOpen = false;
-
-    this.initNetworkDetection();
-  }
-
-  initNetworkDetection() {
-    window.addEventListener('online', () => {
-      this.isOnline = true;
-      this.updateNetworkBadge();
-    });
-
-    window.addEventListener('offline', () => {
-      this.isOnline = false;
-      this.updateNetworkBadge();
-    });
-
-    this.pingInterval = setInterval(() => {
-      if (this.isOnline) {
-        const start = performance.now();
-        fetch('/logo-icon.svg', { method: 'HEAD', cache: 'no-store' })
-          .then(() => {
-            this.currentLatencyMs = Math.round(performance.now() - start);
-            this.updateNetworkBadge();
-          })
-          .catch(() => {
-            this.currentLatencyMs = 24;
-            this.updateNetworkBadge();
-          });
-      }
-    }, 10000);
   }
 
   updateNetworkBadge() {
@@ -75,7 +41,9 @@ export class NavigationManager {
   }
 
   renderShell(profile) {
-    const username = (profile?.username && profile.username !== 'CyberRacer') ? profile.username : 'Kartik';
+    const username = profile?.username || 'Kartik';
+    const userRole = profile?.callsign || profile?.role || 'Apex Pilot';
+    const userAvatar = profile?.avatar || '/images/ui/avatar-kartik.png';
     const streak = profile?.currentStreak || 7;
 
     return `
@@ -190,6 +158,16 @@ export class NavigationManager {
               <span class="nav-btn-label">Tournaments</span>
             </button>
 
+            <button class="dash-nav-btn" data-nav="profile" title="Pilot Profile & Career">
+              <span class="nav-btn-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </span>
+              <span class="nav-btn-label">Profile</span>
+            </button>
+
             <button class="dash-nav-btn" data-nav="settings" title="Audio & System Settings">
               <span class="nav-btn-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -215,25 +193,6 @@ export class NavigationManager {
               </div>
             </div>
 
-            <!-- Promo 2: Offline Mode Card -->
-            <div class="sidebar-status-card">
-              <div class="status-card-header">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                  <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
-                  <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
-                  <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
-                  <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
-                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-                  <line x1="12" y1="20" x2="12.01" y2="20"></line>
-                </svg>
-                <span class="status-card-title">You're Offline</span>
-              </div>
-              <p class="status-card-desc">Play locally, track progress, and enjoy full features offline.</p>
-              <button class="sidebar-status-btn" data-action="offline-info">
-                Offline Mode
-              </button>
-            </div>
           </div>
         </aside>
 
@@ -258,26 +217,6 @@ export class NavigationManager {
 
             <!-- Top Right Profile & Status Controls -->
             <div class="dash-top-right">
-              <!-- Offline Mode Status Pill -->
-              <div class="dash-status-pill" id="dash-status-pill" title="Offline-First Engine: Full Local Availability">
-                <span class="status-pulse-dot" id="dash-network-status-dot"></span>
-                <div class="status-pill-text" id="dash-network-status-text">
-                  <strong>Offline Mode</strong>
-                  <small>Play anytime, anywhere</small>
-                </div>
-              </div>
-
-              <!-- Music & Audio Soundtrack Quick Toggle -->
-              <button class="dash-icon-btn audio-quick-toggle" id="dash-audio-toggle" title="Background Music: Click to Toggle (Mute / Unmute)">
-                <span class="audio-toggle-icon">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <path class="wave-outer" d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-                    <path class="wave-inner" d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                  </svg>
-                </span>
-                <span class="audio-live-pill" id="dash-audio-pill">MUSIC ON</span>
-              </button>
 
               <!-- Notification Bell with Badge 3 -->
               <button class="dash-icon-btn" id="dash-notify-btn" title="Notifications (3)">
@@ -297,11 +236,11 @@ export class NavigationManager {
               </button>
 
               <!-- Player Avatar & Profile -->
-              <div class="dash-user-chip" id="dash-user-chip" role="button" tabindex="0" data-nav="analytics" title="Player Profile & Telemetry">
-                <img src="/images/ui/avatar-kartik.png" alt="${username}" class="dash-user-avatar" />
+              <div class="dash-user-chip" id="dash-user-chip" role="button" tabindex="0" data-nav="profile" title="Pilot Profile & Career">
+                <img src="${userAvatar}" alt="${username}" class="dash-user-avatar" onerror="this.onerror=null; this.src='/images/ui/avatar-kartik.png';" />
                 <div class="dash-user-info">
                   <span class="dash-user-name">${username}</span>
-                  <span class="dash-user-role">Racer</span>
+                  <span class="dash-user-role">${userRole}</span>
                 </div>
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7B8EA8" stroke-width="2.5" stroke-linecap="round">
                   <polyline points="6 9 12 15 18 9"></polyline>
@@ -475,24 +414,7 @@ export class NavigationManager {
         return;
       }
 
-      // Offline info modal trigger
-      const offlineBtn = e.target.closest('[data-action="offline-info"]');
-      if (offlineBtn) {
-        e.preventDefault();
-        alert('⚡ KEYRUSH Offline-First System\n\nAll AI racers, 3D tracks, touch-typing lessons, vehicle customizations, and telemetry logs are 100% saved locally on your device in IndexedDB. No internet connection required!');
-        return;
-      }
 
-      // Audio quick toggle
-      const audioBtn = e.target.closest('#dash-audio-toggle');
-      if (audioBtn) {
-        e.preventDefault();
-        soundEffects.playUiClick();
-        musicManager.toggleMute(true).then((isMuted) => {
-          this.updateAudioToggleUI(!isMuted);
-        });
-        return;
-      }
 
       // Notification toggle
       const notifyBtn = e.target.closest('#dash-notify-btn');

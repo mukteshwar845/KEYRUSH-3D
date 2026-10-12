@@ -716,13 +716,6 @@ export class DashboardView {
       }
     });
 
-    // 4. Offline info click
-    this.container.querySelectorAll('[data-action="offline-info"]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        soundEffects.playUiClick();
-        alert('KEYRUSH Offline-First System: All typing races, AI opponents, garage customizer, academy lessons, and personal progress operate 100% locally with zero internet required.');
-      });
-    });
 
     // 6. User chip profile shortcut
     document.getElementById('dash-user-chip')?.addEventListener('click', () => {

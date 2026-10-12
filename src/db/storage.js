@@ -10,10 +10,89 @@ const DB_VERSION = 1;
 class KeyRushStorage {
   constructor() {
     this.db = null;
+    this.memoryStore = {
+      profile: {
+        user_profile: {
+          id: 'user_profile',
+          username: 'Kartik',
+          callsign: 'KARTIK-01',
+          role: 'Apex Pilot',
+          avatar: '/images/ui/avatar-kartik.png',
+          league: 'Silver II',
+          leagueTier: 'Silver',
+          bio: 'Pushing keystrokes past the redline. Cyberpunk speed enthusiast and competitive touch-typist.',
+          tagline: 'Velocity is a mindset.',
+          country: 'IND',
+          joinedDate: '2025-01-15',
+          visibility: 'public',
+          showStats: true,
+          showHistory: true,
+          xp: 2480,
+          level: 6,
+          totalPracticeTimeSec: 6 * 3600 + 42 * 60,
+          racesWon: 14,
+          racesPlayed: 18,
+          bestWpm: 112,
+          averageWpm: 78,
+          accuracy: 96.0,
+          currentStreak: 7,
+          longestStreak: 7,
+          lastActiveDate: new Date().toISOString().split('T')[0],
+          weakKeys: { 'p': 5, 'q': 4, 'z': 3, 'x': 2 }
+        }
+      },
+      sessions: [
+        { timestamp: Date.now() - 86400000 * 6, mode: 'AI Racing', difficulty: 'ROOKIE', wpm: 58, accuracy: 94.2, errorCount: 6, duration: 42, won: true, opponentWpm: 48, cpm: 290, consistency: 88, keyErrors: { 'c': 2, 'v': 2, 'b': 2 } },
+        { timestamp: Date.now() - 86400000 * 5, mode: 'Solo Practice', difficulty: 'AMATEUR', wpm: 62, accuracy: 95.8, errorCount: 4, duration: 45, won: true, opponentWpm: 0, cpm: 310, consistency: 91, keyErrors: { 'r': 2, 't': 1, 'p': 1 } },
+        { timestamp: Date.now() - 86400000 * 4, mode: 'AI Racing', difficulty: 'AMATEUR', wpm: 66, accuracy: 96.1, errorCount: 3, duration: 41, won: true, opponentWpm: 60, cpm: 330, consistency: 93, keyErrors: { 'p': 2, 'q': 1 } },
+        { timestamp: Date.now() - 86400000 * 3, mode: 'Online Multiplayer', difficulty: 'PRO', wpm: 71, accuracy: 97.4, errorCount: 2, duration: 38, won: true, opponentWpm: 68, cpm: 355, consistency: 94, keyErrors: { 'z': 1, 'x': 1 } },
+        { timestamp: Date.now() - 86400000 * 2, mode: 'AI Racing', difficulty: 'PRO', wpm: 74, accuracy: 95.9, errorCount: 4, duration: 39, won: true, opponentWpm: 72, cpm: 370, consistency: 90, keyErrors: { 'b': 2, 'm': 2 } },
+        { timestamp: Date.now() - 86400000 * 1, mode: 'Solo Practice', difficulty: 'PRO', wpm: 79, accuracy: 98.2, errorCount: 1, duration: 36, won: true, opponentWpm: 0, cpm: 395, consistency: 96, keyErrors: { 'p': 1 } },
+        { timestamp: Date.now() - 3600000 * 3, mode: 'AI Racing', difficulty: 'PRO', wpm: 84, accuracy: 97.8, errorCount: 2, duration: 34, won: true, opponentWpm: 78, cpm: 420, consistency: 95, keyErrors: { 'q': 1, 'x': 1 } }
+      ],
+      garage: {
+        user_garage: {
+          id: 'user_garage',
+          activeVehicleId: 'talon',
+          paintColor: '#00e5ff',
+          underglowColor: '#a855f7',
+          trailEffect: 'neon-plasma',
+          unlockedVehicles: ['talon', 'vortex'],
+          unlockedPaints: ['#00e5ff', '#a855f7', '#00f59b', '#ff3366', '#ffffff']
+        }
+      },
+      missions: {},
+      settings: {
+        user_settings: {
+          id: 'user_settings',
+          theme: 'cyber-dark',
+          soundEffects: true,
+          engineAudio: true,
+          sfxVolume: 0.60,
+          engineVolume: 0.50,
+          masterVolume: 0.80,
+          interiorVolume: 0.55,
+          racingVolume: 0.65,
+          musicMuted: false,
+          keyboardClickSound: 'cherry-blue',
+          errorPenalty: 'standard',
+          reducedMotion: false,
+          targetWpm: 80,
+          targetAccuracy: 98,
+          dailyGoalMinutes: 15,
+          notificationsEnabled: true
+        }
+      },
+      leaderboard: []
+    };
     this.ready = this.init();
   }
 
   async init() {
+    if (typeof indexedDB === 'undefined') {
+      return this;
+    }
+
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -78,10 +157,18 @@ class KeyRushStorage {
       await this.saveProfile({
         id: 'user_profile',
         username: 'Kartik',
-        role: 'Racer',
+        callsign: 'KARTIK-01',
+        role: 'Apex Pilot',
         avatar: '/images/ui/avatar-kartik.png',
         league: 'Silver II',
         leagueTier: 'Silver',
+        bio: 'Pushing keystrokes past the redline. Cyberpunk speed enthusiast and competitive touch-typist.',
+        tagline: 'Velocity is a mindset.',
+        country: 'IND',
+        joinedDate: '2025-01-15',
+        visibility: 'public',
+        showStats: true,
+        showHistory: true,
         xp: 2480,
         level: 6,
         totalPracticeTimeSec: 6 * 3600 + 42 * 60,
@@ -172,16 +259,59 @@ class KeyRushStorage {
   // Profile operations
   async getProfile() {
     await this.ready;
+    if (!this.db) {
+      const res = this.memoryStore.profile['user_profile'];
+      if (!res) return null;
+      return {
+        callsign: res.username ? `${res.username.toUpperCase().slice(0, 8)}-01` : 'PILOT-01',
+        role: 'Apex Pilot',
+        avatar: '/images/ui/avatar-kartik.png',
+        league: 'Silver II',
+        leagueTier: 'Silver',
+        bio: 'Pushing keystrokes past the redline. Cyberpunk speed enthusiast.',
+        tagline: 'Velocity is a mindset.',
+        country: 'IND',
+        joinedDate: '2025-01-15',
+        visibility: 'public',
+        showStats: true,
+        showHistory: true,
+        ...res
+      };
+    }
     return new Promise((resolve) => {
       const tx = this.db.transaction('profile', 'readonly');
       const req = tx.objectStore('profile').get('user_profile');
-      req.onsuccess = () => resolve(req.result || null);
+      req.onsuccess = () => {
+        const res = req.result;
+        if (!res) return resolve(null);
+        // Ensure defaults for any new/optional fields
+        const normalized = {
+          callsign: res.username ? `${res.username.toUpperCase().slice(0, 8)}-01` : 'PILOT-01',
+          role: 'Apex Pilot',
+          avatar: '/images/ui/avatar-kartik.png',
+          league: 'Silver II',
+          leagueTier: 'Silver',
+          bio: 'Pushing keystrokes past the redline. Cyberpunk speed enthusiast.',
+          tagline: 'Velocity is a mindset.',
+          country: 'IND',
+          joinedDate: '2025-01-15',
+          visibility: 'public',
+          showStats: true,
+          showHistory: true,
+          ...res
+        };
+        resolve(normalized);
+      };
       req.onerror = () => resolve(null);
     });
   }
 
   async saveProfile(profile) {
     await this.ready;
+    if (!this.db) {
+      this.memoryStore.profile['user_profile'] = profile;
+      return profile;
+    }
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('profile', 'readwrite');
       const req = tx.objectStore('profile').put(profile);
@@ -190,9 +320,56 @@ class KeyRushStorage {
     });
   }
 
+  async resetCareerTelemetry() {
+    await this.ready;
+    if (!this.db) {
+      this.memoryStore.sessions = [];
+      const p = this.memoryStore.profile['user_profile'] || { id: 'user_profile' };
+      p.racesPlayed = 0;
+      p.racesWon = 0;
+      p.averageWpm = 0;
+      p.bestWpm = 0;
+      p.accuracy = 100;
+      p.totalPracticeTimeSec = 0;
+      p.currentStreak = 0;
+      p.longestStreak = 0;
+      p.weakKeys = {};
+      this.memoryStore.profile['user_profile'] = p;
+      return true;
+    }
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(['sessions', 'profile'], 'readwrite');
+      const sessionStore = tx.objectStore('sessions');
+      sessionStore.clear();
+
+      const profileStore = tx.objectStore('profile');
+      const req = profileStore.get('user_profile');
+      req.onsuccess = () => {
+        const p = req.result || { id: 'user_profile' };
+        p.racesPlayed = 0;
+        p.racesWon = 0;
+        p.averageWpm = 0;
+        p.bestWpm = 0;
+        p.accuracy = 100;
+        p.totalPracticeTimeSec = 0;
+        p.currentStreak = 0;
+        p.longestStreak = 0;
+        p.weakKeys = {};
+        profileStore.put(p);
+      };
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = (e) => reject(e);
+    });
+  }
+
   // Sessions operations
   async addSession(session) {
     await this.ready;
+    if (!this.db) {
+      const s = { id: Date.now() + Math.random(), ...session };
+      this.memoryStore.sessions.unshift(s);
+      return s.id;
+    }
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('sessions', 'readwrite');
       const req = tx.objectStore('sessions').add(session);
@@ -203,6 +380,11 @@ class KeyRushStorage {
 
   async getSessions(limit = 100) {
     await this.ready;
+    if (!this.db) {
+      const results = [...this.memoryStore.sessions];
+      results.sort((a, b) => b.timestamp - a.timestamp);
+      return results.slice(0, limit);
+    }
     return new Promise((resolve) => {
       const tx = this.db.transaction('sessions', 'readonly');
       const store = tx.objectStore('sessions');
@@ -219,6 +401,7 @@ class KeyRushStorage {
   // Garage operations
   async getGarage() {
     await this.ready;
+    if (!this.db) return this.memoryStore.garage['user_garage'] || null;
     return new Promise((resolve) => {
       const tx = this.db.transaction('garage', 'readonly');
       const req = tx.objectStore('garage').get('user_garage');
@@ -229,6 +412,10 @@ class KeyRushStorage {
 
   async saveGarage(garage) {
     await this.ready;
+    if (!this.db) {
+      this.memoryStore.garage['user_garage'] = garage;
+      return garage;
+    }
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('garage', 'readwrite');
       const req = tx.objectStore('garage').put(garage);
@@ -240,6 +427,7 @@ class KeyRushStorage {
   // Missions operations
   async getMissions() {
     await this.ready;
+    if (!this.db) return this.memoryStore.missions['daily_missions'] || null;
     return new Promise((resolve) => {
       const tx = this.db.transaction('missions', 'readonly');
       const req = tx.objectStore('missions').get('daily_missions');
@@ -250,6 +438,10 @@ class KeyRushStorage {
 
   async saveMissions(missions) {
     await this.ready;
+    if (!this.db) {
+      this.memoryStore.missions['daily_missions'] = missions;
+      return missions;
+    }
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('missions', 'readwrite');
       const req = tx.objectStore('missions').put(missions);
@@ -261,6 +453,7 @@ class KeyRushStorage {
   // Settings operations
   async getSettings() {
     await this.ready;
+    if (!this.db) return this.memoryStore.settings['user_settings'] || null;
     return new Promise((resolve) => {
       const tx = this.db.transaction('settings', 'readonly');
       const req = tx.objectStore('settings').get('user_settings');
@@ -282,6 +475,10 @@ class KeyRushStorage {
 
   async saveSettings(settings) {
     await this.ready;
+    if (!this.db) {
+      this.memoryStore.settings['user_settings'] = settings;
+      return settings;
+    }
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('settings', 'readwrite');
       const req = tx.objectStore('settings').put(settings);
@@ -332,6 +529,16 @@ class KeyRushStorage {
 
   async clearAllData() {
     await this.ready;
+    if (!this.db) {
+      this.memoryStore.profile = {};
+      this.memoryStore.sessions = [];
+      this.memoryStore.garage = {};
+      this.memoryStore.missions = {};
+      this.memoryStore.settings = {};
+      this.memoryStore.leaderboard = [];
+      await this.seedDefaults();
+      return true;
+    }
     return new Promise((resolve) => {
       const stores = ['profile', 'sessions', 'garage', 'missions', 'settings', 'leaderboard'];
       const tx = this.db.transaction(stores, 'readwrite');

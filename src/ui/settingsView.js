@@ -204,30 +204,26 @@ export class SettingsView {
             </div>
           </div>
 
-          <!-- 4. PILOT PROFILE & AVATAR -->
+          <!-- 4. PILOT PROFILE & IDENTITY -->
           <div class="settings-card card-dark">
-            <h3 class="panel-title">PILOT PROFILE</h3>
+            <h3 class="panel-title">PILOT PROFILE & IDENTITY</h3>
 
             <div class="setting-item">
               <div class="s-info">
                 <strong>Callsign / Username</strong>
                 <span>Displayed on leaderboards and multiplayer</span>
               </div>
-              <input type="text" id="setting-username" value="${profile?.username || 'CyberRacer'}" maxlength="18" class="custom-input">
+              <input type="text" id="setting-username" value="${profile?.username || 'Kartik'}" maxlength="24" class="custom-input">
             </div>
 
             <div class="setting-item">
               <div class="s-info">
-                <strong>Pilot Avatar Icon</strong>
-                <span>Choose your pilot emoji</span>
+                <strong>Pilot Avatar & Esports Identity</strong>
+                <span>Manage custom avatar uploads, bio, region, telemetry, and privacy controls</span>
               </div>
-              <select id="setting-avatar" class="custom-select">
-                <option value="🏎️" ${profile?.avatar === '🏎️' ? 'selected' : ''}>🏎️ Cyber Racer</option>
-                <option value="⚡" ${profile?.avatar === '⚡' ? 'selected' : ''}>⚡ Lightning Apex</option>
-                <option value="🔥" ${profile?.avatar === '🔥' ? 'selected' : ''}>🔥 Nitro Flame</option>
-                <option value="👑" ${profile?.avatar === '👑' ? 'selected' : ''}>👑 Grand Champion</option>
-                <option value="🤖" ${profile?.avatar === '🤖' ? 'selected' : ''}>🤖 Cyber Cyborg</option>
-              </select>
+              <button class="btn btn-outline btn-small" data-nav="profile" type="button">
+                Open Full Pilot Profile →
+              </button>
             </div>
           </div>
 
@@ -420,12 +416,12 @@ export class SettingsView {
       musicManager.applySettings(newSettings);
       soundEffects.updateSettings(newSettings);
 
-      // Update Profile username/avatar
-      const newUsername = document.getElementById('setting-username')?.value.trim() || 'CyberRacer';
-      const newAvatar = document.getElementById('setting-avatar')?.value || '🏎️';
-      profile.username = newUsername;
-      profile.avatar = newAvatar;
-      await storage.saveProfile(profile);
+      // Update Profile username if changed
+      const newUsername = document.getElementById('setting-username')?.value.trim();
+      if (newUsername && newUsername.length >= 2) {
+        profile.username = newUsername;
+        await storage.saveProfile(profile);
+      }
 
       // Apply theme
       document.body.className = `theme-${theme}`;
