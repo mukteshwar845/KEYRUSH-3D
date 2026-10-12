@@ -1425,35 +1425,36 @@ body {
 /* 3. TOP-LEFT: PILOT TELEMETRY CARD */
 .hud-pilot-card {
   position: absolute;
-  top: 13.0%;
+  top: 12.0%;
   left: 1.6%;
-  width: 22.2%;
-  height: 29.2%;
-  background: rgba(8, 12, 20, 0.92);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 1.1vw 1.3vw;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75);
+  width: 17.5%;
+  max-width: 260px;
+  background: rgba(8, 14, 26, 0.48);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), inset 0 0 12px rgba(0, 229, 255, 0.05);
   z-index: 70;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 0.55rem;
 }
 
 .pilot-identity-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .pilot-avatar-frame {
-  width: 48px;
-  height: 48px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
-  border: 2px solid rgba(0, 229, 255, 0.85);
+  border: 1.5px solid rgba(0, 229, 255, 0.85);
   overflow: hidden;
-  box-shadow: 0 0 14px rgba(0, 229, 255, 0.55);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
   flex-shrink: 0;
 }
 
@@ -1467,53 +1468,58 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .pilot-name-text {
   font-family: var(--font-display);
-  font-size: 1.25rem;
+  font-size: 1.05rem;
   font-weight: 800;
   color: #00e5ff;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pilot-car-model {
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 1.2px;
-  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 1px;
+  margin-top: 2px;
 }
 
 .pilot-vehicle-preview {
   margin-left: auto;
-  width: 82px;
-  height: 42px;
+  width: 56px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .pilot-car-thumb {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.65));
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.6));
 }
 
 .pilot-stats-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.6rem 1rem;
+  gap: 0.35rem 0.8rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.6rem;
+  padding-top: 0.45rem;
   text-align: left;
 }
 
 .pilot-stat-number {
-  font-size: 1.85rem;
+  font-size: 1.45rem;
   font-weight: 900;
   line-height: 1;
   color: #ffffff;
@@ -1521,21 +1527,21 @@ body {
 
 .pilot-stat-number.highlight-cyan {
   color: #00e5ff;
-  text-shadow: 0 0 12px rgba(0, 229, 255, 0.7);
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.65);
 }
 
 .pilot-stat-caption {
   font-family: var(--font-display);
-  font-size: 0.68rem;
-  letter-spacing: 1.2px;
+  font-size: 0.58rem;
+  letter-spacing: 1px;
   color: #8b9bb4;
-  margin-top: 3px;
+  margin-top: 2px;
   font-weight: 700;
 }
 
 .flame-ico {
   color: #ff9900;
-  filter: drop-shadow(0 0 6px #ff5500);
+  filter: drop-shadow(0 0 5px #ff5500);
 }
 
 /* 4. TOP-RIGHT: RACE STANDINGS CARD */
