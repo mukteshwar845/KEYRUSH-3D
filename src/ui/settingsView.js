@@ -8,6 +8,8 @@ import { storage } from '../db/storage.js';
 import { soundEffects } from '../audio/soundEffects.js';
 import { musicManager } from '../audio/musicManager.js';
 import { NotificationManager } from '../utils/notifications.js';
+import { accountLifecycle } from '../utils/accountLifecycle.js';
+
 
 export class SettingsView {
   constructor(container, app) {
@@ -22,31 +24,20 @@ export class SettingsView {
 
     this.container.innerHTML = `
       <div class="dash-page-container">
-        <!-- Section Hero Banner -->
-        <div class="dash-section-hero card-dark">
+        <!-- Section Header -->
+        <header class="dash-section-hero">
           <div class="section-hero-content">
-            <span class="section-tag-pill">SYSTEM CONFIGURATION</span>
-            <h1 class="dash-page-title">SETTINGS & OFFLINE PREFERENCES</h1>
+            <h1 class="dash-page-title">Settings & Preferences</h1>
             <p class="dash-page-desc">
-              Configure audio synthesis, mechanical switch tones, difficulty penalties, and manage your local offline database.
+              Configure audio synthesis, tactile keyboard tones, typing penalties, and manage your local offline storage.
             </p>
           </div>
-          <div class="section-hero-stats">
-            <div class="stat-pill-item">
-              <span class="stat-pill-label">OFFLINE DATABASE</span>
-              <span class="stat-pill-val highlight-cyan font-mono">INDEXEDDB OK</span>
-            </div>
-            <div class="stat-pill-item">
-              <span class="stat-pill-label">AUDIO ENGINE</span>
-              <span class="stat-pill-val text-gold font-mono">WEB AUDIO SYNTH</span>
-            </div>
-          </div>
-        </div>
+        </header>
 
         <div class="settings-grid">
           <!-- 1. APPEARANCE & ACCESSIBILITY -->
-          <div class="settings-card card-dark">
-            <h3 class="panel-title">APPEARANCE & VISUALS</h3>
+          <div class="settings-card">
+            <h3 class="panel-title">Appearance & Accessibility</h3>
 
             <div class="setting-item">
               <div class="s-info">
@@ -70,8 +61,8 @@ export class SettingsView {
           </div>
 
           <!-- 2. GAMEPLAY & ERROR PENALTIES -->
-          <div class="settings-card card-dark">
-            <h3 class="panel-title">GAMEPLAY & PENALTIES</h3>
+          <div class="settings-card">
+            <h3 class="panel-title">Gameplay & Penalties</h3>
 
             <div class="setting-item">
               <div class="s-info">
@@ -103,8 +94,8 @@ export class SettingsView {
           </div>
 
           <!-- 3. AUDIO & MUSIC SYSTEM -->
-          <div class="settings-card card-dark">
-            <h3 class="panel-title">AUDIO & SOUNDTRACK SYSTEM</h3>
+          <div class="settings-card">
+            <h3 class="panel-title">Audio & Sound Effects</h3>
 
             <div class="setting-item">
               <div class="s-info">
@@ -205,8 +196,8 @@ export class SettingsView {
           </div>
 
           <!-- 4. PILOT PROFILE & IDENTITY -->
-          <div class="settings-card card-dark">
-            <h3 class="panel-title">PILOT PROFILE & IDENTITY</h3>
+          <div class="settings-card">
+            <h3 class="panel-title">Pilot Identity</h3>
 
             <div class="setting-item">
               <div class="s-info">
@@ -228,8 +219,8 @@ export class SettingsView {
           </div>
 
           <!-- 5. NOTIFICATIONS & DAILY REMINDERS -->
-          <div class="settings-card card-dark">
-            <h3 class="panel-title">PUSH NOTIFICATIONS & REMINDERS</h3>
+          <div class="settings-card">
+            <h3 class="panel-title">Notifications & Reminders</h3>
 
             <div class="setting-item">
               <div class="s-info">
@@ -251,8 +242,8 @@ export class SettingsView {
           </div>
 
           <!-- 6. OFFLINE DATA PERSISTENCE & BACKUP -->
-          <div class="settings-card card-dark">
-            <h3 class="panel-title">OFFLINE DATA & BACKUP</h3>
+          <div class="settings-card">
+            <h3 class="panel-title">Data & Storage Management</h3>
 
             <p class="data-explainer">
               All telemetry, unlocked supercars, and session histories are stored inside IndexedDB in your browser.
@@ -274,12 +265,119 @@ export class SettingsView {
               </button>
             </div>
           </div>
+
+          <!-- 7. PRIVACY & DATA PROTECTION CONTROLS -->
+          <div class="settings-card">
+            <h3 class="panel-title">Privacy Controls</h3>
+
+            <div class="setting-item">
+              <div class="s-info">
+                <strong>Public Esports Profile</strong>
+                <span>Allow your callsign and league tier to appear on rankings</span>
+              </div>
+              <input type="checkbox" id="setting-privacy-public" ${profile?.visibility !== 'private' ? 'checked' : ''} class="custom-toggle">
+            </div>
+
+            <div class="setting-item">
+              <div class="s-info">
+                <strong>Share Race Telemetry</strong>
+                <span>Broadcast live WPM and speedometer during multiplayer matches</span>
+              </div>
+              <input type="checkbox" id="setting-privacy-telemetry" ${profile?.showStats !== false ? 'checked' : ''} class="custom-toggle">
+            </div>
+
+            <div class="setting-item">
+              <div class="s-info">
+                <strong>Show Session History</strong>
+                <span>Allow viewing of previous race timestamps and circuits</span>
+              </div>
+              <input type="checkbox" id="setting-privacy-history" ${profile?.showHistory !== false ? 'checked' : ''} class="custom-toggle">
+            </div>
+
+            <div class="setting-item">
+              <div class="s-info">
+                <strong>Optional Telemetry Analytics</strong>
+                <span>Allow anonymous local performance error collection to improve the 3D racing engine</span>
+              </div>
+              <input type="checkbox" id="setting-privacy-analytics" ${profile?.analyticsConsent ? 'checked' : ''} class="custom-toggle">
+            </div>
+
+            <div class="legal-links-strip">
+              <div class="legal-strip-title">LEGAL POLICIES & COMPLIANCE:</div>
+              <div class="legal-strip-buttons">
+                <button class="btn btn-outline btn-small" data-nav="legal" data-legal-tab="privacy" type="button">🛡️ Privacy Policy</button>
+                <button class="btn btn-outline btn-small" data-nav="legal" data-legal-tab="terms" type="button">📜 Terms of Service</button>
+                <button class="btn btn-outline btn-small" data-nav="legal" data-legal-tab="cookies" type="button">🍪 Cookie Notice</button>
+                <button class="btn btn-outline btn-small" data-nav="legal" data-legal-tab="security" type="button">🔒 Security Disclosure</button>
+                <button class="btn btn-outline btn-small" data-nav="legal" data-legal-tab="accessibility" type="button">♿ Accessibility</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. DANGER ZONE: ACCOUNT DELETION -->
+          <div class="settings-card card-danger-zone">
+            <h3 class="panel-title text-negative">Account Lifecycle & Reset</h3>
+
+            <div class="danger-zone-content">
+              <p class="text-negative-desc">
+                Permanently delete your player profile, supercar customizations, unlocked liveries, practice streaks, session logs, and purge all Service Worker caches. This action cannot be undone.
+              </p>
+              <button class="btn btn-outline btn-danger" id="btn-trigger-delete-account" type="button">
+                🗑️ Permanently Delete Account & Data
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="settings-footer-actions">
           <button class="btn btn-primary btn-large glow-primary" id="btn-save-settings">
             💾 SAVE SETTINGS
           </button>
+        </div>
+
+        <!-- ACCOUNT DELETION CONFIRMATION MODAL -->
+        <div class="profile-modal-overlay" id="delete-account-modal" role="dialog" aria-modal="true" aria-labelledby="del-modal-title">
+          <div class="profile-modal-dialog modal-danger-dialog">
+            <div class="modal-header">
+              <h3 id="del-modal-title" class="modal-title text-negative">PERMANENT ACCOUNT DELETION</h3>
+              <button class="modal-close-btn" id="btn-del-modal-close" aria-label="Close">×</button>
+            </div>
+
+            <div class="modal-danger-body">
+              <div class="danger-warning-banner">
+                <span class="warning-icon">⚠️</span>
+                <div>
+                  <strong>Irreversible Data Erasure</strong>
+                  <p>In compliance with DPDPA 2023 and GDPR, executing this request will immediately and permanently erase:</p>
+                </div>
+              </div>
+
+              <ul class="deletion-purge-list">
+                <li>IndexedDB Profile & Pilot Callsign</li>
+                <li>All recorded race session telemetry & WPM charts</li>
+                <li>Garage vehicle unlocks, custom liveries & neon underglow</li>
+                <li>Daily mission progress and streak calendar</li>
+                <li>Service Worker offline asset caches (keyrush-v3)</li>
+                <li>Browser session & local storage flags</li>
+              </ul>
+
+              <div class="deletion-challenge-box">
+                <label for="input-del-challenge" class="challenge-label">
+                  To confirm, type <strong class="highlight-cyan font-mono" id="del-challenge-phrase">DELETE ${profile?.username?.toUpperCase() || 'KARTIK'}</strong> below:
+                </label>
+                <input type="text" id="input-del-challenge" class="custom-input font-mono" placeholder="Type confirmation phrase exactly" autocomplete="off" />
+              </div>
+
+              <div class="deletion-status-message hidden" id="del-status-message"></div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" id="btn-cancel-delete">Cancel</button>
+              <button type="button" class="btn btn-danger" id="btn-confirm-delete" disabled>
+                Permanently Delete Everything
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     `;
@@ -478,6 +576,114 @@ export class SettingsView {
         await storage.clearAllData();
         alert('Data reset to defaults.');
         window.location.reload();
+      }
+    });
+
+    // Privacy toggles live sync
+    const togglePublic = document.getElementById('setting-privacy-public');
+    togglePublic?.addEventListener('change', async () => {
+      profile.visibility = togglePublic.checked ? 'public' : 'private';
+      await storage.saveProfile(profile);
+      soundEffects.playUiClick();
+    });
+
+    const toggleTelemetry = document.getElementById('setting-privacy-telemetry');
+    toggleTelemetry?.addEventListener('change', async () => {
+      profile.showStats = toggleTelemetry.checked;
+      await storage.saveProfile(profile);
+      soundEffects.playUiClick();
+    });
+
+    const toggleHistory = document.getElementById('setting-privacy-history');
+    toggleHistory?.addEventListener('change', async () => {
+      profile.showHistory = toggleHistory.checked;
+      await storage.saveProfile(profile);
+      soundEffects.playUiClick();
+    });
+
+    const toggleAnalytics = document.getElementById('setting-privacy-analytics');
+    toggleAnalytics?.addEventListener('change', async () => {
+      profile.analyticsConsent = toggleAnalytics.checked;
+      settings.analyticsConsent = toggleAnalytics.checked;
+      await storage.saveProfile(profile);
+      await storage.saveSettings(settings);
+      soundEffects.playUiClick();
+    });
+
+    // Legal tabs delegation
+    this.container.querySelectorAll('[data-legal-tab]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tab = btn.getAttribute('data-legal-tab');
+        soundEffects.playUiClick();
+        this.app.showScreen('legal', { tab });
+      });
+    });
+
+    // Account Deletion Workflow Modal Handlers
+    const triggerDelBtn = document.getElementById('btn-trigger-delete-account');
+    const delModal = document.getElementById('delete-account-modal');
+    const closeDelBtn = document.getElementById('btn-del-modal-close');
+    const cancelDelBtn = document.getElementById('btn-cancel-delete');
+    const confirmDelBtn = document.getElementById('btn-confirm-delete');
+    const challengeInput = document.getElementById('input-del-challenge');
+    const statusMsg = document.getElementById('del-status-message');
+
+    let currentReq = null;
+
+    triggerDelBtn?.addEventListener('click', () => {
+      soundEffects.playUiClick();
+      currentReq = accountLifecycle.initiateDeletion(profile?.username || 'KARTIK');
+      if (delModal) delModal.classList.add('active');
+      if (challengeInput) {
+        challengeInput.value = '';
+        challengeInput.focus();
+      }
+      if (confirmDelBtn) confirmDelBtn.disabled = true;
+      if (statusMsg) statusMsg.classList.add('hidden');
+    });
+
+    const closeDeleteModal = () => {
+      accountLifecycle.cancelDeletion();
+      if (delModal) delModal.classList.remove('active');
+    };
+
+    closeDelBtn?.addEventListener('click', closeDeleteModal);
+    cancelDelBtn?.addEventListener('click', closeDeleteModal);
+
+    challengeInput?.addEventListener('input', () => {
+      if (confirmDelBtn && currentReq) {
+        confirmDelBtn.disabled = challengeInput.value.trim() !== currentReq.requiredPhrase;
+      }
+    });
+
+    confirmDelBtn?.addEventListener('click', async () => {
+      if (!currentReq) return;
+      confirmDelBtn.disabled = true;
+      if (statusMsg) {
+        statusMsg.classList.remove('hidden');
+        statusMsg.className = 'deletion-status-message status-processing';
+        statusMsg.textContent = 'Erasing database, unlinking caches, and wiping storage...';
+      }
+
+      const res = await accountLifecycle.executePermanentDeletion(challengeInput.value.trim());
+      if (res.success) {
+        if (statusMsg) {
+          statusMsg.className = 'deletion-status-message status-success';
+          statusMsg.textContent = 'Account and all data successfully erased. Redirecting...';
+        }
+        setTimeout(() => {
+          closeDeleteModal();
+          sessionStorage.removeItem('keyrush_entered');
+          window.location.hash = '#landing';
+          window.location.reload();
+        }, 1200);
+      } else {
+        if (statusMsg) {
+          statusMsg.className = 'deletion-status-message status-error';
+          statusMsg.textContent = `Deletion failed: ${res.error}`;
+        }
+        confirmDelBtn.disabled = false;
       }
     });
   }

@@ -81,131 +81,60 @@ export class DashboardView {
                 </div>
               </section>
 
-              <!-- 2. TYPING PERFORMANCE OVERVIEW (5 CARDS) -->
-              <section class="dash-perf-section">
-                <!-- Card 1: Current WPM -->
-                <div class="perf-card">
-                  <div class="perf-card-header">
-                    <div class="perf-icon-circle blue-circle">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#147BFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 14l3-3"></path>
-                        <path d="M3.34 19a10 10 0 1 1 17.32 0"></path>
-                      </svg>
-                    </div>
-                    <span class="perf-label">Current WPM</span>
+              <!-- 2. PILOT TELEMETRY OVERVIEW DOCK (UNIFIED COMPOSITION) -->
+              <section class="dash-telemetry-dock" aria-label="Pilot Telemetry Overview">
+                <div class="telemetry-cell">
+                  <span class="telemetry-cell-label">Current Velocity</span>
+                  <div class="telemetry-value-row">
+                    <span class="telemetry-big-val font-mono">${currentWpm}</span>
+                    <span class="telemetry-unit font-mono">WPM</span>
+                    <span class="telemetry-trend positive font-mono">↑ 12%</span>
                   </div>
-                  <div class="perf-val-row">
-                    <span class="perf-main-val font-mono">${currentWpm}</span>
-                    <span class="perf-trend-pill positive">
-                      <span>↑ +12%</span>
-                      <small>vs last week</small>
-                    </span>
-                  </div>
-                  <!-- Mini sparkline with neon glow -->
-                  <div class="perf-sparkline">
-                    <svg viewBox="0 0 100 24" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="sparkWpmGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stop-color="#147BFF" stop-opacity="0.35"/>
-                          <stop offset="100%" stop-color="#147BFF" stop-opacity="0"/>
-                        </linearGradient>
-                      </defs>
-                      <path d="M0,20 C 25,22 45,14 65,18 C 80,21 90,9 100,6 L 100,24 L 0,24 Z" fill="url(#sparkWpmGrad)" />
-                      <path d="M0,20 C 25,22 45,14 65,18 C 80,21 90,9 100,6" fill="none" stroke="#147BFF" stroke-width="2.2" stroke-linecap="round" />
-                    </svg>
-                  </div>
+                  <span class="telemetry-subtext">Verified 7-day cadence</span>
                 </div>
 
-                <!-- Card 2: Accuracy -->
-                <div class="perf-card">
-                  <div class="perf-card-header">
-                    <div class="perf-icon-circle cyan-circle">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00D9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <circle cx="12" cy="12" r="6"></circle>
-                        <circle cx="12" cy="12" r="2"></circle>
-                      </svg>
-                    </div>
-                    <span class="perf-label">Accuracy</span>
+                <div class="telemetry-divider"></div>
+
+                <div class="telemetry-cell">
+                  <span class="telemetry-cell-label">Typing Accuracy</span>
+                  <div class="telemetry-value-row">
+                    <span class="telemetry-big-val font-mono">${accuracy}%</span>
+                    <span class="telemetry-trend positive font-mono">↑ 3%</span>
                   </div>
-                  <div class="perf-val-row">
-                    <span class="perf-main-val font-mono">${accuracy}%</span>
-                    <span class="perf-trend-pill positive">
-                      <span>↑ +3%</span>
-                      <small>vs last week</small>
-                    </span>
-                  </div>
-                  <!-- Mini sparkline with neon cyan glow -->
-                  <div class="perf-sparkline">
-                    <svg viewBox="0 0 100 24" preserveAspectRatio="none">
-                      <defs>
-                        <linearGradient id="sparkAccGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stop-color="#00D9FF" stop-opacity="0.35"/>
-                          <stop offset="100%" stop-color="#00D9FF" stop-opacity="0"/>
-                        </linearGradient>
-                      </defs>
-                      <path d="M0,19 C 25,17 50,21 75,12 C 85,9 95,6 100,4 L 100,24 L 0,24 Z" fill="url(#sparkAccGrad)" />
-                      <path d="M0,19 C 25,17 50,21 75,12 C 85,9 95,6 100,4" fill="none" stroke="#00D9FF" stroke-width="2.2" stroke-linecap="round" />
-                    </svg>
-                  </div>
+                  <span class="telemetry-subtext">Clean stroke accuracy</span>
                 </div>
 
-                <!-- Card 3: Best Record -->
-                <div class="perf-card">
-                  <div class="perf-card-header">
-                    <div class="perf-icon-circle gold-circle">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                        <path d="M4 22h16"></path>
-                        <path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"></path>
-                        <path d="M6 5h12v4a6 6 0 0 1-12 0V5z"></path>
-                      </svg>
-                    </div>
-                    <span class="perf-label">Best Record</span>
+                <div class="telemetry-divider"></div>
+
+                <div class="telemetry-cell">
+                  <span class="telemetry-cell-label">Peak Velocity</span>
+                  <div class="telemetry-value-row">
+                    <span class="telemetry-big-val font-mono">${bestWpm}</span>
+                    <span class="telemetry-unit font-mono">WPM</span>
                   </div>
-                  <div class="perf-val-row">
-                    <span class="perf-main-val font-mono">${bestWpm} <small>WPM</small></span>
-                  </div>
-                  <div class="perf-sub-badge">(${bestAccuracy}% accuracy)</div>
+                  <span class="telemetry-subtext">${bestAccuracy}% peak precision</span>
                 </div>
 
-                <!-- Card 4: Total Practice Time -->
-                <div class="perf-card">
-                  <div class="perf-card-header">
-                    <div class="perf-icon-circle blue-circle">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#147BFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                      </svg>
-                    </div>
-                    <span class="perf-label">Total Practice Time</span>
+                <div class="telemetry-divider"></div>
+
+                <div class="telemetry-cell">
+                  <span class="telemetry-cell-label">Circuit Duration</span>
+                  <div class="telemetry-value-row">
+                    <span class="telemetry-big-val font-mono">${practiceHours}h ${practiceMins}m</span>
                   </div>
-                  <div class="perf-val-row">
-                    <span class="perf-main-val font-mono">${practiceHours}h ${practiceMins}m</span>
-                  </div>
-                  <div class="perf-today-pill text-positive">+1h 20m today</div>
+                  <span class="telemetry-subtext text-positive">+1h 20m today</span>
                 </div>
 
-                <!-- Card 5: XP Points -->
-                <div class="perf-card">
-                  <div class="perf-card-header">
-                    <div class="perf-icon-circle gold-circle">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                      </svg>
-                    </div>
-                    <span class="perf-label">XP Points</span>
+                <div class="telemetry-divider"></div>
+
+                <div class="telemetry-cell">
+                  <span class="telemetry-cell-label">License Progression</span>
+                  <div class="telemetry-value-row">
+                    <span class="telemetry-big-val font-mono">Lvl ${level}</span>
+                    <span class="telemetry-xp-tag font-mono">${xpPoints} XP</span>
                   </div>
-                  <div class="perf-val-row">
-                    <span class="perf-main-val font-mono">${xpPoints}</span>
-                  </div>
-                  <div class="perf-level-meta">
-                    <span>Level ${level}</span>
-                    <span>320 / 500</span>
-                  </div>
-                  <div class="perf-level-bar">
-                    <div class="perf-level-fill" style="width: 64%"></div>
+                  <div class="telemetry-progress-track">
+                    <div class="telemetry-progress-bar" style="width: 64%"></div>
                   </div>
                 </div>
               </section>
@@ -227,9 +156,6 @@ export class DashboardView {
                   <div class="mode-card" data-mode="Solo Practice" data-nav="diagnostic">
                     <div class="mode-card-visual">
                       <img src="/images/game-modes/mode-solo.png" alt="Solo Practice" class="mode-card-img" />
-                      <div class="mode-floating-badge badge-purple">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H7v4h10v-4h-2c-.55 0-1-.45-1-1v-2.34"></path><path d="M6 5h12v4a6 6 0 0 1-12 0V5z"></path></svg>
-                      </div>
                     </div>
                     <div class="mode-card-body">
                       <h3 class="mode-name">Solo Practice</h3>
@@ -242,9 +168,6 @@ export class DashboardView {
                   <div class="mode-card" data-mode="Race Against AI" data-nav="race">
                     <div class="mode-card-visual">
                       <img src="/images/game-modes/mode-ai.png" alt="Race Against AI" class="mode-card-img" />
-                      <div class="mode-floating-badge badge-blue">
-                        <span style="font-size: 8.5px; font-weight: 800; font-family: sans-serif;">AI</span>
-                      </div>
                     </div>
                     <div class="mode-card-body">
                       <h3 class="mode-name">Race Against AI</h3>
@@ -257,9 +180,6 @@ export class DashboardView {
                   <div class="mode-card" data-mode="Local Multiplayer" data-nav="multiplayer">
                     <div class="mode-card-visual">
                       <img src="/images/game-modes/mode-local.png" alt="Local Multiplayer" class="mode-card-img" />
-                      <div class="mode-floating-badge badge-green">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                      </div>
                     </div>
                     <div class="mode-card-body">
                       <h3 class="mode-name">Local Multiplayer</h3>
@@ -272,9 +192,6 @@ export class DashboardView {
                   <div class="mode-card" data-mode="Online Multiplayer" data-nav="multiplayer">
                     <div class="mode-card-visual">
                       <img src="/images/game-modes/mode-online.png" alt="Online Multiplayer" class="mode-card-img" />
-                      <div class="mode-floating-badge badge-orange">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                      </div>
                     </div>
                     <div class="mode-card-body">
                       <h3 class="mode-name">Online Multiplayer</h3>
@@ -287,9 +204,6 @@ export class DashboardView {
                   <div class="mode-card" data-mode="Ranked Championship" data-nav="leaderboard">
                     <div class="mode-card-visual">
                       <img src="/images/game-modes/mode-ranked.png" alt="Ranked Championship" class="mode-card-img" />
-                      <div class="mode-floating-badge badge-violet">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                      </div>
                     </div>
                     <div class="mode-card-body">
                       <h3 class="mode-name">Ranked Championship</h3>

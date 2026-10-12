@@ -1,4 +1,4 @@
-# Logs
+# Logs & Runtime Diagnostics
 logs
 *.log
 npm-debug.log*
@@ -7,18 +7,45 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies & Build Artifacts
 node_modules
 dist
 dist-ssr
 *.local
 
-# Editor directories and files
+# Secrets, Environment & Credentials (CRITICAL SECURITY)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.credentials
+secrets/
+*.secret
+id_rsa
+id_rsa.pub
+
+# Backups & Database Dumps
+*.bak
+*.backup
+*.sqlite
+*.sqlite3
+*.db
+*.sql
+*.dump
+
+# Editor & OS Artifacts
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*~

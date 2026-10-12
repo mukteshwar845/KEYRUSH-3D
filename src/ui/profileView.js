@@ -155,11 +155,11 @@ export class ProfileView {
           </div>
         </section>
 
-        <!-- 2. VERIFIED GAMING STATISTICS GRID -->
+        <!-- 2. VERIFIED GAMING STATISTICS (UNIFIED TELEMETRY SPEC SHEET) -->
         <section class="profile-section" aria-label="Competitive Statistics">
           <div class="section-title-bar">
             <div>
-              <h2 class="profile-section-heading">TELEMETRY & GAMING STATISTICS</h2>
+              <h2 class="profile-section-heading">Telemetry & Verified Statistics</h2>
               <p class="profile-section-sub">Verified metrics calculated from active race telemetry and IndexedDB sessions.</p>
             </div>
             <span class="stat-source-badge font-mono">
@@ -168,87 +168,73 @@ export class ProfileView {
             </span>
           </div>
 
-          <div class="profile-stats-grid">
-            <!-- Stat 1: Total Races -->
-            <div class="profile-stat-card">
-              <div class="stat-card-header">
-                <span class="stat-label">RACES COMPLETED</span>
-                <span class="stat-icon">🏁</span>
+          <div class="profile-spec-sheet">
+            <div class="spec-sheet-cell">
+              <span class="spec-sheet-label">Races Completed</span>
+              <div class="spec-sheet-val-row">
+                <span class="spec-sheet-num font-mono">${stats.totalRaces}</span>
               </div>
-              <div class="stat-number font-mono">${stats.totalRaces}</div>
-              <div class="stat-footer text-muted">${stats.totalRaces === 0 ? 'No races yet' : `${stats.totalWins} victories earned`}</div>
+              <span class="spec-sheet-desc text-muted">${stats.totalRaces === 0 ? 'No races recorded' : `${stats.totalWins} victories earned`}</span>
             </div>
 
-            <!-- Stat 2: Total Wins -->
-            <div class="profile-stat-card">
-              <div class="stat-card-header">
-                <span class="stat-label">TOTAL VICTORIES</span>
-                <span class="stat-icon">🏆</span>
+            <div class="spec-sheet-cell">
+              <span class="spec-sheet-label">Total Victories</span>
+              <div class="spec-sheet-val-row">
+                <span class="spec-sheet-num font-mono highlight-gold">${stats.totalWins}</span>
+                <span class="spec-sheet-badge font-mono highlight-cyan">${stats.winRate}% Win Rate</span>
               </div>
-              <div class="stat-number font-mono highlight-gold">${stats.totalWins}</div>
-              <div class="stat-footer text-muted">Win rate: <strong class="highlight-cyan font-mono">${stats.winRate}%</strong></div>
+              <span class="spec-sheet-desc text-muted">First place finishes</span>
             </div>
 
-            <!-- Stat 3: Best WPM -->
-            <div class="profile-stat-card">
-              <div class="stat-card-header">
-                <span class="stat-label">RECORD SPEED</span>
-                <span class="stat-icon">⚡</span>
+            <div class="spec-sheet-cell">
+              <span class="spec-sheet-label">Record Velocity</span>
+              <div class="spec-sheet-val-row">
+                <span class="spec-sheet-num font-mono highlight-cyan">${stats.bestWpm}</span>
+                <span class="spec-sheet-unit font-mono">WPM</span>
               </div>
-              <div class="stat-number font-mono highlight-cyan">${stats.bestWpm} <span class="stat-unit">WPM</span></div>
-              <div class="stat-footer text-muted">All-time peak acceleration</div>
+              <span class="spec-sheet-desc text-muted">All-time peak acceleration</span>
             </div>
 
-            <!-- Stat 4: Average WPM -->
-            <div class="profile-stat-card">
-              <div class="stat-card-header">
-                <span class="stat-label">AVERAGE SPEED</span>
-                <span class="stat-icon">🏎️</span>
+            <div class="spec-sheet-cell">
+              <span class="spec-sheet-label">Average Cadence</span>
+              <div class="spec-sheet-val-row">
+                <span class="spec-sheet-num font-mono">${stats.averageWpm}</span>
+                <span class="spec-sheet-unit font-mono">WPM</span>
               </div>
-              <div class="stat-number font-mono">${stats.averageWpm} <span class="stat-unit">WPM</span></div>
-              <div class="stat-footer text-muted">Career pacing benchmark</div>
+              <span class="spec-sheet-desc text-muted">Career pacing benchmark</span>
             </div>
 
-            <!-- Stat 5: Accuracy -->
-            <div class="profile-stat-card">
-              <div class="stat-card-header">
-                <span class="stat-label">TYPING ACCURACY</span>
-                <span class="stat-icon">🎯</span>
+            <div class="spec-sheet-cell">
+              <span class="spec-sheet-label">Touch Precision</span>
+              <div class="spec-sheet-val-row">
+                <span class="spec-sheet-num font-mono highlight-green">${stats.accuracy}%</span>
               </div>
-              <div class="stat-number font-mono highlight-green">${stats.accuracy}%</div>
-              <div class="stat-footer text-muted">Total errors: <strong class="text-negative font-mono">${stats.totalErrors}</strong></div>
+              <span class="spec-sheet-desc text-muted">${stats.totalErrors} total stroke mistakes</span>
             </div>
 
-            <!-- Stat 6: Active Streak -->
-            <div class="profile-stat-card">
-              <div class="stat-card-header">
-                <span class="stat-label">DAILY STREAK</span>
-                <span class="stat-icon">🔥</span>
+            <div class="spec-sheet-cell">
+              <span class="spec-sheet-label">Active Streak</span>
+              <div class="spec-sheet-val-row">
+                <span class="spec-sheet-num font-mono text-orange">${stats.currentStreak}</span>
+                <span class="spec-sheet-unit font-mono">Days</span>
               </div>
-              <div class="stat-number font-mono text-orange">${stats.currentStreak} <span class="stat-unit">DAYS</span></div>
-              <div class="stat-footer text-muted">Best streak: <strong class="font-mono">${stats.longestStreak} days</strong></div>
+              <span class="spec-sheet-desc text-muted">Career best: ${stats.longestStreak} days</span>
             </div>
 
-            <!-- Stat 7: Total Play Time -->
-            <div class="profile-stat-card">
-              <div class="stat-card-header">
-                <span class="stat-label">CIRCUIT TIME</span>
-                <span class="stat-icon">⏱️</span>
+            <div class="spec-sheet-cell">
+              <span class="spec-sheet-label">Circuit Duration</span>
+              <div class="spec-sheet-val-row">
+                <span class="spec-sheet-num font-mono">${stats.playtimeFormatted}</span>
               </div>
-              <div class="stat-number font-mono">${stats.playtimeFormatted}</div>
-              <div class="stat-footer text-muted">Total touch-typing duration</div>
+              <span class="spec-sheet-desc text-muted">Active touch-typing time</span>
             </div>
 
-            <!-- Stat 8: Recent Trend -->
-            <div class="profile-stat-card">
-              <div class="stat-card-header">
-                <span class="stat-label">RECENT TREND</span>
-                <span class="stat-icon">📈</span>
+            <div class="spec-sheet-cell">
+              <span class="spec-sheet-label">Recent Form</span>
+              <div class="spec-sheet-val-row">
+                <span class="spec-sheet-num font-mono ${stats.trendPositive ? 'highlight-green' : 'text-muted'}">${stats.trendLabel}</span>
               </div>
-              <div class="stat-number font-mono ${stats.trendPositive ? 'highlight-green' : 'text-muted'}">
-                ${stats.trendLabel}
-              </div>
-              <div class="stat-footer text-muted">${stats.trendDescription}</div>
+              <span class="spec-sheet-desc text-muted">${stats.trendDescription}</span>
             </div>
           </div>
         </section>
@@ -257,7 +243,7 @@ export class ProfileView {
         <div class="profile-two-col-layout">
           <!-- A. RACING IDENTITY -->
           <section class="profile-section" aria-label="Racing Identity">
-            <h2 class="profile-section-heading">RACING IDENTITY & GARAGE</h2>
+            <h2 class="profile-section-heading">Racing Identity & Vehicle</h2>
             <div class="racing-identity-card card-dark">
               <div class="ri-car-header">
                 <div>
@@ -279,26 +265,26 @@ export class ProfileView {
 
               <div class="ri-specs-grid">
                 <div class="ri-spec">
-                  <span class="ri-spec-label">TOP SPEED</span>
+                  <span class="ri-spec-label">Top Speed</span>
                   <div class="ri-progress-bg"><div class="ri-progress-bar" style="width: ${vehicleInfo.topSpeedPct}%;"></div></div>
                 </div>
                 <div class="ri-spec">
-                  <span class="ri-spec-label">ACCELERATION</span>
+                  <span class="ri-spec-label">Acceleration</span>
                   <div class="ri-progress-bg"><div class="ri-progress-bar" style="width: ${vehicleInfo.accelPct}%;"></div></div>
                 </div>
                 <div class="ri-spec">
-                  <span class="ri-spec-label">HANDLING</span>
+                  <span class="ri-spec-label">Handling</span>
                   <div class="ri-progress-bg"><div class="ri-progress-bar" style="width: ${vehicleInfo.handlingPct}%;"></div></div>
                 </div>
               </div>
 
               <div class="ri-footer">
                 <div class="ri-stat-item">
-                  <span class="ri-f-label">UNLOCKED VEHICLES</span>
+                  <span class="ri-f-label">Unlocked Vehicles</span>
                   <strong class="font-mono">${vehicleInfo.unlockedCount} / ${vehicleInfo.totalCount} Supercars</strong>
                 </div>
                 <div class="ri-stat-item">
-                  <span class="ri-f-label">PREFERRED CIRCUIT</span>
+                  <span class="ri-f-label">Preferred Circuit</span>
                   <strong>${stats.favoriteCircuit}</strong>
                 </div>
                 <button class="btn btn-outline btn-small" data-nav="garage">
@@ -310,7 +296,7 @@ export class ProfileView {
 
           <!-- B. CAREER ACHIEVEMENTS -->
           <section class="profile-section" aria-label="Career Milestones">
-            <h2 class="profile-section-heading">CAREER MILESTONES & BADGES</h2>
+            <h2 class="profile-section-heading">Career Milestones</h2>
             <div class="achievements-list card-dark">
               ${achievements.map(ach => `
                 <div class="achievement-row ${ach.unlocked ? 'unlocked' : 'locked'}">
@@ -340,7 +326,7 @@ export class ProfileView {
         <section class="profile-section" aria-label="Recent Race Activity">
           <div class="section-title-bar">
             <div>
-              <h2 class="profile-section-heading">RECENT RACE SESSIONS</h2>
+              <h2 class="profile-section-heading">Recent Race Sessions</h2>
               <p class="profile-section-sub">Detailed logs from your most recent high-speed typing competitions.</p>
             </div>
             ${this.sessions.length > 0 ? `
@@ -355,7 +341,7 @@ export class ProfileView {
 
         <!-- 5. ACCOUNT SETTINGS & PRIVACY CONTROLS -->
         <section class="profile-section" aria-label="Account Settings and Privacy">
-          <h2 class="profile-section-heading">ACCOUNT PREFERENCES & PRIVACY</h2>
+          <h2 class="profile-section-heading">Account Preferences & Privacy</h2>
           <div class="profile-settings-card card-dark">
             <div class="settings-row">
               <div class="setting-meta">
@@ -399,6 +385,18 @@ export class ProfileView {
               </div>
               <button class="btn btn-outline btn-danger" id="btn-trigger-reset-stats">
                 Reset Career Data
+              </button>
+            </div>
+
+            <div class="danger-zone-divider"></div>
+
+            <div class="danger-zone">
+              <div class="danger-info">
+                <strong class="text-negative">Permanent Account Deletion (DPDPA / GDPR)</strong>
+                <span>Permanently wipe your pilot account, telemetry records, vehicle customizations, and local caches.</span>
+              </div>
+              <button class="btn btn-outline btn-danger" data-nav="settings" id="btn-nav-delete-account">
+                Manage Account Deletion →
               </button>
             </div>
           </div>

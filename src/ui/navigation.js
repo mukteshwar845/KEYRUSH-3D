@@ -311,7 +311,17 @@ export class NavigationManager {
             </div>
 
             <div class="footer-right">
-              <span class="footer-crown">👑 Level Up Your Typing Skills</span>
+              <div class="footer-legal-links">
+                <button class="footer-legal-btn" data-nav="legal" data-legal-tab="privacy">Privacy</button>
+                <span class="legal-sep">•</span>
+                <button class="footer-legal-btn" data-nav="legal" data-legal-tab="terms">Terms</button>
+                <span class="legal-sep">•</span>
+                <button class="footer-legal-btn" data-nav="legal" data-legal-tab="cookies">Cookies</button>
+                <span class="legal-sep">•</span>
+                <button class="footer-legal-btn" data-nav="legal" data-legal-tab="security">Security</button>
+                <span class="legal-sep">•</span>
+                <button class="footer-legal-btn" data-nav="legal" data-legal-tab="accessibility">Accessibility</button>
+              </div>
             </div>
           </footer>
         </div>
@@ -407,9 +417,10 @@ export class NavigationManager {
       if (navTarget) {
         e.preventDefault();
         const screenId = navTarget.getAttribute('data-nav');
+        const tab = navTarget.getAttribute('data-legal-tab');
         if (screenId) {
           soundEffects.playKeyClick(true);
-          this.app.showScreen(screenId);
+          this.app.showScreen(screenId, tab ? { tab } : null);
         }
         return;
       }
@@ -530,7 +541,11 @@ export class NavigationManager {
       { title: 'Ranked Leaderboard', desc: 'Global rankings & competitive league tiers', nav: 'leaderboard', icon: '🏆' },
       { title: 'Telemetry & Statistics', desc: 'WPM trends, accuracy curves & key analytics', nav: 'analytics', icon: '📈' },
       { title: 'Tournaments & Directives', desc: 'Weekly Grand Prix cups & daily missions', nav: 'missions', icon: '🛡️' },
-      { title: 'System & Audio Settings', desc: 'Configure engine audio, themes & calibration', nav: 'settings', icon: '⚙️' }
+      { title: 'System & Audio Settings', desc: 'Configure engine audio, themes & calibration', nav: 'settings', icon: '⚙️' },
+      { title: 'Privacy Policy & Data Protection', desc: 'Review offline-first data retention and rights', nav: 'legal', icon: '🛡️' },
+      { title: 'Terms of Service & Fair Play', desc: 'Esports anti-botting code and game rules', nav: 'legal', icon: '📜' },
+      { title: 'Security & Vulnerability Disclosure', desc: 'Report security findings responsibly', nav: 'legal', icon: '🔒' },
+      { title: 'Account Deletion & Data Erasure', desc: 'Execute permanent account deletion workflow', nav: 'settings', icon: '🗑️' }
     ];
 
     const q = query.toLowerCase().trim();

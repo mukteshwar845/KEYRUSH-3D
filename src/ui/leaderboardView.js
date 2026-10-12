@@ -6,6 +6,7 @@
 
 import { storage } from '../db/storage.js';
 import { downloadPerformanceCard } from '../utils/shareCard.js';
+import { renderAvatarMarkup } from './profileView.js';
 
 export const LEADERBOARD_SEED = [
   { rank: 1, name: 'QuantumRacer', avatar: '👑', league: 'Apex Legend', wpm: 154, accuracy: 99.4, car: 'CHRONOS V12', country: 'SE' },
@@ -34,63 +35,63 @@ export class LeaderboardView {
     this.container.innerHTML = `
       <div class="dash-page-container">
         <!-- Section Hero Banner -->
-        <div class="dash-section-hero card-dark">
+        <header class="dash-section-hero">
           <div class="section-hero-content">
-            <span class="section-tag-pill">GLOBAL ESPORTS STANDINGS</span>
-            <h1 class="dash-page-title">RANKED CHAMPIONSHIP LEAGUES</h1>
+            <span class="section-tag-pill">Global Esports Standings</span>
+            <h1 class="dash-page-title">Ranked Championship Leagues</h1>
             <p class="dash-page-desc">
               Verified typing telemetry across worldwide circuits. Compete to ascend the ranked tiers from Bronze to Apex Legend.
             </p>
           </div>
           <div class="section-hero-stats">
             <div class="stat-pill-item">
-              <span class="stat-pill-label">YOUR RANK</span>
-              <span class="stat-pill-val highlight-cyan font-mono">#4 GLOBAL</span>
+              <span class="stat-pill-label">Global Rank</span>
+              <span class="stat-pill-val highlight-cyan font-mono">#4 Overall</span>
             </div>
             <div class="stat-pill-item">
-              <span class="stat-pill-label">ACTIVE TIER</span>
-              <span class="stat-pill-val text-gold font-mono">SILVER II</span>
+              <span class="stat-pill-label">Active Tier</span>
+              <span class="stat-pill-val text-gold font-mono">${profile?.league || 'Silver II'}</span>
             </div>
           </div>
-        </div>
+        </header>
 
         <!-- LEAGUE TIERS STRIP -->
-        <div class="league-tiers-rack card-dark">
+        <div class="league-tiers-rack">
           <div class="tier-badge-cell bronze">
             <span class="badge-icon">🥉</span>
-            <span class="badge-name">BRONZE</span>
+            <span class="badge-name">Bronze</span>
             <small>0 - 45 WPM</small>
           </div>
           <div class="tier-badge-cell silver active-tier">
             <span class="badge-icon">🥈</span>
-            <span class="badge-name">SILVER</span>
+            <span class="badge-name">Silver</span>
             <small>46 - 70 WPM</small>
           </div>
           <div class="tier-badge-cell gold">
             <span class="badge-icon">🥇</span>
-            <span class="badge-name">GOLD</span>
+            <span class="badge-name">Gold</span>
             <small>71 - 90 WPM</small>
           </div>
           <div class="tier-badge-cell platinum">
             <span class="badge-icon">💎</span>
-            <span class="badge-name">PLATINUM</span>
+            <span class="badge-name">Platinum</span>
             <small>91 - 110 WPM</small>
           </div>
           <div class="tier-badge-cell diamond">
             <span class="badge-icon">✨</span>
-            <span class="badge-name">DIAMOND</span>
+            <span class="badge-name">Diamond</span>
             <small>111 - 130 WPM</small>
           </div>
           <div class="tier-badge-cell apex">
             <span class="badge-icon">👑</span>
-            <span class="badge-name">APEX LEGEND</span>
+            <span class="badge-name">Apex Legend</span>
             <small>131+ WPM</small>
           </div>
         </div>
 
         <!-- MAIN LAYOUT: TABLE & PROFILE PREVIEW -->
         <div class="leaderboard-grid-layout">
-          <div class="leaderboard-table-col card-dark">
+          <div class="leaderboard-table-col">
             <div class="table-header-controls">
               <div class="tab-toggles">
                 <button class="tab-btn active" id="tab-global">Global Grand Prix</button>
@@ -110,12 +111,12 @@ export class LeaderboardView {
               <table class="leaderboard-table">
                 <thead>
                   <tr>
-                    <th>RANK</th>
-                    <th>PILOT</th>
-                    <th>LEAGUE TIER</th>
-                    <th>TOP SPEED</th>
-                    <th>ACCURACY</th>
-                    <th>VEHICLE</th>
+                    <th>Rank</th>
+                    <th>Pilot</th>
+                    <th>League Tier</th>
+                    <th>Top Speed</th>
+                    <th>Accuracy</th>
+                    <th>Vehicle</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -142,45 +143,47 @@ export class LeaderboardView {
           </div>
 
           <!-- USER PROFILE CARD SIDEBAR -->
-          <div class="player-profile-sidebar card-dark">
+          <div class="player-profile-sidebar">
             <div class="profile-card-header">
-              <div class="p-avatar-large">${profile?.avatar || '🏎️'}</div>
+              <div class="p-avatar-frame">
+                ${renderAvatarMarkup(profile?.avatar, profile?.username, 'p-avatar-img')}
+              </div>
               <div class="p-header-meta">
-                <h2>${profile?.username || 'CyberRacer'}</h2>
-                <span class="league-pill silver">SILVER II LEAGUE</span>
+                <h2>${profile?.username || 'Kartik'}</h2>
+                <span class="league-pill silver">${profile?.league || 'Silver II'}</span>
               </div>
             </div>
 
             <div class="profile-stats-grid">
               <div class="p-stat">
-                <span class="ps-label">RANKED SPEED</span>
+                <span class="ps-label">Ranked Speed</span>
                 <span class="ps-val highlight-cyan font-mono">${profile?.bestWpm || 84} WPM</span>
               </div>
               <div class="p-stat">
-                <span class="ps-label">ACCURACY</span>
+                <span class="ps-label">Accuracy</span>
                 <span class="ps-val text-positive font-mono">${profile?.accuracy || 96.4}%</span>
               </div>
               <div class="p-stat">
-                <span class="ps-label">RACES WON</span>
-                <span class="ps-val font-mono">${profile?.racesWon || 14} / ${profile?.racesPlayed || 18}</span>
+                <span class="ps-label">Races Won</span>
+                <span class="ps-val font-mono">${profile?.racesWon || 18} / ${profile?.racesPlayed || 29}</span>
               </div>
               <div class="p-stat">
-                <span class="ps-label">PILOT LEVEL</span>
-                <span class="ps-val text-gold font-mono">LVL ${profile?.level || 4}</span>
+                <span class="ps-label">Pilot Level</span>
+                <span class="ps-val text-gold font-mono">Lvl ${profile?.level || 9}</span>
               </div>
             </div>
 
             <div class="profile-car-preview">
-              <span class="pc-label">PRIMARY CIRCUIT VEHICLE</span>
+              <span class="pc-label">Primary Vehicle</span>
               <div class="pc-car-name">🏎️ ${(garage?.activeVehicleId || 'talon').toUpperCase()}</div>
             </div>
 
             <div class="profile-card-actions">
-              <button class="btn btn-primary btn-full glow-primary" id="btn-export-profile-card">
-                📸 DOWNLOAD PERFORMANCE CARD
+              <button class="btn btn-primary btn-full" id="btn-export-profile-card">
+                📸 Download Career Card
               </button>
-              <button class="btn btn-outline btn-full" data-nav="profile">
-                Edit Pilot Profile & Avatar
+              <button class="btn btn-secondary btn-full" data-nav="profile">
+                View Full Profile →
               </button>
             </div>
           </div>

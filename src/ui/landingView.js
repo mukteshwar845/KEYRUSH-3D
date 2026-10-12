@@ -386,6 +386,25 @@ export class LandingView {
           </div>
         </section>
 
+        <!-- LANDING FOOTER WITH LEGAL LINKS -->
+        <footer class="landing-footer">
+          <div class="landing-footer-brand">
+            <span class="landing-brand-title font-orbitron highlight-cyan">KEYRUSH</span>
+            <span class="landing-brand-tag">Offline-First Esports Touch-Typing Motorsport Simulator</span>
+          </div>
+          <div class="landing-footer-links">
+            <button class="footer-legal-btn" data-nav="legal" data-legal-tab="privacy">Privacy Policy</button>
+            <span class="legal-sep">•</span>
+            <button class="footer-legal-btn" data-nav="legal" data-legal-tab="terms">Terms of Service</button>
+            <span class="legal-sep">•</span>
+            <button class="footer-legal-btn" data-nav="legal" data-legal-tab="cookies">Cookie Notice</button>
+            <span class="legal-sep">•</span>
+            <button class="footer-legal-btn" data-nav="legal" data-legal-tab="security">Security Disclosure</button>
+            <span class="legal-sep">•</span>
+            <button class="footer-legal-btn" data-nav="legal" data-legal-tab="accessibility">Accessibility</button>
+          </div>
+        </footer>
+
         <!-- CINEMATIC TRAILER MODAL -->
         <div class="trailer-modal-backdrop hidden" id="trailer-modal-backdrop">
           <div class="trailer-modal-card">
@@ -437,12 +456,13 @@ export class LandingView {
         e.preventDefault();
         e.stopPropagation();
         const targetScreen = btn.getAttribute('data-nav');
+        const legalTab = btn.getAttribute('data-legal-tab');
         soundEffects.playKeyClick(true);
         sessionStorage.setItem('keyrush_entered', 'true');
         if (targetScreen === 'race') {
           soundEffects.playNitroBoost();
         }
-        this.app.showScreen(targetScreen);
+        this.app.showScreen(targetScreen, legalTab ? { tab: legalTab } : null);
       });
     });
 

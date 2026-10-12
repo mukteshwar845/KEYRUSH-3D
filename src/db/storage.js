@@ -3,6 +3,9 @@
  * Offline-first persistent storage for player profiles, race sessions,
  * vehicle unlocks, daily streaks, missions, and configuration.
  */
+import { validateProfileSchema, validateSettingsSchema, sanitizeObject } from '../utils/security.js';
+import { auditLogger } from '../utils/securityAuditLogger.js';
+
 
 const DB_NAME = 'keyrush_database';
 const DB_VERSION = 1;
@@ -308,14 +311,18 @@ class KeyRushStorage {
 
   async saveProfile(profile) {
     await this.ready;
+    const validated = validateProfileSchema(profile);
+    const cleanProfile = validated.sanitized;
+    auditLogger.log('PROFILE_SAVED', { username: cleanProfile.username, visibility: cleanProfile.visibility });
+
     if (!this.db) {
-      this.memoryStore.profile['user_profile'] = profile;
-      return profile;
+      this.memoryStore.profile['user_profile'] = cleanProfile;
+      return cleanProfile;
     }
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('profile', 'readwrite');
-      const req = tx.objectStore('profile').put(profile);
-      req.onsuccess = () => resolve(profile);
+      const req = tx.objectStore('profile').put(cleanProfile);
+      req.onsuccess = () => resolve(cleanProfile);
       req.onerror = (e) => reject(e);
     });
   }
@@ -475,14 +482,18 @@ class KeyRushStorage {
 
   async saveSettings(settings) {
     await this.ready;
+    const validated = validateSettingsSchema(settings);
+    const cleanSettings = validated.sanitized;
+    auditLogger.log('SETTINGS_SAVED', { theme: cleanSettings.theme });
+
     if (!this.db) {
-      this.memoryStore.settings['user_settings'] = settings;
-      return settings;
+      this.memoryStore.settings['user_settings'] = cleanSettings;
+      return cleanSettings;
     }
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction('settings', 'readwrite');
-      const req = tx.objectStore('settings').put(settings);
-      req.onsuccess = () => resolve(settings);
+      const req = tx.objectStore('settings').put(cleanSettings);
+      req.onsuccess = () => resolve(cleanSettings);
       req.onerror = (e) => reject(e);
     });
   }

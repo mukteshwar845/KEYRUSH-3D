@@ -22,6 +22,8 @@ import { AnalyticsView } from './ui/analyticsView.js';
 import { MissionsView } from './ui/missionsView.js';
 import { SettingsView } from './ui/settingsView.js';
 import { ProfileView } from './ui/profileView.js';
+import { LegalView } from './ui/legalView.js';
+
 
 class KeyRushApp {
   constructor() {
@@ -53,9 +55,10 @@ class KeyRushApp {
     this.navManager.bindEvents();
 
     // 5. Initial View Route — Stop direct access to main page; must enter via Get Started button
-    const validScreens = ['landing', 'dashboard', 'race', 'race-modes', 'diagnostic', 'academy', 'garage', 'leaderboard', 'analytics', 'missions', 'settings', 'profile'];
+    const validScreens = ['landing', 'dashboard', 'race', 'race-modes', 'diagnostic', 'academy', 'garage', 'leaderboard', 'analytics', 'missions', 'settings', 'profile', 'legal'];
     const initialHash = window.location.hash.replace('#', '').trim();
     const hasEntered = sessionStorage.getItem('keyrush_entered') === 'true';
+
 
     if (!hasEntered) {
       // Force Landing overview page on initial load or direct URL access
@@ -74,9 +77,16 @@ class KeyRushApp {
         this.showScreen('landing');
         return;
       }
-      if (targetHash && validScreens.includes(targetHash) && targetHash !== this.currentScreen) {
+      if (targetHash && (validScreens.includes(targetHash) || targetHash.startsWith('legal')) && targetHash !== this.currentScreen) {
         this.showScreen(targetHash);
       }
+    });
+
+    // Account deletion listener: returns user to fresh landing state
+    window.addEventListener('keyrush:account-deleted', () => {
+      this.profile = null;
+      this.settings = null;
+      this.showScreen('landing');
     });
 
     // 6. Register PWA Service Worker if supported
@@ -219,9 +229,16 @@ class KeyRushApp {
         this.currentViewInstance.render(this.profile);
         break;
 
+      case 'legal':
       default:
-        this.currentViewInstance = new DashboardView(mainEl, this);
-        await this.currentViewInstance.render(this.profile);
+        if (screenId.startsWith('legal')) {
+          const tab = params?.tab || (screenId.includes('-') ? screenId.split('-')[1] : 'privacy');
+          this.currentViewInstance = new LegalView(mainEl, this);
+          await this.currentViewInstance.render(tab);
+        } else {
+          this.currentViewInstance = new DashboardView(mainEl, this);
+          await this.currentViewInstance.render(this.profile);
+        }
         break;
     }
   }

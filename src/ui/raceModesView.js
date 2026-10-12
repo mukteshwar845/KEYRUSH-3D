@@ -25,25 +25,24 @@ export class RaceModesView {
     this.container.innerHTML = `
       <div class="dash-page-container">
         <!-- Section Header -->
-        <div class="dash-section-hero card-dark">
+        <header class="dash-section-hero">
           <div class="section-hero-content">
-            <span class="section-tag-pill">CIRCUIT RACING HUB</span>
-            <h1 class="dash-page-title">CHOOSE YOUR RACE MODE</h1>
+            <h1 class="dash-page-title">Race Modes</h1>
             <p class="dash-page-desc">
-              Select your competitive arena. Type accurately to generate horsepower, overtake AI competitors, and dominate the global leaderboards.
+              Select your competitive arena. Type accurately to generate horsepower, overtake AI competitors, and dominate the circuits.
             </p>
           </div>
           <div class="section-hero-stats">
-            <div class="stat-pill-item">
-              <span class="stat-pill-label">ACTIVE SUPERCAR</span>
-              <span class="stat-pill-val highlight-cyan font-mono">${activeCar.toUpperCase()} GT</span>
+            <div class="inline-stat-chip">
+              <span class="chip-label">Active Supercar</span>
+              <span class="chip-val font-mono highlight-cyan">${activeCar.toUpperCase()} GT</span>
             </div>
-            <div class="stat-pill-item">
-              <span class="stat-pill-label">GRID PARTICIPANTS</span>
-              <span class="stat-pill-val text-gold font-mono">5 RACERS</span>
+            <div class="inline-stat-chip">
+              <span class="chip-label">Grid</span>
+              <span class="chip-val font-mono">5 Racers</span>
             </div>
           </div>
-        </div>
+        </header>
 
         <!-- 5 Interactive Race Mode Cards Grid -->
         <div class="race-modes-grid">
