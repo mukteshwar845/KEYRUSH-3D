@@ -227,6 +227,20 @@ export function createCarMesh(carId = 'talon', options = {}) {
     length = 4.75;
     width = 2.3;
     height = 0.78;
+  } else if (carId === 'talon_gold') {
+    bodyMaterial.color.set('#d4af37');
+    bodyMaterial.metalness = 0.98;
+    bodyMaterial.roughness = 0.12;
+    secondaryBodyMat.color.set('#ffd700');
+  } else if (carId === 'shadow') {
+    length = 4.5;
+    width = 2.2;
+    height = 0.88;
+    bodyMaterial.color.set('#101218');
+    bodyMaterial.metalness = 0.85;
+    bodyMaterial.roughness = 0.45;
+    headlightMaterial.color.set('#ff0033');
+    headlightGlowMaterial.color.set('#ff3355');
   }
 
   const chassisY = wheelRadius * 0.95; // base chassis height above ground

@@ -150,6 +150,14 @@ export class RaceModesView {
                   <span class="circuit-name">Cyber Highway 2099</span>
                   <span class="circuit-meta">High-Speed Straightaway • Wet Asphalt</span>
                 </div>
+                <div class="circuit-choice-card" data-circuit="Sunset Horizon Expressway">
+                  <span class="circuit-name">Sunset Horizon Expressway</span>
+                  <span class="circuit-meta">Golden Hour Twilight • Warm Sunset Sky</span>
+                </div>
+                <div class="circuit-choice-card" data-circuit="Tokyo Neon Rain Circuit">
+                  <span class="circuit-name">Tokyo Neon Rain Circuit</span>
+                  <span class="circuit-meta">Downpour Rain Streaks • Specular Wet Road</span>
+                </div>
               </div>
             </div>
           </div>

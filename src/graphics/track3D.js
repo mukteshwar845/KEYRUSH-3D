@@ -1,13 +1,14 @@
 /**
- * KeyRush 3D Track & Racing World Engine (Three.js) — Complete AAA Overhaul
- * - Visually rich futuristic megacity environment with procedural skyscrapers & illuminated windows
- * - Layered night skyline, atmospheric volumetric fog, wet-asphalt road with racing lines & kerbs
+ * KeyRush 3D Track & Racing World Engine (Three.js) — AAA Production Implementation
+ * - Visually rich futuristic circuits (Neo-Metropolis GP, Cyber Highway 2099, Sunset Horizon Expressway, Tokyo Neon Rain Circuit)
+ * - Layered night/sunset skyline, atmospheric volumetric fog, wet-asphalt road with racing lines & kerbs
  * - Animated holographic advertising screens, overhead highway gantries, and neon tunnel arches
  * - Metallic crash barriers with reflective cat-eye studs and trackside streetlamps with light pools
- * - Multi-opponent grid support (3-5 simultaneous competitors) with independent movement & lanes
+ * - Multi-opponent grid support (3-5 simultaneous competitors) with independent movement, lanes & visual telemetry
  * - High-performance infinite scrolling tile architecture (never runs out of scenery)
- * - Dynamic chase camera with acceleration-responsive FOV, speed lines, and countdown cinematic
- * - Direct physical connection to player typing (nitro exhaust flames, wheel rotation, brake flare)
+ * - Dynamic chase camera with acceleration-responsive FOV, speed lines, camera shake, and countdown cinematic
+ * - Direct physical connection to player typing (nitro exhaust flames, wheel rotation, steering, brake flare)
+ * - Finish line gate approach and victory crossing
  */
 
 import * as THREE from 'three';
@@ -19,17 +20,25 @@ const TILE_LENGTH = 45; // 45 units each
 const TOTAL_WORLD_BUFFER = TILE_COUNT * TILE_LENGTH; // 720 units buffer
 
 export class Track3D {
-  constructor(canvasContainer) {
+  constructor(canvasContainer, options = {}) {
     this.container = canvasContainer;
+    this.options = options;
+    this.circuit = options.circuit || 'Neo-Metropolis GP';
     this.scene = null;
     this.camera = null;
     this.renderer = null;
     this.animId = null;
+    this.isPaused = false;
+    this.isFinished = false;
 
     // Racing Entities
     this.playerCar = null;
     this.opponentCars = new Map(); // id -> { mesh, visualZ, targetVisualZ, laneX, currentX, wpm, progress }
-    this.trackWidth = 26; // 4 wide highway lanes
+    this.trackWidth = 26; // 4 highway lanes
+    // 4 Distinct lanes: Outer-Left (-9.75), Center-Left (-3.25), Center-Right (3.25), Outer-Right (9.75)
+    this.lanes = [-9.75, -3.25, 3.25, 9.75];
+    this.currentLaneIndex = 1; // Default to Center-Left lane (-3.25)
+    this.targetPlayerX = this.lanes[this.currentLaneIndex];
 
     // World Motion
     this.worldZ = 0;
@@ -39,6 +48,7 @@ export class Track3D {
     this.playerProgress = 0;
     this.isBraking = false;
     this.isCountdown = false;
+    this.lastKeystrokeTime = performance.now();
 
     // Scenery & Tile Pools
     this.tiles = [];
@@ -52,18 +62,23 @@ export class Track3D {
     this.nitroVelocities = null;
     this.speedLines = null;
     this.speedLinePositions = null;
-    this.speedLineCount = 70;
+    this.speedLineCount = 75;
+    this.rainParticles = null;
+    this.rainPositions = null;
 
-    // Camera Telemetry
-    this.cameraOffset = new THREE.Vector3(0, 3.6, -9.2);
-    this.smoothedCamPos = new THREE.Vector3(0, 3.6, -9.2);
-    this.smoothedLookAt = new THREE.Vector3(0, 1.2, 18);
+    // Camera Telemetry - elevated for unobstructed view above HUD teleprompter
+    this.cameraOffset = new THREE.Vector3(0, 4.4, -9.8);
+    this.smoothedCamPos = new THREE.Vector3(0, 4.4, -9.8);
+    this.smoothedLookAt = new THREE.Vector3(0, 0.9, 24);
     this.camShake = 0;
     this.isFirstFrame = true;
     this.countdownElapsed = 0;
 
-    this.clock = null;
+    this.lastFrameTime = performance.now();
     this.elapsedTime = 0;
+
+    this.onVisibilityChange = this.handleVisibilityChange.bind(this);
+    document.addEventListener('visibilitychange', this.onVisibilityChange);
 
     this.init();
   }
@@ -71,16 +86,34 @@ export class Track3D {
   // ------------------------------------------------------------------ INITIALIZATION
   init() {
     const width = this.container.clientWidth || window.innerWidth;
-    const height = this.container.clientHeight || 480;
+    const height = this.container.clientHeight || window.innerHeight;
 
-    // 1. Scene & Atmosphere
+    // 1. Environment & Atmospheric Theme
+    const isSunset = (this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset'));
+    const isRain = (this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain'));
+    const isCyberHighway = (this.circuit === 'Cyber Highway 2099');
+
+    let bgColor = 0x060810;
+    let fogDensity = 0.0038;
+
+    if (isSunset) {
+      bgColor = 0x1a0d24;
+      fogDensity = 0.0035;
+    } else if (isRain) {
+      bgColor = 0x04060e;
+      fogDensity = 0.0052;
+    } else if (isCyberHighway) {
+      bgColor = 0x030714;
+      fogDensity = 0.0044;
+    }
+
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x060810);
-    this.scene.fog = new THREE.FogExp2(0x060810, 0.0038);
+    this.scene.background = new THREE.Color(bgColor);
+    this.scene.fog = new THREE.FogExp2(bgColor, fogDensity);
 
     // 2. Camera
     this.camera = new THREE.PerspectiveCamera(65, width / height, 0.2, 950);
-    this.camera.position.set(0, 4.0, -9.5);
+    this.camera.position.set(this.targetPlayerX, 4.4, -9.8);
 
     // 3. WebGL Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -92,9 +125,10 @@ export class Track3D {
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.35;
+    this.renderer.toneMappingExposure = isSunset ? 1.45 : (isRain ? 1.25 : 1.35);
+    this.renderer.domElement.className = 'track-3d-webgl-canvas';
     this.container.appendChild(this.renderer.domElement);
 
     // 4. Procedural Textures & Materials
@@ -108,15 +142,22 @@ export class Track3D {
     this.buildRoadTilePool();
     this.buildSpeedLines();
     this.buildNitroParticles();
+    if (isRain) {
+      this.buildRainParticles();
+    }
     this.buildFinishGate();
 
     // 7. Event Listeners & Animation Loop
     this.onResize = this.onResize.bind(this);
     window.addEventListener('resize', this.onResize);
 
-    this.clock = new THREE.Clock();
+    this.lastFrameTime = performance.now();
     this.animate = this.animate.bind(this);
     this.animate();
+  }
+
+  handleVisibilityChange() {
+    this.lastFrameTime = performance.now();
   }
 
   // ------------------------------------------------------------------ PROCEDURAL TEXTURES
@@ -144,7 +185,7 @@ export class Track3D {
 
     // Wet reflective sheen patches
     const grad = rCtx.createRadialGradient(256, 256, 40, 256, 256, 240);
-    grad.addColorStop(0, 'rgba(0, 229, 255, 0.05)');
+    grad.addColorStop(0, 'rgba(0, 229, 255, 0.06)');
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     rCtx.fillStyle = grad;
     rCtx.fillRect(0, 0, 512, 512);
@@ -154,7 +195,7 @@ export class Track3D {
     this.roadTexture.wrapT = THREE.RepeatWrapping;
     this.roadTexture.repeat.set(2, 6);
 
-    // 2. Skyscraper Window Grid Textures (Procedural illuminated office grids)
+    // 2. Skyscraper Window Grid Textures
     this.windowTextures = [];
     const colorThemes = ['#00e5ff', '#ffb800', '#a855f7', '#00f59b', '#38bdf8'];
 
@@ -164,11 +205,9 @@ export class Track3D {
       winCanvas.height = 512;
       const wCtx = winCanvas.getContext('2d');
 
-      // Dark concrete / glass tower base
       wCtx.fillStyle = '#070910';
       wCtx.fillRect(0, 0, 256, 512);
 
-      // Window grid cells
       const cols = 12;
       const rows = 28;
       const cellW = 256 / cols;
@@ -212,18 +251,15 @@ export class Track3D {
       bCtx.fillStyle = '#060a14';
       bCtx.fillRect(0, 0, 512, 256);
 
-      // Neon glowing border
       bCtx.strokeStyle = ad.col;
       bCtx.lineWidth = 10;
       bCtx.strokeRect(8, 8, 496, 240);
 
-      // Cyber diagonal scanlines
       bCtx.fillStyle = 'rgba(0, 0, 0, 0.25)';
       for (let y = 0; y < 256; y += 8) {
         bCtx.fillRect(0, y, 512, 4);
       }
 
-      // Title & sub text
       bCtx.fillStyle = '#ffffff';
       bCtx.font = 'bold 54px sans-serif';
       bCtx.textAlign = 'center';
@@ -241,13 +277,18 @@ export class Track3D {
 
   // ------------------------------------------------------------------ WORLD LIGHTING
   setupLighting() {
-    // 1. Ambient Fill (Night Megacity Glow)
-    const ambient = new THREE.AmbientLight(0x182442, 2.4);
+    const isSunset = (this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset'));
+    const isRain = (this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain'));
+
+    // 1. Ambient Fill
+    const ambCol = isSunset ? 0x2e1a38 : (isRain ? 0x121a2c : 0x182442);
+    const ambient = new THREE.AmbientLight(ambCol, isSunset ? 2.8 : 2.4);
     this.scene.add(ambient);
 
-    // 2. Stadium Overhead Floodlight (Simulates overhead track lights)
-    const mainDirLight = new THREE.DirectionalLight(0x8fc8ff, 3.2);
-    mainDirLight.position.set(10, 40, 20);
+    // 2. Stadium Overhead Floodlight
+    const dirCol = isSunset ? 0xffb86c : (isRain ? 0x7ab5e6 : 0x8fc8ff);
+    const mainDirLight = new THREE.DirectionalLight(dirCol, isSunset ? 3.8 : 3.2);
+    mainDirLight.position.set(isSunset ? -20 : 10, 40, isSunset ? -10 : 20);
     mainDirLight.castShadow = true;
     mainDirLight.shadow.mapSize.width = 1024;
     mainDirLight.shadow.mapSize.height = 1024;
@@ -261,19 +302,22 @@ export class Track3D {
     this.mainDirLight = mainDirLight;
 
     // 3. Side Neon Fills (Follow Chase Camera)
-    this.cyanNeonLight = new THREE.PointLight(0x00e5ff, 4.5, 45);
+    const side1Col = isSunset ? 0xff9033 : (isRain ? 0xff2a85 : 0x00e5ff);
+    const side2Col = isSunset ? 0xaa44ff : (isRain ? 0x00e5ff : 0xa855f7);
+
+    this.cyanNeonLight = new THREE.PointLight(side1Col, 4.5, 45);
     this.cyanNeonLight.position.set(-16, 4, 0);
     this.scene.add(this.cyanNeonLight);
 
-    this.violetNeonLight = new THREE.PointLight(0xa855f7, 4.5, 45);
+    this.violetNeonLight = new THREE.PointLight(side2Col, 4.5, 45);
     this.violetNeonLight.position.set(16, 4, 0);
     this.scene.add(this.violetNeonLight);
 
-    // 4. Player Vehicle Forward Projector Light
-    this.carHeadlight = new THREE.SpotLight(0x00f5ff, 5.0, 40, Math.PI / 4, 0.4);
-    this.carHeadlight.position.set(0, 1.2, 2);
+    // 4. Player Vehicle Forward Projector Headlight (points forward toward +Z)
+    this.carHeadlight = new THREE.SpotLight(0x00f5ff, 5.0, 45, Math.PI / 4, 0.4);
+    this.carHeadlight.position.set(this.targetPlayerX, 1.2, 2);
     this.carHeadlightTarget = new THREE.Object3D();
-    this.carHeadlightTarget.position.set(0, 0, 25);
+    this.carHeadlightTarget.position.set(this.targetPlayerX, 0, 28);
     this.scene.add(this.carHeadlightTarget);
     this.carHeadlight.target = this.carHeadlightTarget;
     this.scene.add(this.carHeadlight);
@@ -281,7 +325,9 @@ export class Track3D {
 
   // ------------------------------------------------------------------ DISTANT SKYLINE DOME
   buildSkylineDome() {
-    // Massive cylinder perimeter representing endless distant megacity skyline
+    const isSunset = (this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset'));
+    const isRain = (this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain'));
+
     const domeGeo = new THREE.CylinderGeometry(420, 420, 220, 32, 1, true);
     domeGeo.rotateY(Math.PI);
 
@@ -290,25 +336,36 @@ export class Track3D {
     domeCanvas.height = 512;
     const dCtx = domeCanvas.getContext('2d');
 
-    // Cyber dusk gradient
     const grad = dCtx.createLinearGradient(0, 0, 0, 512);
-    grad.addColorStop(0, '#04060c');
-    grad.addColorStop(0.5, '#0b1326');
-    grad.addColorStop(0.85, '#181b38');
-    grad.addColorStop(1, '#05070e');
+    if (isSunset) {
+      grad.addColorStop(0, '#0c0714');
+      grad.addColorStop(0.4, '#2d1138');
+      grad.addColorStop(0.75, '#6e274a');
+      grad.addColorStop(0.92, '#ff6e3b');
+      grad.addColorStop(1, '#1b0818');
+    } else if (isRain) {
+      grad.addColorStop(0, '#020308');
+      grad.addColorStop(0.5, '#070b18');
+      grad.addColorStop(0.85, '#0f1424');
+      grad.addColorStop(1, '#04060c');
+    } else {
+      grad.addColorStop(0, '#04060c');
+      grad.addColorStop(0.5, '#0b1326');
+      grad.addColorStop(0.85, '#181b38');
+      grad.addColorStop(1, '#05070e');
+    }
     dCtx.fillStyle = grad;
     dCtx.fillRect(0, 0, 1024, 512);
 
-    // Distant skyscraper silhouettes with twinkling points
+    // Distant skyscraper silhouettes
     dCtx.fillStyle = '#060812';
     for (let x = 0; x < 1024; x += 18 + Math.random() * 24) {
       const bH = 80 + Math.random() * 160;
       const bW = 16 + Math.random() * 26;
       dCtx.fillRect(x, 512 - bH, bW, bH);
 
-      // Occasional rooftop beacon dots
       if (Math.random() > 0.4) {
-        dCtx.fillStyle = Math.random() > 0.5 ? '#ff2255' : '#00e5ff';
+        dCtx.fillStyle = Math.random() > 0.5 ? '#ff2255' : (isSunset ? '#ffb800' : '#00e5ff');
         dCtx.fillRect(x + bW / 2, 512 - bH, 2, 2);
         dCtx.fillStyle = '#060812';
       }
@@ -332,20 +389,23 @@ export class Track3D {
 
   // ------------------------------------------------------------------ ROAD TILE POOL & SCENERY
   buildRoadTilePool() {
+    const isSunset = (this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset'));
+    const isRain = (this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain'));
+
     const roadMat = new THREE.MeshStandardMaterial({
       map: this.roadTexture,
-      roughness: 0.35,
-      metalness: 0.45,
+      roughness: isRain ? 0.15 : 0.35,
+      metalness: isRain ? 0.65 : 0.45,
       bumpScale: 0.05
     });
 
     const curbRedMat = new THREE.MeshStandardMaterial({ color: 0xee2233, roughness: 0.4 });
     const curbWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
     const barrierMat = new THREE.MeshStandardMaterial({ color: 0x181e2c, metalness: 0.9, roughness: 0.3 });
-    const cyanRailMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
-    const violetRailMat = new THREE.MeshBasicMaterial({ color: 0xb044ff });
+    const cyanRailMat = new THREE.MeshBasicMaterial({ color: isSunset ? 0xff9033 : 0x00e5ff });
+    const violetRailMat = new THREE.MeshBasicMaterial({ color: isSunset ? 0xaa44ff : 0xb044ff });
     const whiteDashMat = new THREE.MeshBasicMaterial({ color: 0xe0f7ff, transparent: true, opacity: 0.85 });
-    const arrowMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.7 });
+    const arrowMat = new THREE.MeshBasicMaterial({ color: isSunset ? 0xffaa00 : 0x00e5ff, transparent: true, opacity: 0.7 });
 
     const hw = this.trackWidth / 2; // 13 units
 
@@ -376,12 +436,11 @@ export class Track3D {
         });
       }
 
-      // 3. Glowing Flat Racing Chevron Decals (flush with asphalt)
+      // 3. Glowing Flat Racing Chevron Decals
       if (i % 2 === 0) {
         const chevronGroup = new THREE.Group();
         chevronGroup.position.set(0, 0.025, 0);
 
-        // Left and right angled chevron wings
         const arm1 = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 2.4), arrowMat);
         arm1.rotation.x = -Math.PI / 2;
         arm1.rotation.z = Math.PI / 3.5;
@@ -397,7 +456,7 @@ export class Track3D {
         group.add(chevronGroup);
       }
 
-      // 4. Red & White Apex Racing Curbs (Kerbs along outer edges)
+      // 4. Red & White Apex Racing Curbs
       const curbLen = 3.0;
       const numCurbs = Math.floor(TILE_LENGTH / curbLen);
       const curbGeo = new THREE.BoxGeometry(0.8, 0.12, curbLen);
@@ -416,21 +475,18 @@ export class Track3D {
 
       // 5. Crash Barriers with Continuous Glowing Neon Rail
       [-hw - 0.2, hw + 0.2].forEach((x, sideIdx) => {
-        // Metallic barrier wall
         const barGeo = new THREE.BoxGeometry(0.4, 0.9, TILE_LENGTH);
         const barrier = new THREE.Mesh(barGeo, barrierMat);
         barrier.position.set(x, 0.45, 0);
         barrier.receiveShadow = true;
         group.add(barrier);
 
-        // Continuous glowing top neon strip
         const railGeo = new THREE.BoxGeometry(0.12, 0.10, TILE_LENGTH);
         const railMat = sideIdx === 0 ? cyanRailMat : violetRailMat;
         const rail = new THREE.Mesh(railGeo, railMat);
         rail.position.set(x, 0.92, 0);
         group.add(rail);
 
-        // Reflective cat-eye studs
         const studGeo = new THREE.BoxGeometry(0.18, 0.12, 0.18);
         for (let s = -TILE_LENGTH / 2 + 5; s < TILE_LENGTH / 2; s += 10) {
           const stud = new THREE.Mesh(studGeo, sideIdx === 0 ? cyanRailMat : violetRailMat);
@@ -444,33 +500,29 @@ export class Track3D {
         const lampGroup = new THREE.Group();
         lampGroup.position.set(lx, 0, 0);
 
-        // Arching metallic pole
         const poleGeo = new THREE.CylinderGeometry(0.12, 0.16, 7.5, 8);
         const pole = new THREE.Mesh(poleGeo, barrierMat);
         pole.position.set(0, 3.75, 0);
         lampGroup.add(pole);
 
-        // Overhang arm
         const armGeo = new THREE.BoxGeometry(sideIdx === 0 ? 2.8 : -2.8, 0.12, 0.2);
         const arm = new THREE.Mesh(armGeo, barrierMat);
         arm.position.set(sideIdx === 0 ? 1.4 : -1.4, 7.4, 0);
         lampGroup.add(arm);
 
-        // Lamp head & illuminated lens
         const headGeo = new THREE.BoxGeometry(0.6, 0.16, 0.9);
         const head = new THREE.Mesh(headGeo, barrierMat);
         head.position.set(sideIdx === 0 ? 2.6 : -2.6, 7.3, 0);
         lampGroup.add(head);
 
         const lensGeo = new THREE.BoxGeometry(0.5, 0.05, 0.8);
-        const lens = new THREE.Mesh(lensGeo, new THREE.MeshBasicMaterial({ color: 0x88f5ff }));
+        const lens = new THREE.Mesh(lensGeo, new THREE.MeshBasicMaterial({ color: isSunset ? 0xffcc77 : 0x88f5ff }));
         lens.position.set(sideIdx === 0 ? 2.6 : -2.6, 7.2, 0);
         lampGroup.add(lens);
 
-        // Downward pool of light on the road surface
         const poolGeo = new THREE.PlaneGeometry(6, 6);
         const poolMat = new THREE.MeshBasicMaterial({
-          color: 0x00e5ff,
+          color: isSunset ? 0xffaa33 : 0x00e5ff,
           transparent: true,
           opacity: 0.12,
           blending: THREE.AdditiveBlending
@@ -483,7 +535,7 @@ export class Track3D {
         group.add(lampGroup);
       });
 
-      // 7. Trackside Cyber Skyscrapers (Attached to tile -> Moves seamlessly!)
+      // 7. Trackside Cyber Skyscrapers
       this.buildTileCityScenery(group, i, hw);
 
       // 8. Overhead Highway Gantries (Every 4th tile)
@@ -503,7 +555,8 @@ export class Track3D {
   }
 
   buildTileCityScenery(tileGroup, tileIdx, hw) {
-    // Generate 3-4 skyscrapers on each side of this tile
+    const isSunset = (this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset'));
+
     [-1, 1].forEach(side => {
       for (let b = 0; b < 2; b++) {
         const height = 45 + Math.random() * 85;
@@ -513,7 +566,6 @@ export class Track3D {
         const posX = side * (hw + 18 + b * 26 + Math.random() * 10);
         const posZ = -TILE_LENGTH / 2 + (b + 0.5) * (TILE_LENGTH / 2);
 
-        // Pick procedural window texture
         const texIdx = Math.floor(Math.random() * this.windowTextures.length);
         const winTex = this.windowTextures[texIdx];
 
@@ -521,7 +573,7 @@ export class Track3D {
         const bldgMat = new THREE.MeshStandardMaterial({
           map: winTex,
           emissiveMap: winTex,
-          emissive: 0x90c0ff,
+          emissive: isSunset ? 0x9070aa : 0x90c0ff,
           emissiveIntensity: 0.85,
           metalness: 0.8,
           roughness: 0.3,
@@ -534,16 +586,14 @@ export class Track3D {
         bldg.receiveShadow = true;
         tileGroup.add(bldg);
 
-        // Rooftop glowing architectural crown
         if (height > 70) {
           const crownGeo = new THREE.BoxGeometry(width * 0.7, 5, depth * 0.7);
-          const crownMat = new THREE.MeshBasicMaterial({ color: side === -1 ? 0x00e5ff : 0xa855f7 });
+          const crownMat = new THREE.MeshBasicMaterial({ color: side === -1 ? (isSunset ? 0xff9033 : 0x00e5ff) : 0xa855f7 });
           const crown = new THREE.Mesh(crownGeo, crownMat);
           crown.position.set(posX, height + 2.5, posZ);
           tileGroup.add(crown);
         }
 
-        // Rooftop antenna with blinking red beacon
         const antGeo = new THREE.CylinderGeometry(0.14, 0.28, 14, 6);
         const ant = new THREE.Mesh(antGeo, new THREE.MeshStandardMaterial({ color: 0x555555 }));
         ant.position.set(posX, height + 7, posZ);
@@ -554,7 +604,6 @@ export class Track3D {
         beacon.position.set(posX, height + 12, posZ);
         tileGroup.add(beacon);
 
-        // Vertical corner neon accent strip
         const stripGeo = new THREE.BoxGeometry(0.3, height * 0.85, 0.3);
         const stripMat = new THREE.MeshBasicMaterial({ color: side === -1 ? 0x00e5ff : 0xa855f7 });
         const strip = new THREE.Mesh(stripGeo, stripMat);
@@ -563,19 +612,16 @@ export class Track3D {
       }
     });
 
-    // Holographic Advertising Billboard (Every 3rd tile)
     if (tileIdx % 3 === 0) {
       const side = tileIdx % 2 === 0 ? -1 : 1;
       const bSideX = side * (hw + 5.5);
       const bHeight = 11.0;
 
-      // Trusses
       const trussGeo = new THREE.CylinderGeometry(0.2, 0.2, bHeight, 8);
       const truss = new THREE.Mesh(trussGeo, new THREE.MeshStandardMaterial({ color: 0x222633 }));
       truss.position.set(bSideX, bHeight / 2, 0);
       tileGroup.add(truss);
 
-      // Billboard Screen
       const adIdx = tileIdx % this.billboardTextures.length;
       const screenGeo = new THREE.PlaneGeometry(12, 6);
       const screenMat = new THREE.MeshBasicMaterial({
@@ -595,19 +641,16 @@ export class Track3D {
     const gW = this.trackWidth + 6;
     const steelMat = new THREE.MeshStandardMaterial({ color: 0x202638, metalness: 0.9, roughness: 0.3 });
 
-    // Pillars
     [-gW / 2, gW / 2].forEach(px => {
       const p = new THREE.Mesh(new THREE.BoxGeometry(1.0, gH, 1.0), steelMat);
       p.position.set(px, gH / 2, 0);
       gantry.add(p);
     });
 
-    // Crossbeam
     const beam = new THREE.Mesh(new THREE.BoxGeometry(gW + 1.2, 1.4, 1.2), steelMat);
     beam.position.set(0, gH, 0);
     gantry.add(beam);
 
-    // Digital Speed Check Display Screen
     const dispGeo = new THREE.PlaneGeometry(16, 1.1);
     const dispMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
     const disp = new THREE.Mesh(dispGeo, dispMat);
@@ -618,22 +661,18 @@ export class Track3D {
   }
 
   buildTunnelArch(tileGroup) {
-    // Futuristic glowing hexagonal arch spanning over the highway
     const hexRadius = this.trackWidth * 0.58;
     const archMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
-    const darkArchMat = new THREE.MeshStandardMaterial({ color: 0x141824, roughness: 0.6 });
 
     for (let ring = 0; ring < 3; ring++) {
       const zOffset = -12 + ring * 12;
       const ringGroup = new THREE.Group();
       ringGroup.position.set(0, 5.0, zOffset);
 
-      // Upper arch beam
       const topBeam = new THREE.Mesh(new THREE.BoxGeometry(this.trackWidth + 4, 0.4, 0.4), archMat);
       topBeam.position.set(0, 5.8, 0);
       ringGroup.add(topBeam);
 
-      // Angled side posts
       [-hexRadius, hexRadius].forEach((x, s) => {
         const sidePost = new THREE.Mesh(new THREE.BoxGeometry(0.4, 7.5, 0.4), archMat);
         sidePost.position.set(x, 2.0, 0);
@@ -653,26 +692,21 @@ export class Track3D {
 
     const steelMat = new THREE.MeshStandardMaterial({ color: 0x1a2236, metalness: 0.9 });
     const glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const checkMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
 
-    // Sturdy gantry columns
     [-this.trackWidth / 2 - 2, this.trackWidth / 2 + 2].forEach(x => {
       const col = new THREE.Mesh(new THREE.BoxGeometry(1.6, 16, 1.6), steelMat);
       col.position.set(x, 8, 0);
       group.add(col);
     });
 
-    // Overhead truss
     const arch = new THREE.Mesh(new THREE.BoxGeometry(this.trackWidth + 8, 2.5, 2.0), steelMat);
     arch.position.set(0, 15, 0);
     group.add(arch);
 
-    // Neon checkered banner strip
     const banner = new THREE.Mesh(new THREE.BoxGeometry(this.trackWidth + 6, 1.2, 0.2), glowMat);
     banner.position.set(0, 14.8, 1.05);
     group.add(banner);
 
-    // Checkered finish line on asphalt
     const finishLineGeo = new THREE.PlaneGeometry(this.trackWidth, 4.0);
     const finishLineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
     const finishLine = new THREE.Mesh(finishLineGeo, finishLineMat);
@@ -684,14 +718,14 @@ export class Track3D {
     this.finishGate = group;
   }
 
-  // ------------------------------------------------------------------ SPEED LINES & NITRO PARTICLES
+  // ------------------------------------------------------------------ SPEED LINES & PARTICLES
   buildSpeedLines() {
     const n = this.speedLineCount;
     const pos = new Float32Array(n * 6);
 
     for (let i = 0; i < n; i++) {
       const side = i % 2 === 0 ? -1 : 1;
-      const x = side * (6 + Math.random() * 16);
+      const x = side * (5 + Math.random() * 15);
       const y = 0.4 + Math.random() * 5;
       const z = (Math.random() - 0.5) * 40;
       const len = 6 + Math.random() * 12;
@@ -750,6 +784,39 @@ export class Track3D {
     this.scene.add(this.nitroParticles);
   }
 
+  buildRainParticles() {
+    const count = 220;
+    const pos = new Float32Array(count * 6);
+
+    for (let i = 0; i < count; i++) {
+      const x = (Math.random() - 0.5) * 50;
+      const y = Math.random() * 25;
+      const z = (Math.random() - 0.5) * 70;
+      const len = 1.2 + Math.random() * 2.5;
+
+      pos[i * 6 + 0] = x;
+      pos[i * 6 + 1] = y;
+      pos[i * 6 + 2] = z;
+      pos[i * 6 + 3] = x;
+      pos[i * 6 + 4] = y - len;
+      pos[i * 6 + 5] = z - 0.5;
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    this.rainPositions = pos;
+
+    const mat = new THREE.LineBasicMaterial({
+      color: 0x70bbff,
+      transparent: true,
+      opacity: 0.45,
+      blending: THREE.AdditiveBlending
+    });
+
+    this.rainParticles = new THREE.LineSegments(geo, mat);
+    this.scene.add(this.rainParticles);
+  }
+
   // ------------------------------------------------------------------ PUBLIC API: CARS & OPPONENTS
 
   setPlayerCar(carId, paintColor, underglowColor) {
@@ -757,21 +824,26 @@ export class Track3D {
       this.scene.remove(this.playerCar);
     }
     this.playerCar = createCarMesh(carId, { paintColor, underglowColor });
-    // Player car rides in center-left lane
-    this.playerCar.position.set(-2.5, 0, 0);
-    this.playerCar.rotation.y = Math.PI; // Face forward along negative Z
+    // Face forward along +Z (rotation.y = 0)
+    this.playerCar.position.set(this.targetPlayerX, 0, 0);
+    this.playerCar.rotation.y = 0;
     this.scene.add(this.playerCar);
   }
 
+  steerLane(direction) {
+    // direction: -1 (left), +1 (right)
+    this.currentLaneIndex = Math.max(0, Math.min(this.lanes.length - 1, this.currentLaneIndex + direction));
+    this.targetPlayerX = this.lanes[this.currentLaneIndex];
+  }
+
   setOpponents(opponentsList) {
-    // Clear previous opponents
     this.opponentCars.forEach(op => {
       this.scene.remove(op.mesh);
     });
     this.opponentCars.clear();
 
-    // Default highway lanes for 4 competitors: -6.5, 2.5, 6.5, -2.5
-    const defaultLanes = [-6.5, 2.5, 6.5, -2.5];
+    // Distribute opponents across lanes
+    const laneDistribution = [this.lanes[0], this.lanes[2], this.lanes[3], this.lanes[1]];
 
     opponentsList.forEach((opp, idx) => {
       const mesh = createCarMesh(opp.carModel || 'vortex', {
@@ -779,11 +851,11 @@ export class Track3D {
         underglowColor: opp.color || '#ffb800'
       });
 
-      const laneX = opp.laneX !== undefined ? opp.laneX : defaultLanes[idx % defaultLanes.length];
+      const laneX = opp.laneX !== undefined ? opp.laneX : laneDistribution[idx % laneDistribution.length];
       const startZ = opp.startZ !== undefined ? opp.startZ : (6.0 - idx * 8.0);
 
       mesh.position.set(laneX, 0, startZ);
-      mesh.rotation.y = Math.PI; // Face forward
+      mesh.rotation.y = 0; // Face forward along +Z
       this.scene.add(mesh);
 
       this.opponentCars.set(opp.id, {
@@ -792,6 +864,7 @@ export class Track3D {
         mesh,
         laneX,
         currentX: laneX,
+        startZ,
         visualZ: startZ,
         targetVisualZ: startZ,
         wpm: 0,
@@ -804,7 +877,8 @@ export class Track3D {
   updatePlayerProgress(progress, wpm, isBoosting = false) {
     this.playerProgress = progress;
     this.wpmRatio = Math.min(1.6, wpm / 80);
-    this.targetSpeed = wpm * 3.1; // Speed scaled to visual road travel
+    this.targetSpeed = wpm * 3.1;
+    this.lastKeystrokeTime = performance.now();
 
     // Nitro flame & particle trigger
     const fast = wpm >= 65 || isBoosting;
@@ -820,6 +894,17 @@ export class Track3D {
       const targetOpacity = Math.max(0, Math.min(0.85, (wpm - 45) / 45));
       this.speedLines.material.opacity = targetOpacity;
     }
+
+    // Position finish line gate when nearing completion (75% to 100%)
+    if (this.finishGate) {
+      if (progress >= 0.75) {
+        const remainingRatio = Math.max(0, (1.0 - progress) / 0.25);
+        const distToPlayer = remainingRatio * 140;
+        this.finishGate.position.set(0, 0, (this.playerCar ? this.playerCar.position.z : 0) + distToPlayer);
+      } else {
+        this.finishGate.position.set(0, 0, 99999);
+      }
+    }
   }
 
   updateOpponentProgress(oppId, progress, wpm) {
@@ -829,11 +914,11 @@ export class Track3D {
     opp.progress = progress;
     opp.wpm = wpm;
 
-    // Relative visual offset relative to player (100% gap = 85 world units)
+    // Smooth starting grid fade-out into actual progress delta
     const relProgress = progress - this.playerProgress;
-    opp.targetVisualZ = relProgress * 85;
+    const startGridFactor = Math.max(0, 1.0 - this.playerProgress * 3.5);
+    opp.targetVisualZ = (opp.startZ * startGridFactor) + (relProgress * 95);
 
-    // Check nitro flame for fast opponents
     if (opp.mesh && opp.mesh.userData.setNitro) {
       opp.mesh.userData.setNitro(wpm >= 70);
     }
@@ -841,7 +926,7 @@ export class Track3D {
 
   triggerBrakeFeedback() {
     this.isBraking = true;
-    this.camShake = 0.12;
+    this.camShake = 0.16;
 
     if (this.playerCar && this.playerCar.userData.setBrake) {
       this.playerCar.userData.setBrake(true);
@@ -852,7 +937,17 @@ export class Track3D {
       if (this.playerCar && this.playerCar.userData.setBrake) {
         this.playerCar.userData.setBrake(false);
       }
-    }, 450);
+    }, 420);
+  }
+
+  triggerNitroSurge() {
+    this.camShake = 0.08;
+    if (this.playerCar && this.playerCar.userData.setNitro) {
+      this.playerCar.userData.setNitro(true);
+    }
+    if (this.nitroParticles) {
+      this.nitroParticles.visible = true;
+    }
   }
 
   setCountdownState(isActive) {
@@ -862,16 +957,41 @@ export class Track3D {
     }
   }
 
+  setPaused(isPaused) {
+    this.isPaused = isPaused;
+  }
+
+  setFinished(isFinished) {
+    this.isFinished = isFinished;
+  }
+
   // ------------------------------------------------------------------ ANIMATION LOOP
   animate() {
     this.animId = requestAnimationFrame(this.animate);
-    const delta = Math.min(this.clock.getDelta(), 0.1);
+
+    const now = performance.now();
+    const delta = Math.min((now - (this.lastFrameTime || now)) / 1000, 0.1);
+    this.lastFrameTime = now;
+
+    if (this.isPaused) {
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+
     this.elapsedTime += delta;
 
-    // Smooth speed acceleration
+    // Smooth speed deceleration if user stops typing for > 1.2s during a race
+    if (!this.isCountdown && !this.isFinished) {
+      const timeSinceKeystroke = performance.now() - this.lastKeystrokeTime;
+      if (timeSinceKeystroke > 1200) {
+        this.targetSpeed = Math.max(8, this.targetSpeed * 0.95);
+      }
+    }
+
+    // Smooth speed acceleration lerp
     this.playerSpeed = THREE.MathUtils.lerp(this.playerSpeed, this.targetSpeed, delta * 4.5);
 
-    // Scroll infinite world backward
+    // Scroll infinite world backward along -Z
     const moveStep = this.playerSpeed * delta;
     this.worldZ += moveStep;
 
@@ -892,39 +1012,50 @@ export class Track3D {
       this.skylineDome.rotation.y += delta * 0.005;
     }
 
-    // ---- CHASE CAMERA & CINEMATIC MOTIONS ----
+    // ---- PLAYER MOVEMENT & CONTROLS ----
     if (this.playerCar) {
+      // Smooth lateral lane change lerp
+      this.playerCar.position.x = THREE.MathUtils.lerp(this.playerCar.position.x, this.targetPlayerX, delta * 7.5);
+
+      const steerDiff = this.targetPlayerX - this.playerCar.position.x;
+      if (this.playerCar.userData.steerWheels) {
+        this.playerCar.userData.steerWheels(steerDiff * 0.18);
+      }
+
+      // Roll into turns, pitch on acceleration / braking
+      const roll = -steerDiff * 0.06;
+      const pitch = this.isBraking ? 0.08 : (-this.wpmRatio * 0.04);
+      if (this.playerCar.userData.setTilt) {
+        this.playerCar.userData.setTilt(pitch, roll);
+      }
+
       const carPos = this.playerCar.position;
 
+      // ---- CHASE CAMERA & CINEMATIC MOTIONS ----
       if (this.isCountdown) {
-        // Dramatic countdown camera pan around starting grid
         this.countdownElapsed += delta;
-        const panAngle = Math.sin(this.countdownElapsed * 1.5) * 1.2;
-        this.camera.position.set(carPos.x + panAngle * 2.5, 2.8, carPos.z - 6.5);
-        this.camera.lookAt(carPos.x, 1.2, carPos.z + 5);
+        const panAngle = Math.sin(this.countdownElapsed * 1.5) * 1.4;
+        this.camera.position.set(carPos.x + panAngle * 2.4, 2.7, carPos.z - 6.2);
+        this.camera.lookAt(carPos.x, 1.2, carPos.z + 5.5);
       } else {
-        // High-octane Chase Camera
-        // Dynamic pushback on speed: pull back & down at high WPM
-        const fovBoost = this.wpmRatio * 16;
+        const fovBoost = this.wpmRatio * 15;
         const targetFov = 65 + fovBoost;
         this.camera.fov = THREE.MathUtils.lerp(this.camera.fov, targetFov, delta * 3.5);
         this.camera.updateProjectionMatrix();
 
-        // Acceleration camera pushback
         const pushBack = -this.wpmRatio * 0.8;
         const desiredCam = new THREE.Vector3(
-          carPos.x * 0.75,
+          carPos.x * 0.72,
           carPos.y + this.cameraOffset.y - (this.wpmRatio * 0.2),
           carPos.z + this.cameraOffset.z + pushBack
         );
 
-        // Subtle camera shake at high speeds or on braking
         if (this.camShake > 0.001) {
           desiredCam.x += (Math.random() - 0.5) * this.camShake;
           desiredCam.y += (Math.random() - 0.5) * this.camShake;
           this.camShake = THREE.MathUtils.lerp(this.camShake, 0, delta * 8.0);
         } else if (this.wpmRatio > 0.95) {
-          const microShake = (this.wpmRatio - 0.95) * 0.05;
+          const microShake = (this.wpmRatio - 0.95) * 0.04;
           desiredCam.x += (Math.random() - 0.5) * microShake;
           desiredCam.y += (Math.random() - 0.5) * microShake;
         }
@@ -938,18 +1069,12 @@ export class Track3D {
         this.camera.position.copy(this.smoothedCamPos);
 
         const lookTarget = new THREE.Vector3(
-          carPos.x * 0.8,
-          carPos.y + 1.2,
+          carPos.x * 0.75,
+          carPos.y + 0.9,
           carPos.z + 24
         );
         this.smoothedLookAt.lerp(lookTarget, delta * 9.0);
         this.camera.lookAt(this.smoothedLookAt);
-
-        // Car chassis pitch & tilt
-        const pitch = this.isBraking ? 0.06 : (-this.wpmRatio * 0.04);
-        if (this.playerCar.userData.setTilt) {
-          this.playerCar.userData.setTilt(pitch, 0);
-        }
 
         // Projector headlight follows car
         if (this.carHeadlight) {
@@ -964,17 +1089,16 @@ export class Track3D {
     }
 
     // ---- WHEEL ROLLING ANIMATION ----
-    const wheelSpinSpeed = this.playerSpeed * delta * 0.42;
+    const wheelSpinSpeed = (this.playerSpeed + 2.0) * delta * 0.45;
     if (this.playerCar && this.playerCar.userData.spinWheels) {
       this.playerCar.userData.spinWheels(wheelSpinSpeed);
     }
 
     // ---- MULTI-OPPONENT UPDATE LOOP ----
-    this.opponentCars.forEach((opp, id) => {
-      // Smooth visual Z convergence toward relative progress offset
+    this.opponentCars.forEach((opp) => {
       opp.visualZ = THREE.MathUtils.lerp(opp.visualZ, opp.targetVisualZ, delta * 4.0);
 
-      // Subtle human-like lane wander (subtle steering wave)
+      // Subtle human-like lane wander
       const wander = Math.sin(this.elapsedTime * 0.7 + opp.laneX) * 0.35;
       opp.currentX = opp.laneX + wander;
 
@@ -985,12 +1109,10 @@ export class Track3D {
           this.playerCar.position.z + opp.visualZ
         );
 
-        // Spin wheels at opponent's simulated speed
         if (opp.mesh.userData.spinWheels) {
-          opp.mesh.userData.spinWheels(opp.wpm * 0.038 * delta);
+          opp.mesh.userData.spinWheels((opp.wpm * 0.038 + 1.0) * delta);
         }
 
-        // Steer front wheels slightly into lane wander
         if (opp.mesh.userData.steerWheels) {
           opp.mesh.userData.steerWheels(wander * 0.4);
         }
@@ -1036,7 +1158,7 @@ export class Track3D {
 
         if (pos[i * 6 + 5] < camZ - 10) {
           const side = i % 2 === 0 ? -1 : 1;
-          const x = side * (6 + Math.random() * 16);
+          const x = side * (5 + Math.random() * 15);
           const y = 0.4 + Math.random() * 5;
           const startZ = camZ + 45 + Math.random() * 25;
           const len = 6 + Math.random() * 12;
@@ -1050,6 +1172,33 @@ export class Track3D {
         }
       }
       this.speedLines.geometry.attributes.position.needsUpdate = true;
+    }
+
+    // ---- RAIN PARTICLES ----
+    if (this.rainParticles && this.camera) {
+      const pos = this.rainPositions;
+      const camPos = this.camera.position;
+      const fallSpeed = 32 * delta;
+
+      for (let i = 0; i < pos.length / 6; i++) {
+        pos[i * 6 + 1] -= fallSpeed;
+        pos[i * 6 + 4] -= fallSpeed;
+
+        if (pos[i * 6 + 4] < 0) {
+          const rx = camPos.x + (Math.random() - 0.5) * 45;
+          const ry = 22 + Math.random() * 8;
+          const rz = camPos.z + (Math.random() - 0.5) * 60;
+          const len = 1.4 + Math.random() * 2.5;
+
+          pos[i * 6 + 0] = rx;
+          pos[i * 6 + 1] = ry;
+          pos[i * 6 + 2] = rz;
+          pos[i * 6 + 3] = rx;
+          pos[i * 6 + 4] = ry - len;
+          pos[i * 6 + 5] = rz - 0.4;
+        }
+      }
+      this.rainParticles.geometry.attributes.position.needsUpdate = true;
     }
 
     // Render 3D Scene
@@ -1072,6 +1221,28 @@ export class Track3D {
       this.animId = null;
     }
     window.removeEventListener('resize', this.onResize);
+    document.removeEventListener('visibilitychange', this.onVisibilityChange);
+
+    // Dispose scene objects and textures
+    if (this.scene) {
+      this.scene.traverse((obj) => {
+        if (obj.geometry) {
+          obj.geometry.dispose();
+        }
+        if (obj.material) {
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach(m => m.dispose());
+          } else {
+            obj.material.dispose();
+          }
+        }
+      });
+    }
+
+    if (this.roadTexture) this.roadTexture.dispose();
+    if (this.windowTextures) this.windowTextures.forEach(t => t.dispose());
+    if (this.billboardTextures) this.billboardTextures.forEach(t => t.dispose());
+
     if (this.renderer && this.renderer.domElement && this.renderer.domElement.parentNode) {
       this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
     }

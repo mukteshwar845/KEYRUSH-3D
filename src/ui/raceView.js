@@ -1,15 +1,13 @@
 /**
- * KEYRUSH — Complete Photorealistic Cyberpunk Car Racing & Gameplay Screen
- * - Fullscreen Photorealistic Cyberpunk Megacity Highway Racing Arena
- * - Dynamic Canvas VFX Engine (speed lines, twin cyan nitro exhaust flames, wet asphalt specular reflection)
- * - Top HUD: Logo, angled Position badge (5/5), track progress radar, lap timer, online race status, action buttons
- * - Top-Left: Pilot Telemetry Card (pilot avatar, You / TALON GT, car thumbnail, 2x2 WPM/Accuracy/Errors/Streak grid)
- * - Top-Right: Race Standings Card (5 racer rows with thumbnails, rank, WPM, accuracy %, gaps, highlighted player row)
- * - Bottom: Typing Challenge Panel (⚡ TYPING CHALLENGE, character counter, legend, glowing box caret [T], keyboard guide)
- * - Bottom-Right: Digital Cockpit (circular neon speedometer with KM/H and vertical angled 7-segment NITRO gauge)
+ * KEYRUSH — Complete 3D Car Racing Engine & Production Gameplay View
+ * - Fullscreen Real Three.js 3D Racing Arena (infinite scrolling procedural city, animated sky, lighting)
+ * - True 3D Player sports car with rolling wheels, front steering, nitro exhaust flames, dynamic brake lights
+ * - Multi-Car 3D Opponent Grid with live AI pacing, lane wander, and authoritative race standings
+ * - Real-time typing engine driving vehicle acceleration, speed lines, camera shake, and cockpit gauges
+ * - Synchronized HUD: live 3D track radar, digital speedometer, 7-segment nitro meter, pilot telemetry
  */
 
-import { RaceVfxEngine } from './raceVfxEngine.js';
+import { Track3D } from '../graphics/track3D.js';
 import { TypingEngine } from '../engine/typingEngine.js';
 import { getRandomPassage, getAcademyLesson } from '../engine/textGenerator.js';
 import { AiOpponentGrid } from '../engine/aiOpponent.js';
@@ -24,7 +22,10 @@ const CAR_THUMBNAILS = {
   you: '/images/cars/thumb-you.png',
   talon: '/images/cars/thumb-you.png',
   talon_gt: '/images/cars/thumb-talon-gt.png',
+  talon_gold: '/images/cars/thumb-talon-gt.png',
+  shadow: '/images/cars/thumb-viper-drift.png',
   nitro_phantom: '/images/cars/thumb-nitro-phantom.png',
+  phantom: '/images/cars/thumb-nitro-phantom.png',
   neural_adaptive: '/images/cars/thumb-neural-adaptive.png',
   street_cruiser: '/images/cars/thumb-street-cruiser.png',
   drift_king: '/images/cars/thumb-viper-drift.png',
@@ -32,14 +33,17 @@ const CAR_THUMBNAILS = {
   cyber_apex: '/images/cars/thumb-street-cruiser.png',
   ghost_rider: '/images/cars/thumb-viper-drift.png',
   titan_overdrive: '/images/cars/thumb-nitro-phantom.png',
-  rookie_bolt: '/images/cars/thumb-talon-gt.png'
+  rookie_bolt: '/images/cars/thumb-talon-gt.png',
+  vortex: '/images/cars/thumb-viper-drift.png',
+  nebula: '/images/cars/thumb-neural-adaptive.png',
+  chronos: '/images/cars/thumb-nitro-phantom.png'
 };
 
 export class RaceView {
   constructor(container, app) {
     this.container = container;
     this.app = app;
-    this.vfxEngine = null;
+    this.track3D = null;
     this.typingEngine = null;
     this.aiGrid = null;
     this.isRaceActive = false;
@@ -48,6 +52,7 @@ export class RaceView {
     this.raceConfig = {
       mode: 'Online Race',
       difficulty: 'AMATEUR',
+      circuit: 'Neo-Metropolis GP',
       aiTier: 'intermediate',
       lessonId: null,
       customText: null,
@@ -104,26 +109,32 @@ export class RaceView {
         soundEffects.playKeyClick(true);
         this.updateTypingDisplay();
         this.updatePlayerHUD(stats);
+        if (this.track3D) {
+          this.track3D.updatePlayerProgress(stats.progress, stats.wpm, stats.currentStreak > 15);
+        }
       },
       onMistake: (expected, typed, stats) => {
         soundEffects.playKeyClick(false);
         soundEffects.playErrorMisfire();
-        if (this.vfxEngine) {
-          this.vfxEngine.triggerBrakeFeedback();
+        if (this.track3D) {
+          this.track3D.triggerBrakeFeedback();
         }
         this.updateTypingDisplay(true);
         this.updatePlayerHUD(stats);
       },
       onProgress: (progress, stats) => {
         const kmh = Math.round(stats.wpm * 2.45);
-        if (this.vfxEngine) {
-          this.vfxEngine.updateSpeed(stats.wpm, kmh);
+        if (this.track3D) {
+          this.track3D.updatePlayerProgress(progress, stats.wpm, stats.currentStreak > 15);
         }
         soundEffects.updateEngineSpeed(stats.wpm / 80, stats.penaltyMultiplier);
         this.updateCockpitInstruments(stats.wpm, stats);
         this.updateGridStandings();
       },
       onFinish: (finalStats) => {
+        if (this.track3D) {
+          this.track3D.setFinished(true);
+        }
         this.handleRaceFinish(finalStats);
       }
     });
@@ -132,12 +143,14 @@ export class RaceView {
   }
 
   renderLayout() {
+    const carThumb = CAR_THUMBNAILS[this.playerCarId] || '/images/cars/thumb-talon-gt.png';
+    const carDisplayName = this.playerCarId.toUpperCase().replace('_', ' ');
+
     this.container.innerHTML = `
       <div class="race-screen-wrapper">
-        <!-- 1. FULLSCREEN PHOTOREALISTIC RACING ARENA STAGE -->
-        <div class="race-arena-stage">
-          <div class="race-arena-backdrop"></div>
-          <canvas id="race-vfx-canvas" class="race-vfx-canvas"></canvas>
+        <!-- 1. FULLSCREEN 3D RACING ARENA STAGE -->
+        <div class="race-arena-stage" id="race-arena-stage">
+          <div id="race-3d-canvas-container" class="race-3d-canvas-container"></div>
         </div>
 
         <!-- 2. TOP HUD STRIP -->
@@ -198,11 +211,11 @@ export class RaceView {
               <img src="/images/ui/pilot-avatar.png" alt="Pilot" class="pilot-avatar-img" />
             </div>
             <div class="pilot-labels">
-              <div class="pilot-name-text">You</div>
-              <div class="pilot-car-model">TALON GT</div>
+              <div class="pilot-name-text">${this.profile?.username || 'You'}</div>
+              <div class="pilot-car-model">${carDisplayName}</div>
             </div>
             <div class="pilot-vehicle-preview">
-              <img src="/images/cars/thumb-talon-gt.png" alt="Talon GT" class="pilot-car-thumb" />
+              <img src="${carThumb}" alt="${carDisplayName}" class="pilot-car-thumb" onerror="this.src='/images/cars/thumb-you.png'" />
             </div>
           </div>
 
@@ -233,7 +246,7 @@ export class RaceView {
             <span class="standings-txt">RACE STANDINGS</span>
           </div>
           <div class="standings-rows-stack" id="leaderboard-racers-list">
-            <!-- 5 Dynamic Competitor Rows -->
+            <!-- Dynamic Competitor Rows -->
           </div>
         </aside>
 
@@ -262,7 +275,7 @@ export class RaceView {
           <div class="typing-panel-footer">
             <div class="typing-hint-guide">
               <span class="kbd-ico">⌨️</span>
-              <span class="hint-text">Type the text accurately to accelerate your car</span>
+              <span class="hint-text">Type to accelerate • [← / →] Steer Lanes • [ESC] Pause</span>
             </div>
             <div class="typing-esc-action">
               <span class="esc-badge"><kbd>ESC</kbd> Pause</span>
@@ -329,7 +342,7 @@ export class RaceView {
         <div class="countdown-overlay" id="race-countdown-overlay">
           <div class="countdown-box">
             <div class="starting-grid-info">
-              <span class="grid-circuit-name">NEO-METROPOLIS CIRCUIT</span>
+              <span class="grid-circuit-name">${(this.raceConfig.circuit || 'NEO-METROPOLIS GP').toUpperCase()}</span>
               <span class="grid-lap-desc">${this.raceConfig.mode} • 5 RACERS GRID</span>
             </div>
             <div class="countdown-lights">
@@ -372,9 +385,12 @@ export class RaceView {
   }
 
   initVisualStage() {
-    const canvas = document.getElementById('race-vfx-canvas');
-    if (canvas) {
-      this.vfxEngine = new RaceVfxEngine(canvas);
+    const stageEl = document.getElementById('race-3d-canvas-container');
+    if (stageEl) {
+      this.track3D = new Track3D(stageEl, {
+        circuit: this.raceConfig.circuit || 'Neo-Metropolis GP'
+      });
+      this.track3D.setPlayerCar(this.playerCarId, this.paintColor, this.underglowColor);
     }
 
     // Initialize 4-car AI Opponent Grid
@@ -386,6 +402,10 @@ export class RaceView {
     );
 
     const opponentsData = this.aiGrid.getOpponentsData();
+    if (this.track3D) {
+      this.track3D.setOpponents(opponentsData);
+      this.track3D.setCountdownState(true);
+    }
     this.initRadarMarkers(opponentsData);
     this.updateGridStandings();
   }
@@ -409,6 +429,10 @@ export class RaceView {
     this.isCountdown = true;
     this.isRaceActive = false;
     let count = 3;
+
+    if (this.track3D) {
+      this.track3D.setCountdownState(true);
+    }
 
     const overlay = document.getElementById('race-countdown-overlay');
     const numberEl = document.getElementById('countdown-number');
@@ -441,6 +465,11 @@ export class RaceView {
         soundEffects.playCountdown(0);
         soundEffects.playNitroBoost();
         musicManager.duck(0.60, 500);
+
+        if (this.track3D) {
+          this.track3D.setCountdownState(false);
+          this.track3D.triggerNitroSurge();
+        }
 
         clearInterval(this.countdownInterval);
         this.countdownInterval = null;
@@ -537,7 +566,6 @@ export class RaceView {
   }
 
   updateCockpitInstruments(wpm, stats = {}) {
-    // Speed: 68 WPM ~ 168 km/h, max ~ 280 km/h
     const kmh = Math.round(wpm * 2.45);
     const digitalEl = document.getElementById('digital-speed-val');
     const arcFill = document.getElementById('speed-arc-fill');
@@ -545,7 +573,6 @@ export class RaceView {
     if (digitalEl) digitalEl.textContent = kmh.toString();
 
     // SVG Circular Speedometer Fill Arc
-    // Dasharray: 320, active arc range is 255
     const ratio = Math.min(1.0, kmh / 260);
     if (arcFill) {
       const offset = 320 - (ratio * 255);
@@ -564,9 +591,8 @@ export class RaceView {
       }
     }
 
-    // Trigger visual nitro surge flame burst on hyper speed
-    if (wpm >= 70 && this.vfxEngine) {
-      this.vfxEngine.triggerNitroSurge();
+    if (wpm >= 70 && this.track3D) {
+      this.track3D.triggerNitroSurge();
     }
   }
 
@@ -576,6 +602,9 @@ export class RaceView {
       if (marker) {
         const pct = Math.min(100, Math.round(opp.progress * 100));
         marker.style.left = `${pct}%`;
+      }
+      if (this.track3D) {
+        this.track3D.updateOpponentProgress(opp.id, opp.progress, opp.wpm);
       }
     });
 
@@ -667,7 +696,6 @@ export class RaceView {
     musicManager.duck(0.50, 1100);
     soundEffects.playVictoryFanfare();
 
-    // Crossfade back to ambient music
     musicManager.playInterior(1500);
 
     const isWinner = this.playerRank === 1;
@@ -680,13 +708,11 @@ export class RaceView {
       });
     }
 
-    // XP calculation
     const baseExp = Math.round(finalStats.wpm * 2.5);
     const accuracyBonus = Math.round(finalStats.accuracy * 1.5);
     const rankBonus = this.playerRank === 1 ? 180 : (this.playerRank === 2 ? 100 : 50);
     const totalXp = baseExp + accuracyBonus + rankBonus;
 
-    // Save race session to IndexedDB
     const sessionRecord = {
       timestamp: Date.now(),
       mode: this.raceConfig.mode,
@@ -704,7 +730,6 @@ export class RaceView {
     };
     await storage.addSession(sessionRecord);
 
-    // Update Player Profile
     const profile = await storage.getProfile();
     if (profile) {
       profile.xp = (profile.xp || 0) + totalXp;
@@ -716,7 +741,6 @@ export class RaceView {
       }
       profile.totalPracticeTimeSec = (profile.totalPracticeTimeSec || 0) + Math.round(finalStats.elapsedSeconds);
 
-      // Accumulate weak keys
       profile.weakKeys = profile.weakKeys || {};
       for (const [k, count] of Object.entries(finalStats.keyErrors)) {
         profile.weakKeys[k] = (profile.weakKeys[k] || 0) + count;
@@ -725,7 +749,6 @@ export class RaceView {
       this.profile = profile;
     }
 
-    // Vehicle unlocks
     let unlockedVehicleName = null;
     const garage = await storage.getGarage();
     if (garage) {
@@ -877,6 +900,9 @@ export class RaceView {
     if (!this.isRaceActive || this.isPaused) return;
     this.isPaused = true;
     this.isRaceActive = false;
+    if (this.track3D) {
+      this.track3D.setPaused(true);
+    }
     if (this.raceTimerInterval) {
       clearInterval(this.raceTimerInterval);
       this.raceTimerInterval = null;
@@ -892,6 +918,9 @@ export class RaceView {
     if (!this.isPaused) return;
     this.isPaused = false;
     this.isRaceActive = true;
+    if (this.track3D) {
+      this.track3D.setPaused(false);
+    }
     this.startRaceTimer();
     soundEffects.startEngine();
     musicManager.resumeRaceMusic();
@@ -906,7 +935,6 @@ export class RaceView {
   bindEvents() {
     window.addEventListener('keydown', this.onKeyDownHandler);
 
-    // Pause / Resume triggers
     document.getElementById('race-pause-btn')?.addEventListener('click', () => {
       this.togglePause();
     });
@@ -925,13 +953,11 @@ export class RaceView {
       this.app.showScreen('dashboard');
     });
 
-    // Quick restart button
     document.getElementById('race-restart-btn')?.addEventListener('click', () => {
       this.dispose();
       this.setup(this.raceConfig);
     });
 
-    // Fullscreen Toggle
     document.getElementById('race-fullscreen-btn')?.addEventListener('click', () => {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
@@ -949,6 +975,23 @@ export class RaceView {
     }
 
     if (!this.isRaceActive || this.isPaused || this.isCountdown) {
+      return;
+    }
+
+    // Dynamic lane switching with Left and Right arrow keys
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (this.track3D) {
+        this.track3D.steerLane(-1);
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      if (this.track3D) {
+        this.track3D.steerLane(1);
+      }
       return;
     }
 
@@ -974,9 +1017,9 @@ export class RaceView {
       this.aiGrid.stop();
       this.aiGrid = null;
     }
-    if (this.vfxEngine) {
-      this.vfxEngine.dispose();
-      this.vfxEngine = null;
+    if (this.track3D) {
+      this.track3D.dispose();
+      this.track3D = null;
     }
     soundEffects.stopEngine();
     clearTimeout(this.overtakeTimeout);
