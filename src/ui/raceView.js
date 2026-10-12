@@ -212,13 +212,6 @@ export class RaceView {
             <span class="timer-readout font-mono" id="hud-timer-val">00:00.0</span>
           </div>
 
-          <!-- Race Mode Connection Status Badge -->
-          <div class="hud-online-badge">
-            <span class="status-pulse-dot"></span>
-            <span class="status-mode-label">${isMultiplayer ? 'ONLINE RACE' : 'AI CIRCUIT'}</span>
-            <span class="latency-pill font-mono" id="hud-latency-pill">${isMultiplayer ? '24ms' : 'GRID'}</span>
-          </div>
-
           <!-- Quick Action Buttons -->
           <div class="hud-action-controls">
             <button class="hud-ctrl-btn" id="race-pause-btn" title="Pause Lap (Esc)">⏸</button>
