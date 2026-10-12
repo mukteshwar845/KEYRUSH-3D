@@ -1571,76 +1571,133 @@ body.in-pseudo-fullscreen {
   filter: drop-shadow(0 0 5px #ff5500);
 }
 
-/* 4. TOP-RIGHT: RACE STANDINGS CARD */
+/* 4. TOP-RIGHT: LIVE TIMING TOWER */
 .hud-standings-card {
   position: absolute;
-  top: 11.9%;
-  right: 1.4%;
-  width: 20.3%;
-  height: 42.4%;
-  background: rgba(8, 12, 20, 0.92);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 0.8vw 1vw;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75);
+  top: 12.0%;
+  right: 1.6%;
+  width: 17.5%;
+  max-width: 260px;
+  background: rgba(8, 14, 26, 0.48);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid rgba(0, 229, 255, 0.22);
+  border-radius: 10px;
+  padding: 0.55vw 0.75vw;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   z-index: 70;
   display: flex;
   flex-direction: column;
+  user-select: none;
 }
 
 .standings-card-title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.6rem;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
 }
 
-.trophy-ico {
-  font-size: 1.05rem;
-  color: #00e5ff;
+.standings-title-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.standings-tower-ico {
+  display: block;
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.6));
 }
 
 .standings-txt {
   font-family: var(--font-display);
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 1.8px;
+  letter-spacing: 1.4px;
   color: #ffffff;
 }
 
+.standings-live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.standings-pulse-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #00f59b;
+  box-shadow: 0 0 6px #00f59b;
+  animation: pulseLiveBeacon 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseLiveBeacon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.standings-live-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #8b9bb4;
+  letter-spacing: 0.8px;
+}
+
 .standings-rows-stack {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 4px;
+  gap: 3.5px;
 }
 
 .standings-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0.38rem 0.6rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  transition: all 0.2s ease;
-  flex: 1;
+  gap: 6px;
+  padding: 0.24rem 0.42rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.racer-livery-strip {
+  width: 2.5px;
+  height: 18px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
 }
 
 .racer-rank-num {
   font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 900;
-  width: 18px;
-  color: #ffb800;
+  font-size: 0.80rem;
+  font-weight: 800;
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.racer-rank-num.rank-1 {
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.45);
+}
+
+.racer-rank-num.rank-2 {
+  color: #e2e8f0;
+}
+
+.racer-rank-num.rank-3 {
+  color: #f59e0b;
 }
 
 .racer-car-box {
-  width: 52px;
-  height: 28px;
+  width: 36px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1651,58 +1708,107 @@ body.in-pseudo-fullscreen {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .racer-info-cell {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 1px;
+}
+
+.racer-name-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .racer-name {
-  font-size: 0.84rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: #ffffff;
+  color: #e2e8f0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.racer-stats-sub {
-  font-size: 0.7rem;
-  display: flex;
-  gap: 8px;
-  color: #94a3b8;
-  font-weight: 600;
+.racer-name.player-name-txt {
+  color: #00e5ff;
+  font-weight: 800;
 }
 
-.racer-gap {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #00f59b;
-  text-align: right;
-}
-
-.standings-row.player-active-row {
-  border: 1px solid rgba(0, 229, 255, 0.6);
-  background: rgba(0, 217, 255, 0.14);
-  box-shadow: 0 0 14px rgba(0, 217, 255, 0.28);
+.player-pill-badge {
+  font-family: var(--font-display);
+  font-size: 0.50rem;
+  font-weight: 800;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.16);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  padding: 0px 3.5px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
 }
 
 .ai-tag-chip {
   font-family: var(--font-display);
+  font-size: 0.50rem;
+  font-weight: 800;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0px 3px;
+  border-radius: 3px;
+  letter-spacing: 0.4px;
+}
+
+.racer-stats-sub {
+  font-size: 0.60rem;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.racer-wpm {
+  color: #94a3b8;
+}
+
+.stats-unit {
+  font-size: 0.50rem;
+  color: #64748b;
+}
+
+.racer-dot-sep {
+  color: #475569;
+}
+
+.racer-acc {
+  color: #94a3b8;
+}
+
+.racer-gap {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.racer-gap.leader {
+  color: #00f59b;
   font-size: 0.62rem;
   font-weight: 800;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  padding: 1px 5px;
-  border-radius: 4px;
-  margin-left: 6px;
   letter-spacing: 0.5px;
-  display: inline-block;
-  vertical-align: middle;
+  text-shadow: 0 0 6px rgba(0, 245, 155, 0.35);
+}
+
+.standings-row.player-active-row {
+  background: linear-gradient(90deg, rgba(0, 229, 255, 0.16), rgba(0, 229, 255, 0.04));
+  border: 1px solid rgba(0, 229, 255, 0.38);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.18);
 }
 
 /* 5. BOTTOM: STREAMLINED TYPING CHALLENGE HUD PANEL */

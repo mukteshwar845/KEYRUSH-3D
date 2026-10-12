@@ -260,11 +260,19 @@ export class RaceView {
           </div>
         </aside>
 
-        <!-- 4. TOP-RIGHT: RACE STANDINGS CARD -->
+        <!-- 4. TOP-RIGHT: LIVE TIMING TOWER -->
         <aside class="hud-card hud-standings-card" id="hud-leaderboard-panel">
           <div class="standings-card-title">
-            <span class="trophy-ico">🏆</span>
-            <span class="standings-txt">RACE STANDINGS</span>
+            <div class="standings-title-left">
+              <svg class="standings-tower-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span class="standings-txt">LIVE TIMING</span>
+            </div>
+            <div class="standings-live-indicator">
+              <span class="standings-pulse-dot"></span>
+              <span class="standings-live-label font-mono">GAP</span>
+            </div>
           </div>
           <div class="standings-rows-stack" id="leaderboard-racers-list">
             <!-- Dynamic Competitor Rows -->
@@ -624,18 +632,24 @@ export class RaceView {
         const isPlayer = r.isPlayer;
         const thumbKey = isPlayer ? 'player' : (r.id || 'nitro_phantom');
         const thumbSrc = CAR_THUMBNAILS[thumbKey] || CAR_THUMBNAILS[r.carModel] || '/images/cars/thumb-you.png';
-        const gapDisplay = isPlayer ? '--' : (r.rank === 1 ? 'LEADER' : r.gapText);
+        const gapDisplay = r.rank === 1 ? 'LEADER' : (r.gapText || '--');
+        const displayName = isPlayer ? (this.profile?.username || 'You') : r.name;
 
         return `
           <div class="standings-row ${isPlayer ? 'player-active-row' : ''}">
-            <span class="racer-rank-num font-mono">${r.rank}</span>
+            <span class="racer-livery-strip" style="background-color: ${r.color || '#00e5ff'};"></span>
+            <span class="racer-rank-num font-mono rank-${r.rank}">${r.rank}</span>
             <div class="racer-car-box">
-              <img src="${thumbSrc}" alt="${r.name}" class="racer-thumb-img" onerror="this.src='/images/cars/thumb-you.png'" />
+              <img src="${thumbSrc}" alt="${displayName}" class="racer-thumb-img" onerror="this.src='/images/cars/thumb-you.png'" />
             </div>
             <div class="racer-info-cell">
-              <div class="racer-name">${isPlayer ? 'You' : `${r.name} <span class="ai-tag-chip">AI</span>`}</div>
+              <div class="racer-name-row">
+                <span class="racer-name ${isPlayer ? 'player-name-txt' : ''}">${displayName}</span>
+                ${isPlayer ? '<span class="player-pill-badge">YOU</span>' : '<span class="ai-tag-chip">AI</span>'}
+              </div>
               <div class="racer-stats-sub font-mono">
-                <span class="racer-wpm highlight-cyan">${r.wpm} WPM</span>
+                <span class="racer-wpm">${r.wpm} <span class="stats-unit">WPM</span></span>
+                <span class="racer-dot-sep">·</span>
                 <span class="racer-acc">${r.accuracy}%</span>
               </div>
             </div>

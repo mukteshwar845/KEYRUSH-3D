@@ -463,17 +463,19 @@ export class RacingSimulation {
       let gapText = '';
       if (idx === 0) {
         gapText = 'LEADER';
-      } else if (racer.isPlayer) {
-        const distDiff = leader.distance - racer.distance;
-        gapText = distDiff > 0.5 ? `-${distDiff.toFixed(1)}m` : 'TIED';
       } else {
-        const distDiff = racer.distance - playerEntry.distance;
-        if (distDiff > 0.5) {
-          gapText = `+${distDiff.toFixed(1)}m`;
-        } else if (distDiff < -0.5) {
-          gapText = `${distDiff.toFixed(1)}m`;
-        } else {
+        const distDiff = Math.max(0, leader.distance - racer.distance);
+        if (distDiff <= 0.4) {
           gapText = 'TIED';
+        } else if (leader.speedMps > 6.0) {
+          const timeDelta = distDiff / Math.max(12.0, leader.speedMps);
+          if (timeDelta < 25.0) {
+            gapText = `+${timeDelta.toFixed(1)}s`;
+          } else {
+            gapText = `+${Math.round(distDiff)}m`;
+          }
+        } else {
+          gapText = `+${distDiff.toFixed(1)}m`;
         }
       }
       racer.gapText = gapText;
