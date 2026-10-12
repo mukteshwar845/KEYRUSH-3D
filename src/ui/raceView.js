@@ -146,7 +146,9 @@ export class RaceView {
     const carThumb = CAR_THUMBNAILS[this.playerCarId] || '/images/cars/thumb-talon-gt.png';
     const carDisplayName = this.playerCarId.toUpperCase().replace('_', ' ');
 
-    this.container.innerHTML = `
+      const isMultiplayer = (this.raceConfig.mode === 'Multiplayer');
+
+      this.container.innerHTML = `
       <div class="race-screen-wrapper">
         <!-- 1. FULLSCREEN 3D RACING ARENA STAGE -->
         <div class="race-arena-stage" id="race-arena-stage">
@@ -189,11 +191,11 @@ export class RaceView {
             <span class="timer-readout font-mono" id="hud-timer-val">00:00.0</span>
           </div>
 
-          <!-- Online Race Status -->
+          <!-- Race Mode Connection Status Badge -->
           <div class="hud-online-badge">
             <span class="status-pulse-dot"></span>
-            <span class="status-mode-label">ONLINE RACE</span>
-            <span class="latency-pill font-mono" id="hud-latency-pill">18ms</span>
+            <span class="status-mode-label">${isMultiplayer ? 'ONLINE RACE' : 'AI CIRCUIT'}</span>
+            <span class="latency-pill font-mono" id="hud-latency-pill">${isMultiplayer ? '24ms' : 'GRID'}</span>
           </div>
 
           <!-- Quick Action Buttons -->
@@ -275,7 +277,7 @@ export class RaceView {
           <div class="typing-panel-footer">
             <div class="typing-hint-guide">
               <span class="kbd-ico">⌨️</span>
-              <span class="hint-text">Type to accelerate • [← / →] Steer Lanes • [ESC] Pause</span>
+              <span class="hint-text">Type the text accurately to accelerate your car</span>
             </div>
             <div class="typing-esc-action">
               <span class="esc-badge"><kbd>ESC</kbd> Pause</span>
@@ -311,6 +313,7 @@ export class RaceView {
             <div class="speedometer-center-core">
               <span class="speedometer-digits font-mono" id="digital-speed-val">0</span>
               <span class="speedometer-unit-label">KM/H</span>
+              <span class="speedometer-gear-label font-mono" id="digital-gear-val">1</span>
             </div>
           </div>
 
@@ -569,8 +572,15 @@ export class RaceView {
     const kmh = Math.round(wpm * 2.45);
     const digitalEl = document.getElementById('digital-speed-val');
     const arcFill = document.getElementById('speed-arc-fill');
+    const gearEl = document.getElementById('digital-gear-val');
 
     if (digitalEl) digitalEl.textContent = kmh.toString();
+
+    // Transmission Gear Calculation
+    if (gearEl) {
+      const gear = kmh < 35 ? 1 : (kmh < 75 ? 2 : (kmh < 120 ? 3 : (kmh < 165 ? 4 : (kmh < 210 ? 5 : 6))));
+      gearEl.textContent = gear.toString();
+    }
 
     // SVG Circular Speedometer Fill Arc
     const ratio = Math.min(1.0, kmh / 260);
@@ -657,7 +667,7 @@ export class RaceView {
             <img src="${thumbSrc}" alt="${r.name}" class="racer-thumb-img" onerror="this.src='/images/cars/thumb-you.png'" />
           </div>
           <div class="racer-info-cell">
-            <div class="racer-name">${isPlayer ? 'You' : r.name}</div>
+            <div class="racer-name">${isPlayer ? 'You' : `${r.name} <span class="ai-tag-chip">AI</span>`}</div>
             <div class="racer-stats-sub font-mono">
               <span class="racer-wpm highlight-cyan">${r.wpm} WPM</span>
               <span class="racer-acc">${r.accuracy}%</span>

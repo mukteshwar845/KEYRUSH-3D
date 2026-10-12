@@ -1158,7 +1158,7 @@ body {
 /* 2. TOP HUD STRIP */
 .hud-top-strip {
   position: absolute;
-  top: 2.2%;
+  top: 2.0%;
   left: 1.8%;
   right: 1.8%;
   height: 7.2%;
@@ -1169,7 +1169,13 @@ body {
 }
 
 .hud-brand-container {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: absolute;
+  left: 0;
+  top: 0;
+  user-select: none;
 }
 
 .hud-brand-logo {
@@ -1183,6 +1189,7 @@ body {
   font-family: var(--font-display);
   font-size: 1.95rem;
   font-weight: 900;
+  font-style: italic;
   background: linear-gradient(135deg, #a855f7, #00e5ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1191,36 +1198,38 @@ body {
 
 .hud-brand-text {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   font-weight: 900;
+  font-style: italic;
   color: #ffffff;
   letter-spacing: 2px;
 }
 
 .hud-brand-tagline {
   font-family: var(--font-display);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: #00e5ff;
   letter-spacing: 1.2px;
-  margin-top: 2px;
+  margin-top: 1px;
   font-weight: 600;
+  font-style: italic;
 }
 
 /* Position Bracket Badge */
 .hud-position-bracket {
   position: absolute;
-  left: 23.1%;
-  top: 4%;
+  left: 23.5%;
+  top: 6%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(3, 7, 18, 0.96);
+  background: rgba(4, 8, 16, 0.88);
   backdrop-filter: blur(16px);
-  border: 1.5px solid rgba(0, 229, 255, 0.6);
+  border: 1.5px solid rgba(0, 229, 255, 0.5);
   clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-  padding: 0.28rem 2rem;
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.35);
+  padding: 0.24rem 1.8rem;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.25);
 }
 
 .bracket-pos-label {
@@ -1643,23 +1652,38 @@ body {
 }
 
 .standings-row.player-active-row {
-  border: 1px solid var(--accent-cyan);
-  background: rgba(0, 217, 255, 0.12);
-  box-shadow: 0 0 10px rgba(0, 217, 255, 0.25);
+  border: 1px solid rgba(0, 229, 255, 0.6);
+  background: rgba(0, 217, 255, 0.14);
+  box-shadow: 0 0 14px rgba(0, 217, 255, 0.28);
 }
 
-/* 5. BOTTOM: TYPING CHALLENGE HUD PANEL */
+.ai-tag-chip {
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 6px;
+  letter-spacing: 0.5px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* 5. BOTTOM: STREAMLINED TYPING CHALLENGE HUD PANEL */
 .hud-typing-challenge-panel {
   position: absolute;
-  bottom: 4.4%;
-  left: 2.0%;
-  width: 76.6%;
-  height: 23.4%;
-  background: rgba(8, 12, 20, 0.94);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  bottom: 3.2%;
+  left: 1.8%;
+  width: 75.5%;
+  height: 17.2%;
+  background: rgba(6, 10, 18, 0.82);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 229, 255, 0.22);
   border-radius: 12px;
-  padding: 1vw 1.6vw;
+  padding: 0.7vw 1.4vw;
   box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75);
   z-index: 70;
   outline: none;
@@ -1670,8 +1694,8 @@ body {
 }
 
 .hud-typing-challenge-panel:focus {
-  border-color: rgba(0, 217, 255, 0.45);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 217, 255, 0.2);
+  border-color: rgba(0, 217, 255, 0.55);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75), 0 0 16px rgba(0, 217, 255, 0.25);
 }
 
 .typing-panel-header {
@@ -1688,19 +1712,19 @@ body {
 
 .lightning-ico {
   color: #00e5ff;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 .typing-challenge-tag {
   font-family: var(--font-display);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   font-weight: 800;
-  letter-spacing: 2px;
+  letter-spacing: 1.8px;
   color: #00e5ff;
 }
 
 .typing-char-counter {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   color: #8b9bb4;
   margin-left: 14px;
   font-weight: 600;
@@ -1713,7 +1737,7 @@ body {
 }
 
 .legend-chip {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: #94a3b8;
   display: flex;
   align-items: center;
@@ -1721,8 +1745,8 @@ body {
 }
 
 .leg-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
 }
 
@@ -1734,8 +1758,8 @@ body {
 .leg-dot.current {
   background: #00e5ff;
   border-radius: 2px;
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
 }
 
 .leg-dot.error {
@@ -1755,9 +1779,9 @@ body {
 
 .typing-stream-text {
   font-family: var(--font-mono);
-  font-size: 1.48rem;
-  line-height: 1.7;
-  letter-spacing: 0.5px;
+  font-size: 1.36rem;
+  line-height: 1.5;
+  letter-spacing: 0.4px;
   word-break: break-word;
 }
 
@@ -1771,8 +1795,8 @@ body {
   color: #020617;
   font-weight: 900;
   border-radius: 4px;
-  box-shadow: 0 0 18px #00e5ff;
-  padding: 1px 6px;
+  box-shadow: 0 0 16px #00e5ff;
+  padding: 1px 5px;
   margin: 0 2px;
   display: inline-block;
   animation: pulseCaret 0.8s infinite;
@@ -1794,11 +1818,11 @@ body {
   justify-content: space-between;
   align-items: center;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 0.4rem;
+  padding-top: 0.3rem;
 }
 
 .typing-hint-guide {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: #8b9bb4;
   display: flex;
   align-items: center;
@@ -1806,13 +1830,13 @@ body {
 }
 
 .esc-badge {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: #94a3b8;
 }
 
 .esc-badge kbd {
   background: rgba(255, 255, 255, 0.12);
-  padding: 0.15rem 0.5rem;
+  padding: 0.12rem 0.45rem;
   border-radius: 4px;
   color: #ffffff;
   font-family: var(--font-mono);
@@ -1821,10 +1845,10 @@ body {
 /* 6. BOTTOM-RIGHT: DIGITAL COCKPIT INSTRUMENTS */
 .hud-cockpit-gauges {
   position: absolute;
-  bottom: 4.4%;
-  right: 1.4%;
-  width: 18.8%;
-  height: 24.8%;
+  bottom: 3.2%;
+  right: 1.6%;
+  width: 19.4%;
+  height: 20.8%;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -1839,7 +1863,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, rgba(3, 7, 18, 0.98) 58%, rgba(3, 7, 18, 0.7) 80%, transparent 100%);
+  background: radial-gradient(circle at center, rgba(3, 7, 18, 0.95) 58%, rgba(3, 7, 18, 0.65) 80%, transparent 100%);
   border-radius: 50%;
 }
 
@@ -1879,21 +1903,30 @@ body {
 
 .speedometer-digits {
   font-family: var(--font-display);
-  font-size: 3.3rem;
+  font-size: 2.85rem;
   font-weight: 900;
   color: #ffffff;
   line-height: 1;
-  text-shadow: 0 0 20px rgba(0, 229, 255, 0.8);
+  text-shadow: 0 0 16px rgba(0, 229, 255, 0.8);
 }
 
 .speedometer-unit-label {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 800;
   color: #00e5ff;
-  letter-spacing: 2px;
+  letter-spacing: 1.8px;
   display: block;
-  margin-top: 4px;
+  margin-top: 2px;
+}
+
+.speedometer-gear-label {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  display: block;
+  margin-top: 1px;
 }
 
 .vertical-nitro-module {
