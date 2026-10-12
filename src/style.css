@@ -1422,6 +1422,33 @@ body {
   box-shadow: 0 0 14px rgba(0, 229, 255, 0.5);
 }
 
+.hud-ctrl-btn.active {
+  background: rgba(0, 229, 255, 0.35);
+  border-color: #00e5ff;
+  color: #00e5ff;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.65);
+}
+
+.hud-ctrl-btn svg {
+  display: block;
+  pointer-events: none;
+}
+
+/* Pseudo-fullscreen mode fallback for iframes, webviews and restricted environments */
+.race-screen-wrapper.race-screen-pseudo-fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+}
+
+body.in-pseudo-fullscreen {
+  overflow: hidden !important;
+}
+
 /* 3. TOP-LEFT: PILOT TELEMETRY CARD */
 .hud-pilot-card {
   position: absolute;

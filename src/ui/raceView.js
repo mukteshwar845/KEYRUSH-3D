@@ -40,6 +40,9 @@ const CAR_THUMBNAILS = {
   chronos: '/images/cars/thumb-nitro-phantom.png'
 };
 
+const FS_EXPAND_ICON = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
+const FS_COMPRESS_ICON = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`;
+
 export class RaceView {
   constructor(container, app) {
     this.container = container;
@@ -74,7 +77,9 @@ export class RaceView {
     this.previousPlayerRank = 5;
     this.overtakeTimeout = null;
 
+    this.isPseudoFullscreen = false;
     this.onKeyDownHandler = this.handleKeyDown.bind(this);
+    this.onFullscreenChangeHandler = this.handleFullscreenChange.bind(this);
   }
 
   async setup(config = {}) {
@@ -214,9 +219,9 @@ export class RaceView {
 
           <!-- Quick Action Buttons -->
           <div class="hud-action-controls">
-            <button class="hud-ctrl-btn" id="race-pause-btn" title="Pause Lap (Esc)">⏸</button>
-            <button class="hud-ctrl-btn" id="race-fullscreen-btn" title="Toggle Fullscreen">⛶</button>
-            <button class="hud-ctrl-btn" id="race-restart-btn" title="Restart Lap">↺</button>
+            <button class="hud-ctrl-btn" id="race-pause-btn" title="Pause Lap (Esc)" type="button" aria-label="Pause Lap">⏸</button>
+            <button class="hud-ctrl-btn" id="race-fullscreen-btn" title="Toggle Fullscreen" type="button" aria-label="Toggle Fullscreen">${this.isFullscreen() ? FS_COMPRESS_ICON : FS_EXPAND_ICON}</button>
+            <button class="hud-ctrl-btn" id="race-restart-btn" title="Restart Lap" type="button" aria-label="Restart Lap">↺</button>
           </div>
         </header>
 
@@ -965,6 +970,10 @@ export class RaceView {
 
   bindEvents() {
     window.addEventListener('keydown', this.onKeyDownHandler);
+    document.addEventListener('fullscreenchange', this.onFullscreenChangeHandler);
+    document.addEventListener('webkitfullscreenchange', this.onFullscreenChangeHandler);
+    document.addEventListener('mozfullscreenchange', this.onFullscreenChangeHandler);
+    document.addEventListener('MSFullscreenChange', this.onFullscreenChangeHandler);
 
     document.getElementById('race-pause-btn')?.addEventListener('click', () => {
       this.togglePause();
@@ -989,18 +998,151 @@ export class RaceView {
       this.setup(this.raceConfig);
     });
 
-    document.getElementById('race-fullscreen-btn')?.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+    const fsBtn = document.getElementById('race-fullscreen-btn');
+    if (fsBtn) {
+      fsBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        fsBtn.blur();
+        this.toggleFullscreen();
+      });
+    }
+
+    this.updateFullscreenUI();
+  }
+
+  isFullscreen() {
+    return !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement ||
+      this.isPseudoFullscreen
+    );
+  }
+
+  handleFullscreenChange() {
+    this.updateFullscreenUI();
+  }
+
+  updateFullscreenUI() {
+    const isFull = this.isFullscreen();
+    const btn = document.getElementById('race-fullscreen-btn');
+    if (btn) {
+      btn.innerHTML = isFull ? FS_COMPRESS_ICON : FS_EXPAND_ICON;
+      btn.title = isFull ? 'Exit Fullscreen (Esc)' : 'Enter Fullscreen';
+      btn.setAttribute('aria-label', isFull ? 'Exit Fullscreen' : 'Enter Fullscreen');
+      if (isFull) {
+        btn.classList.add('active');
       } else {
-        document.exitFullscreen().catch(() => {});
+        btn.classList.remove('active');
       }
-    });
+    }
+
+    // Adapt 3D Canvas resolution to monitor / viewport transition
+    if (this.track3D) {
+      this.track3D.onResize();
+      setTimeout(() => this.track3D?.onResize(), 120);
+      setTimeout(() => this.track3D?.onResize(), 300);
+    }
+  }
+
+  async toggleFullscreen() {
+    if (this.isFullscreen()) {
+      await this.exitFullscreen();
+    } else {
+      await this.enterFullscreen();
+    }
+  }
+
+  async enterFullscreen() {
+    const target = document.documentElement || document.body;
+    const reqFn = target.requestFullscreen ||
+                  target.webkitRequestFullscreen ||
+                  target.mozRequestFullScreen ||
+                  target.msRequestFullscreen;
+
+    if (reqFn) {
+      try {
+        const promise = reqFn.call(target);
+        if (promise && typeof promise.then === 'function') {
+          await promise;
+        }
+        this.updateFullscreenUI();
+        return;
+      } catch (err) {
+        console.warn('Native requestFullscreen denied or failed, switching to pseudo-fullscreen fallback:', err);
+      }
+    }
+
+    // Fallback: CSS Pseudo-Fullscreen for iframes, webviews and restricted environments
+    this.enablePseudoFullscreen();
+  }
+
+  async exitFullscreen() {
+    if (this.isPseudoFullscreen) {
+      this.disablePseudoFullscreen();
+      return;
+    }
+
+    const isNative = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+
+    if (isNative) {
+      const exitFn = document.exitFullscreen ||
+                     document.webkitExitFullscreen ||
+                     document.mozCancelFullScreen ||
+                     document.msExitFullscreen;
+      if (exitFn) {
+        try {
+          const promise = exitFn.call(document);
+          if (promise && typeof promise.then === 'function') {
+            await promise;
+          }
+        } catch (err) {
+          console.warn('Exit fullscreen error:', err);
+        }
+      }
+    }
+
+    if (this.isPseudoFullscreen) {
+      this.disablePseudoFullscreen();
+    }
+
+    this.updateFullscreenUI();
+  }
+
+  enablePseudoFullscreen() {
+    this.isPseudoFullscreen = true;
+    const wrapper = document.querySelector('.race-screen-wrapper');
+    if (wrapper) {
+      wrapper.classList.add('race-screen-pseudo-fullscreen');
+    }
+    document.body.classList.add('in-pseudo-fullscreen');
+    this.updateFullscreenUI();
+  }
+
+  disablePseudoFullscreen() {
+    this.isPseudoFullscreen = false;
+    const wrapper = document.querySelector('.race-screen-wrapper');
+    if (wrapper) {
+      wrapper.classList.remove('race-screen-pseudo-fullscreen');
+    }
+    document.body.classList.remove('in-pseudo-fullscreen');
+    this.updateFullscreenUI();
   }
 
   handleKeyDown(e) {
     if (e.key === 'Escape') {
       e.preventDefault();
+      // If currently in fullscreen mode, cleanly exit fullscreen first
+      if (this.isFullscreen()) {
+        this.exitFullscreen();
+        return;
+      }
       this.togglePause();
       return;
     }
@@ -1042,6 +1184,14 @@ export class RaceView {
 
   dispose() {
     window.removeEventListener('keydown', this.onKeyDownHandler);
+    document.removeEventListener('fullscreenchange', this.onFullscreenChangeHandler);
+    document.removeEventListener('webkitfullscreenchange', this.onFullscreenChangeHandler);
+    document.removeEventListener('mozfullscreenchange', this.onFullscreenChangeHandler);
+    document.removeEventListener('MSFullscreenChange', this.onFullscreenChangeHandler);
+
+    if (this.isPseudoFullscreen) {
+      this.disablePseudoFullscreen();
+    }
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
       this.countdownInterval = null;
