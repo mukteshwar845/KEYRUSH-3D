@@ -11,6 +11,7 @@ import { Track3D } from '../graphics/track3D.js';
 import { TypingEngine } from '../engine/typingEngine.js';
 import { getRandomPassage, getAcademyLesson } from '../engine/textGenerator.js';
 import { AiOpponentGrid } from '../engine/aiOpponent.js';
+import { RacingSimulation } from '../engine/racingSimulation.js';
 import { soundEffects } from '../audio/soundEffects.js';
 import { musicManager } from '../audio/musicManager.js';
 import { storage } from '../db/storage.js';
@@ -45,10 +46,12 @@ export class RaceView {
     this.app = app;
     this.track3D = null;
     this.typingEngine = null;
+    this.simulation = null;
     this.aiGrid = null;
     this.isRaceActive = false;
     this.isCountdown = false;
     this.isPaused = false;
+    this.isFinishHandled = false;
     this.raceConfig = {
       mode: 'Online Race',
       difficulty: 'AMATEUR',
@@ -96,6 +99,20 @@ export class RaceView {
       passage = getRandomPassage(this.raceConfig.difficulty);
     }
 
+    // Authoritative total race distance in metres (proportional to text length)
+    const trackDistance = Math.max(900, passage.length * 6.5);
+    this.simulation = new RacingSimulation({
+      totalDistance: trackDistance,
+      difficulty: this.raceConfig.difficulty,
+      playerAvgWpm: this.profile?.averageWpm || 65,
+      opponentCount: this.raceConfig.opponentCount || 4,
+      playerName: this.profile?.username || 'You',
+      playerAvatar: this.profile?.avatar || '🏎️',
+      playerCarModel: this.playerCarId,
+      playerColor: this.paintColor
+    });
+    this.isFinishHandled = false;
+
     this.initTypingEngine(passage);
     this.renderLayout();
     this.initVisualStage();
@@ -107,15 +124,18 @@ export class RaceView {
       errorPenaltyMode: this.settings?.errorPenalty || 'standard',
       onCharTyped: (char, isCorrect, stats) => {
         soundEffects.playKeyClick(true);
+        if (this.simulation) {
+          this.simulation.handleCorrectKeystroke(stats);
+        }
         this.updateTypingDisplay();
         this.updatePlayerHUD(stats);
-        if (this.track3D) {
-          this.track3D.updatePlayerProgress(stats.progress, stats.wpm, stats.currentStreak > 15);
-        }
       },
       onMistake: (expected, typed, stats) => {
         soundEffects.playKeyClick(false);
         soundEffects.playErrorMisfire();
+        if (this.simulation) {
+          this.simulation.handleMistake(stats);
+        }
         if (this.track3D) {
           this.track3D.triggerBrakeFeedback();
         }
@@ -123,19 +143,20 @@ export class RaceView {
         this.updatePlayerHUD(stats);
       },
       onProgress: (progress, stats) => {
-        const kmh = Math.round(stats.wpm * 2.45);
-        if (this.track3D) {
-          this.track3D.updatePlayerProgress(progress, stats.wpm, stats.currentStreak > 15);
+        if (this.simulation) {
+          this.simulation.handleCorrectKeystroke(stats);
         }
-        soundEffects.updateEngineSpeed(stats.wpm / 80, stats.penaltyMultiplier);
-        this.updateCockpitInstruments(stats.wpm, stats);
-        this.updateGridStandings();
+        this.updateTypingDisplay();
+        this.updatePlayerHUD(stats);
       },
       onFinish: (finalStats) => {
-        if (this.track3D) {
-          this.track3D.setFinished(true);
+        if (!this.isFinishHandled) {
+          this.isFinishHandled = true;
+          if (this.track3D) {
+            this.track3D.setFinished(true);
+          }
+          this.handleRaceFinish(finalStats);
         }
-        this.handleRaceFinish(finalStats);
       }
     });
 
@@ -394,23 +415,17 @@ export class RaceView {
         circuit: this.raceConfig.circuit || 'Neo-Metropolis GP'
       });
       this.track3D.setPlayerCar(this.playerCarId, this.paintColor, this.underglowColor);
-    }
-
-    // Initialize 4-car AI Opponent Grid
-    const oppCount = this.raceConfig.opponentCount || 4;
-    this.aiGrid = new AiOpponentGrid(
-      this.raceConfig.difficulty,
-      this.profile?.averageWpm || 65,
-      oppCount
-    );
-
-    const opponentsData = this.aiGrid.getOpponentsData();
-    if (this.track3D) {
-      this.track3D.setOpponents(opponentsData);
+      if (this.simulation) {
+        this.track3D.setSimulation(this.simulation, (telemetry) => this.handleTelemetryTick(telemetry));
+        this.track3D.setOpponents(this.simulation.opponents);
+      }
       this.track3D.setCountdownState(true);
     }
-    this.initRadarMarkers(opponentsData);
-    this.updateGridStandings();
+
+    if (this.simulation) {
+      this.initRadarMarkers(this.simulation.opponents);
+      this.handleTelemetryTick(this.simulation.getTelemetry());
+    }
   }
 
   initRadarMarkers(opponentsData) {
@@ -481,19 +496,13 @@ export class RaceView {
           if (overlay) overlay.style.display = 'none';
           this.isCountdown = false;
           this.isRaceActive = true;
+          if (this.simulation) {
+            this.simulation.startRace();
+          }
           this.startRaceTimer();
 
           // High-energy racing soundtrack
           musicManager.playRacing(1200);
-
-          // Start multi-car AI Grid simulation
-          if (this.aiGrid) {
-            this.aiGrid.start(
-              this.typingEngine.targetText.length,
-              (updatedOpponents) => this.handleGridUpdate(updatedOpponents),
-              (finalOpponents) => this.handleGridFinish(finalOpponents)
-            );
-          }
 
           // Focus teleprompter
           const tele = document.getElementById('typing-teleprompter');
@@ -555,21 +564,100 @@ export class RaceView {
     const accEl = document.getElementById('hud-acc');
     const errEl = document.getElementById('hud-errors');
     const streakEl = document.getElementById('hud-streak');
-    const progressFill = document.getElementById('track-progress-fill');
-    const playerMarker = document.getElementById('radar-player-marker');
 
     if (wpmEl) wpmEl.textContent = stats.wpm;
     if (accEl) accEl.textContent = `${stats.accuracy}%`;
     if (errEl) errEl.textContent = stats.errorCount;
     if (streakEl) streakEl.innerHTML = `<span class="flame-ico">🔥</span> ${stats.currentStreak}`;
-
-    const progPercent = Math.min(100, Math.round(stats.progress * 100));
-    if (progressFill) progressFill.style.width = `${progPercent}%`;
-    if (playerMarker) playerMarker.style.left = `${progPercent}%`;
   }
 
-  updateCockpitInstruments(wpm, stats = {}) {
-    const kmh = Math.round(wpm * 2.45);
+  handleTelemetryTick(telemetry) {
+    if (!telemetry || !telemetry.player) return;
+
+    // 1. Digital Speedometer & Cockpit Instruments
+    // Formula: speedKmh = Math.round(speedMps * 3.6)
+    const kmh = telemetry.player.speedKmh;
+    const speedMps = telemetry.player.speedMps;
+    this.updateCockpitInstruments(kmh, { currentStreak: telemetry.player.streak }, speedMps);
+
+    // Audio pitch follows real vehicle speed
+    if (this.isRaceActive && !this.isPaused) {
+      soundEffects.updateEngineSpeed(
+        Math.min(1.6, speedMps / 42.0),
+        telemetry.player.isBraking ? 0.65 : 1.0
+      );
+    }
+
+    // 2. Mini Track Progress Radar
+    const progPercent = Math.min(100, Math.round(telemetry.player.progress * 100));
+    const progressFill = document.getElementById('track-progress-fill');
+    const playerMarker = document.getElementById('radar-player-marker');
+    if (progressFill) progressFill.style.width = `${progPercent}%`;
+    if (playerMarker) playerMarker.style.left = `${progPercent}%`;
+
+    telemetry.opponents.forEach(opp => {
+      const marker = document.getElementById(`radar-opp-${opp.id}`);
+      if (marker) {
+        const oppPct = Math.min(100, Math.round(opp.progress * 100));
+        marker.style.left = `${oppPct}%`;
+      }
+    });
+
+    // 3. Grid Standings
+    this.currentStandings = telemetry.standings;
+    this.playerRank = telemetry.player.rank;
+
+    // Check for Overtake event
+    if (this.previousPlayerRank > this.playerRank) {
+      this.showOvertakeNotification(`P${this.previousPlayerRank} ➔ P${this.playerRank}: OVERTAKE!`);
+    }
+    this.previousPlayerRank = this.playerRank;
+
+    // Top Position Badge
+    const posVal = document.getElementById('hud-pos-val');
+    const posTotal = document.getElementById('hud-pos-total');
+    if (posVal) posVal.textContent = this.playerRank;
+    if (posTotal) posTotal.textContent = telemetry.totalRacers;
+
+    // Standings rows list
+    const listEl = document.getElementById('leaderboard-racers-list');
+    if (listEl) {
+      listEl.innerHTML = telemetry.standings.map(r => {
+        const isPlayer = r.isPlayer;
+        const thumbKey = isPlayer ? 'player' : (r.id || 'nitro_phantom');
+        const thumbSrc = CAR_THUMBNAILS[thumbKey] || CAR_THUMBNAILS[r.carModel] || '/images/cars/thumb-you.png';
+        const gapDisplay = isPlayer ? '--' : (r.rank === 1 ? 'LEADER' : r.gapText);
+
+        return `
+          <div class="standings-row ${isPlayer ? 'player-active-row' : ''}">
+            <span class="racer-rank-num font-mono">${r.rank}</span>
+            <div class="racer-car-box">
+              <img src="${thumbSrc}" alt="${r.name}" class="racer-thumb-img" onerror="this.src='/images/cars/thumb-you.png'" />
+            </div>
+            <div class="racer-info-cell">
+              <div class="racer-name">${isPlayer ? 'You' : `${r.name} <span class="ai-tag-chip">AI</span>`}</div>
+              <div class="racer-stats-sub font-mono">
+                <span class="racer-wpm highlight-cyan">${r.wpm} WPM</span>
+                <span class="racer-acc">${r.accuracy}%</span>
+              </div>
+            </div>
+            <div class="racer-gap font-mono ${r.rank === 1 ? 'leader' : ''}">${gapDisplay}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 4. Check Race Finish Condition
+    if (telemetry.player.isFinished && !this.isFinishHandled) {
+      this.isFinishHandled = true;
+      if (this.track3D) this.track3D.setFinished(true);
+      const finalStats = this.typingEngine ? this.typingEngine.getStats() : {};
+      this.handleRaceFinish(finalStats);
+    }
+  }
+
+  updateCockpitInstruments(speedKmh, stats = {}, speedMps = null) {
+    const kmh = typeof speedKmh === 'number' ? speedKmh : Math.round((speedMps || 0) * 3.6);
     const digitalEl = document.getElementById('digital-speed-val');
     const arcFill = document.getElementById('speed-arc-fill');
     const gearEl = document.getElementById('digital-gear-val');
@@ -591,7 +679,8 @@ export class RaceView {
 
     // 7-segment Vertical Nitro Gauge
     const streak = stats.currentStreak || 0;
-    const nitroRatio = Math.min(1.0, (wpm / 80) * 0.7 + (streak / 25) * 0.3);
+    const mps = speedMps !== null ? speedMps : (kmh / 3.6);
+    const nitroRatio = Math.min(1.0, (mps / 62.0) * 0.7 + (streak / 25) * 0.3);
     const activeSegments = Math.round(nitroRatio * 7);
 
     for (let i = 0; i < 7; i++) {
@@ -601,82 +690,15 @@ export class RaceView {
       }
     }
 
-    if (wpm >= 70 && this.track3D) {
+    if (kmh >= 180 && this.track3D) {
       this.track3D.triggerNitroSurge();
     }
   }
 
-  handleGridUpdate(opponents) {
-    opponents.forEach(opp => {
-      const marker = document.getElementById(`radar-opp-${opp.id}`);
-      if (marker) {
-        const pct = Math.min(100, Math.round(opp.progress * 100));
-        marker.style.left = `${pct}%`;
-      }
-      if (this.track3D) {
-        this.track3D.updateOpponentProgress(opp.id, opp.progress, opp.wpm);
-      }
-    });
-
-    this.updateGridStandings();
-  }
-
   updateGridStandings() {
-    if (!this.aiGrid || !this.typingEngine) return;
-
-    const playerStats = this.typingEngine.getStats();
-    const result = this.aiGrid.calculateStandings({
-      name: this.profile?.username || 'You',
-      avatar: this.profile?.avatar || '🏎️',
-      carId: this.playerCarId,
-      progress: playerStats.progress,
-      wpm: playerStats.wpm,
-      accuracy: playerStats.accuracy,
-      isFinished: this.typingEngine.isFinished
-    });
-
-    this.currentStandings = result.standings;
-    this.playerRank = result.playerPosition;
-
-    // Check for Overtake event
-    if (this.previousPlayerRank > this.playerRank) {
-      this.showOvertakeNotification(`P${this.previousPlayerRank} ➔ P${this.playerRank}: OVERTAKE!`);
+    if (this.simulation) {
+      this.handleTelemetryTick(this.simulation.getTelemetry());
     }
-    this.previousPlayerRank = this.playerRank;
-
-    // Update Top Position Bracket Badge
-    const posVal = document.getElementById('hud-pos-val');
-    const posTotal = document.getElementById('hud-pos-total');
-    if (posVal) posVal.textContent = this.playerRank;
-    if (posTotal) posTotal.textContent = result.totalRacers;
-
-    // Render Right Standings List
-    const listEl = document.getElementById('leaderboard-racers-list');
-    if (!listEl) return;
-
-    listEl.innerHTML = result.standings.map(r => {
-      const isPlayer = r.isPlayer;
-      const thumbKey = isPlayer ? 'player' : (r.id || 'nitro_phantom');
-      const thumbSrc = CAR_THUMBNAILS[thumbKey] || CAR_THUMBNAILS[r.carModel] || '/images/cars/thumb-you.png';
-      const gapDisplay = isPlayer ? '--' : (r.rank === 1 ? '+0.0s' : `+${((r.rank - 1) * 0.4).toFixed(1)}s`);
-
-      return `
-        <div class="standings-row ${isPlayer ? 'player-active-row' : ''}">
-          <span class="racer-rank-num font-mono">${r.rank}</span>
-          <div class="racer-car-box">
-            <img src="${thumbSrc}" alt="${r.name}" class="racer-thumb-img" onerror="this.src='/images/cars/thumb-you.png'" />
-          </div>
-          <div class="racer-info-cell">
-            <div class="racer-name">${isPlayer ? 'You' : `${r.name} <span class="ai-tag-chip">AI</span>`}</div>
-            <div class="racer-stats-sub font-mono">
-              <span class="racer-wpm highlight-cyan">${r.wpm} WPM</span>
-              <span class="racer-acc">${r.accuracy}%</span>
-            </div>
-          </div>
-          <div class="racer-gap font-mono ${r.rank === 1 ? 'leader' : ''}">${gapDisplay}</div>
-        </div>
-      `;
-    }).join('');
   }
 
   showOvertakeNotification(text) {
@@ -910,6 +932,9 @@ export class RaceView {
     if (!this.isRaceActive || this.isPaused) return;
     this.isPaused = true;
     this.isRaceActive = false;
+    if (this.simulation) {
+      this.simulation.pause();
+    }
     if (this.track3D) {
       this.track3D.setPaused(true);
     }
@@ -928,6 +953,9 @@ export class RaceView {
     if (!this.isPaused) return;
     this.isPaused = false;
     this.isRaceActive = true;
+    if (this.simulation) {
+      this.simulation.resume();
+    }
     if (this.track3D) {
       this.track3D.setPaused(false);
     }
@@ -990,16 +1018,22 @@ export class RaceView {
 
     // Dynamic lane switching with Left and Right arrow keys
     if (e.key === 'ArrowLeft') {
+      if (e.repeat) return; // Prevent key auto-repeat runaway
       e.preventDefault();
-      if (this.track3D) {
+      if (this.simulation) {
+        this.simulation.steerLane(-1);
+      } else if (this.track3D) {
         this.track3D.steerLane(-1);
       }
       return;
     }
 
     if (e.key === 'ArrowRight') {
+      if (e.repeat) return; // Prevent key auto-repeat runaway
       e.preventDefault();
-      if (this.track3D) {
+      if (this.simulation) {
+        this.simulation.steerLane(1);
+      } else if (this.track3D) {
         this.track3D.steerLane(1);
       }
       return;
@@ -1022,6 +1056,10 @@ export class RaceView {
     if (this.raceTimerInterval) {
       clearInterval(this.raceTimerInterval);
       this.raceTimerInterval = null;
+    }
+    if (this.simulation) {
+      this.simulation.pause();
+      this.simulation = null;
     }
     if (this.aiGrid) {
       this.aiGrid.stop();

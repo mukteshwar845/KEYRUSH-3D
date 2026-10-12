@@ -41,6 +41,8 @@ export class Track3D {
     this.targetPlayerX = this.lanes[this.currentLaneIndex];
 
     // World Motion
+    this.simulation = null;
+    this.onTelemetryTick = null;
     this.worldZ = 0;
     this.playerSpeed = 0; // units/sec based on WPM
     this.targetSpeed = 0;
@@ -898,10 +900,19 @@ export class Track3D {
     this.scene.add(this.playerCar);
   }
 
+  setSimulation(simulation, onTelemetryTick) {
+    this.simulation = simulation;
+    this.onTelemetryTick = onTelemetryTick;
+  }
+
   steerLane(direction) {
-    // direction: -1 (left), +1 (right)
+    if (this.simulation) {
+      return this.simulation.steerLane(direction);
+    }
+    // Fallback if simulation not attached
     this.currentLaneIndex = Math.max(0, Math.min(this.lanes.length - 1, this.currentLaneIndex + direction));
     this.targetPlayerX = this.lanes[this.currentLaneIndex];
+    return true;
   }
 
   setOpponents(opponentsList) {
@@ -1041,6 +1052,13 @@ export class Track3D {
 
   setPaused(isPaused) {
     this.isPaused = isPaused;
+    if (this.simulation) {
+      if (isPaused) {
+        this.simulation.pause();
+      } else {
+        this.simulation.resume();
+      }
+    }
   }
 
   setFinished(isFinished) {
@@ -1062,18 +1080,42 @@ export class Track3D {
 
     this.elapsedTime += delta;
 
-    // Smooth speed deceleration if user stops typing for > 1.2s during a race
-    if (!this.isCountdown && !this.isFinished) {
-      const timeSinceKeystroke = performance.now() - this.lastKeystrokeTime;
-      if (timeSinceKeystroke > 1200) {
-        this.targetSpeed = Math.max(8, this.targetSpeed * 0.95);
+    if (this.simulation && this.simulation.state === 'racing') {
+      this.simulation.update(delta);
+      const telemetry = this.simulation.getTelemetry();
+
+      this.playerSpeed = telemetry.player.speedMps;
+      this.targetPlayerX = telemetry.player.laneX;
+      this.wpmRatio = Math.min(1.6, telemetry.player.speedMps / 48.0);
+
+      // Finish line gate tracking in 3D world
+      if (this.finishGate) {
+        const distToFinish = telemetry.totalDistance - telemetry.player.distance;
+        if (distToFinish < 250) {
+          this.finishGate.position.set(0, 0, this.playerBaseZ + distToFinish);
+          this.finishGate.visible = true;
+        } else {
+          this.finishGate.visible = false;
+        }
       }
+
+      if (this.onTelemetryTick) {
+        this.onTelemetryTick(telemetry);
+      }
+    } else if (!this.simulation) {
+      // Fallback speed deceleration if user stops typing for > 1.2s during a race
+      if (!this.isCountdown && !this.isFinished) {
+        const timeSinceKeystroke = performance.now() - this.lastKeystrokeTime;
+        if (timeSinceKeystroke > 1200) {
+          this.targetSpeed = Math.max(0, this.targetSpeed * 0.95);
+        }
+      }
+
+      // Smooth speed acceleration lerp
+      this.playerSpeed = THREE.MathUtils.lerp(this.playerSpeed, this.targetSpeed, delta * 4.5);
     }
 
-    // Smooth speed acceleration lerp
-    this.playerSpeed = THREE.MathUtils.lerp(this.playerSpeed, this.targetSpeed, delta * 4.5);
-
-    // Scroll infinite world backward along -Z
+    // Scroll infinite world backward along -Z based on authoritative longitudinal speed
     const moveStep = this.playerSpeed * delta;
     this.worldZ += moveStep;
 
@@ -1104,20 +1146,35 @@ export class Track3D {
 
     // ---- PLAYER MOVEMENT & CONTROLS ----
     if (this.playerCar) {
-      // Smooth lateral lane change lerp
-      this.playerCar.position.x = THREE.MathUtils.lerp(this.playerCar.position.x, this.targetPlayerX, delta * 7.5);
-      this.playerCar.position.z = this.playerBaseZ;
+      if (this.simulation) {
+        this.playerCar.position.x = this.targetPlayerX;
+        this.playerCar.position.z = this.playerBaseZ;
 
-      const steerDiff = this.targetPlayerX - this.playerCar.position.x;
-      if (this.playerCar.userData.steerWheels) {
-        this.playerCar.userData.steerWheels(steerDiff * 0.18);
-      }
+        const steerDiff = this.simulation.player.steerAngle;
+        if (this.playerCar.userData.steerWheels) {
+          this.playerCar.userData.steerWheels(steerDiff);
+        }
 
-      // Roll into turns, pitch on acceleration / braking
-      const roll = -steerDiff * 0.05;
-      const pitch = this.isBraking ? 0.07 : (-this.wpmRatio * 0.035);
-      if (this.playerCar.userData.setTilt) {
-        this.playerCar.userData.setTilt(pitch, roll);
+        const roll = -steerDiff * 0.15;
+        const pitch = this.isBraking ? 0.07 : (-this.wpmRatio * 0.035);
+        if (this.playerCar.userData.setTilt) {
+          this.playerCar.userData.setTilt(pitch, roll);
+        }
+      } else {
+        // Smooth lateral lane change lerp
+        this.playerCar.position.x = THREE.MathUtils.lerp(this.playerCar.position.x, this.targetPlayerX, delta * 7.5);
+        this.playerCar.position.z = this.playerBaseZ;
+
+        const steerDiff = this.targetPlayerX - this.playerCar.position.x;
+        if (this.playerCar.userData.steerWheels) {
+          this.playerCar.userData.steerWheels(steerDiff * 0.18);
+        }
+
+        const roll = -steerDiff * 0.05;
+        const pitch = this.isBraking ? 0.07 : (-this.wpmRatio * 0.035);
+        if (this.playerCar.userData.setTilt) {
+          this.playerCar.userData.setTilt(pitch, roll);
+        }
       }
 
       const carPos = this.playerCar.position;
@@ -1177,35 +1234,60 @@ export class Track3D {
     }
 
     // ---- WHEEL ROLLING ANIMATION ----
-    const wheelSpinSpeed = (this.playerSpeed + 2.0) * delta * 0.45;
+    // Spins strictly corresponding to actual travel speed
+    const wheelSpinSpeed = (this.playerSpeed * 0.45) * delta;
     if (this.playerCar && this.playerCar.userData.spinWheels) {
       this.playerCar.userData.spinWheels(wheelSpinSpeed);
     }
 
     // ---- MULTI-OPPONENT UPDATE LOOP ----
-    this.opponentCars.forEach((opp) => {
-      opp.visualZ = THREE.MathUtils.lerp(opp.visualZ, opp.targetVisualZ, delta * 4.0);
+    if (this.simulation) {
+      const pDist = this.simulation.player.distance;
+      this.opponentCars.forEach((opp) => {
+        const simOpp = this.simulation.opponents.find(o => o.id === opp.id);
+        if (simOpp && opp.mesh) {
+          const relativeZ = this.playerBaseZ + (simOpp.distance - pDist);
+          opp.mesh.position.set(simOpp.laneX, 0, relativeZ);
 
-      // Subtle human-like lane wander
-      const wander = Math.sin(this.elapsedTime * 0.7 + opp.laneX) * 0.35;
-      opp.currentX = opp.laneX + wander;
+          // Visibility clipping
+          opp.mesh.visible = (relativeZ > -45 && relativeZ < 350);
 
-      if (opp.mesh && this.playerCar) {
-        opp.mesh.position.set(
-          opp.currentX,
-          0,
-          this.playerCar.position.z + opp.visualZ
-        );
-
-        if (opp.mesh.userData.spinWheels) {
-          opp.mesh.userData.spinWheels((opp.wpm * 0.038 + 1.0) * delta);
+          if (opp.mesh.userData.spinWheels) {
+            opp.mesh.userData.spinWheels((simOpp.speedMps * 0.45) * delta);
+          }
+          if (opp.mesh.userData.steerWheels) {
+            opp.mesh.userData.steerWheels(simOpp.steerAngle);
+          }
+          if (opp.mesh.userData.setNitro) {
+            opp.mesh.userData.setNitro(simOpp.speedMps > 48.0);
+          }
         }
+      });
+    } else {
+      this.opponentCars.forEach((opp) => {
+        opp.visualZ = THREE.MathUtils.lerp(opp.visualZ, opp.targetVisualZ, delta * 4.0);
 
-        if (opp.mesh.userData.steerWheels) {
-          opp.mesh.userData.steerWheels(wander * 0.4);
+        // Subtle human-like lane wander
+        const wander = Math.sin(this.elapsedTime * 0.7 + opp.laneX) * 0.35;
+        opp.currentX = opp.laneX + wander;
+
+        if (opp.mesh && this.playerCar) {
+          opp.mesh.position.set(
+            opp.currentX,
+            0,
+            this.playerCar.position.z + opp.visualZ
+          );
+
+          if (opp.mesh.userData.spinWheels) {
+            opp.mesh.userData.spinWheels((opp.wpm * 0.038 + 1.0) * delta);
+          }
+
+          if (opp.mesh.userData.steerWheels) {
+            opp.mesh.userData.steerWheels(wander * 0.4);
+          }
         }
-      }
-    });
+      });
+    }
 
     // ---- NITRO EXHAUST PARTICLES ----
     if (this.nitroParticles && this.nitroParticles.visible && this.playerCar) {

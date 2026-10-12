@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { TypingEngine } from '../src/engine/typingEngine.js';
 import { AiOpponent, AiOpponentGrid, AI_PRESETS } from '../src/engine/aiOpponent.js';
+import { RacingSimulation, HIGHWAY_LANES } from '../src/engine/racingSimulation.js';
 import { VEHICLE_CATALOG, createCarMesh } from '../src/graphics/carModels.js';
 import { getRandomPassage, getAcademyLesson } from '../src/engine/textGenerator.js';
 
@@ -281,3 +282,218 @@ test('13. Rendering initialization, wheel spin, steering and runtime API validat
     carMesh.userData.updateUnderglow('#00f5ff');
   });
 });
+
+test('14. Authoritative Physics: typing accelerates vehicle, idle triggers drag deceleration', () => {
+  const sim = new RacingSimulation({ totalDistance: 1000 });
+  sim.startRace();
+
+  assert.equal(sim.player.speedMps, 0);
+  assert.equal(sim.player.distance, 0);
+
+  // Correct typing keystrokes pulse acceleration
+  sim.handleCorrectKeystroke({ wpm: 75, accuracy: 98, currentStreak: 5 });
+  assert.ok(sim.player.targetSpeedMps > 30);
+  assert.ok(sim.player.speedMps > 0);
+
+  const initialSpeed = sim.player.speedMps;
+
+  // Integrate physics over time: vehicle accelerates smoothly toward target speed
+  sim.update(0.1);
+  assert.ok(sim.player.speedMps > initialSpeed, 'Vehicle should accelerate');
+  assert.ok(sim.player.distance > 0, 'Distance should advance when moving');
+
+  // Let vehicle reach a cruising speed
+  for (let i = 0; i < 20; i++) {
+    sim.update(0.1);
+  }
+  const peakSpeed = sim.player.speedMps;
+  const beforeDecelTarget = sim.player.targetSpeedMps;
+
+  // Simulate stopping typing: simulate elapsed time without keystrokes
+  sim.player.lastKeystrokeTime = performance.now() - 600; // >450ms ago
+  for (let i = 0; i < 10; i++) {
+    sim.update(0.1);
+  }
+  assert.ok(sim.player.targetSpeedMps < beforeDecelTarget, 'Target speed should decay when typing stops');
+
+  // Further updates decelerate the vehicle via aerodynamic drag & rolling friction
+  for (let i = 0; i < 30; i++) {
+    sim.update(0.1);
+  }
+  assert.ok(sim.player.speedMps < peakSpeed, 'Vehicle must decelerate naturally when typing stops');
+});
+
+test('15. Speedometer calibration strictly follows speedKmh = Math.round(speedMps * 3.6)', () => {
+  const sim = new RacingSimulation();
+
+  sim.player.speedMps = 0.0;
+  assert.equal(sim.getSpeedKmh(), 0);
+
+  sim.player.speedMps = 25.0; // 25 m/s -> 90 km/h
+  assert.equal(sim.getSpeedKmh(), 90);
+
+  sim.player.speedMps = 50.0; // 50 m/s -> 180 km/h
+  assert.equal(sim.getSpeedKmh(), 180);
+
+  sim.player.speedMps = 66.67; // 66.67 m/s -> 240 km/h
+  assert.equal(sim.getSpeedKmh(), 240);
+
+  const telemetry = sim.getTelemetry();
+  assert.equal(telemetry.player.speedKmh, sim.getSpeedKmh());
+});
+
+test('16. Lateral lane steering bounds clamping and direction integrity', () => {
+  const sim = new RacingSimulation();
+  sim.startRace();
+
+  assert.equal(sim.player.laneIndex, 1);
+  assert.equal(sim.player.targetLaneIndex, 1);
+
+  // Steer left: from lane 1 to lane 0
+  const steeredLeft = sim.steerLane(-1);
+  assert.equal(steeredLeft, true);
+  assert.equal(sim.player.targetLaneIndex, 0);
+
+  // Steer left again beyond boundary: must clamp strictly at lane 0
+  sim.player.lastLaneChangeTime = -9999; // reset cooldown for test
+  const clampedLeft = sim.steerLane(-1);
+  assert.equal(clampedLeft, false);
+  assert.equal(sim.player.targetLaneIndex, 0, 'Cannot steer past left road boundary');
+
+  // Steer right across lanes
+  sim.player.lastLaneChangeTime = -9999;
+  sim.steerLane(1); // to 1
+  assert.equal(sim.player.targetLaneIndex, 1);
+
+  sim.player.lastLaneChangeTime = -9999;
+  sim.steerLane(1); // to 2
+  assert.equal(sim.player.targetLaneIndex, 2);
+
+  sim.player.lastLaneChangeTime = -9999;
+  sim.steerLane(1); // to 3
+  assert.equal(sim.player.targetLaneIndex, 3);
+
+  // Steer right beyond boundary: must clamp at lane 3
+  sim.player.lastLaneChangeTime = -9999;
+  const clampedRight = sim.steerLane(1);
+  assert.equal(clampedRight, false);
+  assert.equal(sim.player.targetLaneIndex, 3, 'Cannot steer past right road boundary');
+});
+
+test('17. Lateral collision avoidance prevents steering into occupied car', () => {
+  const sim = new RacingSimulation();
+  sim.startRace();
+
+  sim.player.distance = 100.0;
+  sim.player.laneIndex = 1;
+  sim.player.targetLaneIndex = 1;
+
+  // Place opponent 0 in lane 2, right beside player (distance 101.0m, within 4.5m)
+  sim.opponents[0].distance = 101.0;
+  sim.opponents[0].laneIndex = 2;
+  sim.opponents[0].targetLaneIndex = 2;
+  sim.opponents[0].laneX = sim.lanes[2];
+
+  sim.player.lastLaneChangeTime = -9999;
+  const attemptedSteer = sim.steerLane(1); // attempts to move into lane 2
+  assert.equal(attemptedSteer, false, 'Should block lane change when opponent car is alongside');
+  assert.equal(sim.player.targetLaneIndex, 1, 'Target lane should remain unchanged');
+
+  // Move opponent away longitudinally (> 10m ahead)
+  sim.opponents[0].distance = 125.0;
+  sim.player.lastLaneChangeTime = -9999;
+  const clearSteer = sim.steerLane(1);
+  assert.equal(clearSteer, true, 'Should allow lane change when destination lane is clear');
+  assert.equal(sim.player.targetLaneIndex, 2);
+});
+
+test('18. Monotonic race progress: speed > 0 strictly advances distance, paused/idle freezes', () => {
+  const sim = new RacingSimulation({ totalDistance: 800 });
+  sim.startRace();
+
+  // Initially 0 speed, distance does not move
+  sim.update(0.1);
+  assert.equal(sim.player.distance, 0);
+
+  // Give player speed
+  sim.player.speedMps = 40.0; // 40 m/s
+  sim.player.targetSpeedMps = 40.0;
+  sim.player.lastKeystrokeTime = performance.now();
+
+  sim.update(0.5); // 0.5s at ~40 m/s = ~20m
+  assert.ok(sim.player.distance >= 19.0 && sim.player.distance <= 21.0);
+  const distBeforePause = sim.player.distance;
+
+  // Pausing freezes simulation completely
+  sim.pause();
+  assert.equal(sim.state, 'paused');
+  sim.update(0.5);
+  assert.equal(sim.player.distance, distBeforePause, 'Distance must freeze while paused');
+
+  // Resume unfreezes
+  sim.resume();
+  assert.equal(sim.state, 'racing');
+  sim.player.lastKeystrokeTime = performance.now();
+  sim.update(0.5);
+  assert.ok(sim.player.distance > distBeforePause, 'Distance advances upon resume');
+});
+
+test('19. AI competitors possess distinct personalities and execute tactical lane changes', () => {
+  const sim = new RacingSimulation({ difficulty: 'PRO', opponentCount: 4 });
+  sim.startRace();
+
+  assert.equal(sim.opponents.length, 4);
+
+  // Verify opponents have distinct initial configurations
+  const speeds = new Set(sim.opponents.map(o => o.baseTargetMps));
+  assert.ok(speeds.size >= 2, 'Opponents must have varied target speed profiles');
+
+  // Place slower car directly in front of fast car in the same lane
+  const chaser = sim.opponents[0];
+  const blocker = sim.opponents[1];
+
+  chaser.targetLaneIndex = 1;
+  chaser.laneX = sim.lanes[1];
+  chaser.distance = 50.0;
+  chaser.speedMps = 55.0;
+  chaser.baseTargetMps = 55.0;
+  chaser.timeSinceDecision = 1.0; // trigger immediate tactical decision
+
+  blocker.targetLaneIndex = 1;
+  blocker.laneX = sim.lanes[1];
+  blocker.distance = 58.0; // 8 metres ahead (blocking path)
+  blocker.speedMps = 25.0;
+
+  // Clear adjacent lane 2
+  sim.opponents[2].distance = 200.0;
+  sim.opponents[3].distance = 200.0;
+  sim.player.distance = 0.0;
+
+  // Run update: chaser detects blocker ahead and changes lane to overtake
+  sim.update(0.1);
+  assert.notEqual(chaser.targetLaneIndex, blocker.targetLaneIndex, 'Chaser AI should switch lane to overtake blocking vehicle');
+});
+
+test('20. Authoritative race standings derive strictly from actual race progress', () => {
+  const sim = new RacingSimulation({ totalDistance: 1000 });
+  sim.startRace();
+
+  // Set explicit distances
+  sim.player.distance = 450.0;
+  sim.opponents[0].distance = 600.0;
+  sim.opponents[1].distance = 500.0;
+  sim.opponents[2].distance = 300.0;
+  sim.opponents[3].distance = 150.0;
+
+  sim.updateStandings();
+  const standings = sim.standings;
+
+  assert.equal(standings[0].id, sim.opponents[0].id, 'Leader at 600m should be P1');
+  assert.equal(standings[1].id, sim.opponents[1].id, 'Second at 500m should be P2');
+  assert.equal(standings[2].isPlayer, true, 'Player at 450m should be P3');
+  assert.equal(standings[3].id, sim.opponents[2].id, 'Fourth at 300m should be P4');
+  assert.equal(standings[4].id, sim.opponents[3].id, 'Fifth at 150m should be P5');
+
+  assert.equal(sim.player.rank, 3);
+});
+
