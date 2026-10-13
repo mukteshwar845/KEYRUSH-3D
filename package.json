@@ -1,6 +1,7 @@
 {
-  "name": "gotype",
-  "version": "0.0.0",
+  "name": "keyrush-3d",
+  "version": "1.0.0",
+  "description": "KEYRUSH — Type. Race. Dominate. | Esports Motorsport 3D Typing Simulator",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +10,16 @@
     "preview": "vite preview",
     "test": "node --test tests/**/*.test.js"
   },
+  "keywords": [
+    "typing-game",
+    "threejs",
+    "racing-game",
+    "webgl",
+    "esports",
+    "touch-typing"
+  ],
+  "author": "Mukteshwar",
+  "license": "MIT",
   "devDependencies": {
     "vite": "^8.3.0"
   },

@@ -41,11 +41,6 @@ export const ASSETS = Object.freeze({
     vehicleNeonBlade: '/images/ui/vehicle-neon-blade.png',
     pilotAvatar: '/images/ui/pilot-avatar.png'
   },
-  heroes: {
-    dashboard: '/images/heroes/dashboard-hero-car.png',
-    landing: '/images/heroes/landing-hero-car.jpg',
-    raceGameplayBg: '/images/heroes/race-gameplay-bg.jpg'
-  },
   thumbs: {
     nitroPhantom: '/images/cars/thumb-nitro-phantom.png',
     neuralAdaptive: '/images/cars/thumb-neural-adaptive.png',
