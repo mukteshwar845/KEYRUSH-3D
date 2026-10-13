@@ -6,7 +6,7 @@
 
 import { AI_PRESETS } from './aiOpponent.js';
 
-export const HIGHWAY_LANES = [-9.75, -3.25, 3.25, 9.75]; // 4 Highway Lanes (Outer-L, Center-L, Center-R, Outer-R)
+export const HIGHWAY_LANES = [9.75, 3.25, -3.25, -9.75]; // 4 Highway Lanes (Outer-L, Center-L, Center-R, Outer-R)
 export const ROAD_HALF_WIDTH = 13.0; // Total road width is 26 units
 
 export class RacingSimulation {

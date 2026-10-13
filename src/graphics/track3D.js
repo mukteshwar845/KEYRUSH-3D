@@ -35,9 +35,9 @@ export class Track3D {
     this.playerCar = null;
     this.opponentCars = new Map(); // id -> { mesh, nameplate, visualZ, targetVisualZ, laneX, currentX, wpm, progress }
     this.trackWidth = 26; // 4 highway lanes
-    // 4 Distinct lanes: Outer-Left (-9.75), Center-Left (-3.25), Center-Right (3.25), Outer-Right (9.75)
-    this.lanes = [-9.75, -3.25, 3.25, 9.75];
-    this.currentLaneIndex = 1; // Default to Center-Left lane (-3.25)
+    // 4 Distinct lanes: Outer-Left (9.75), Center-Left (3.25), Center-Right (-3.25), Outer-Right (-9.75)
+    this.lanes = [9.75, 3.25, -3.25, -9.75];
+    this.currentLaneIndex = 1; // Default to Center-Left lane (3.25)
     this.targetPlayerX = this.lanes[this.currentLaneIndex];
 
     // World Motion
@@ -515,14 +515,14 @@ export class Track3D {
       const yLineGeo = new THREE.PlaneGeometry(0.32, TILE_LENGTH);
       const yLine = new THREE.Mesh(yLineGeo, yellowLineMat);
       yLine.rotation.x = -Math.PI / 2;
-      yLine.position.set(-hw + 0.3, 0.02, 0);
+      yLine.position.set(hw - 0.3, 0.02, 0);
       group.add(yLine);
 
       // Outer/Right: Solid White Line
       const wLineGeo = new THREE.PlaneGeometry(0.32, TILE_LENGTH);
       const wLine = new THREE.Mesh(wLineGeo, whiteLineMat);
       wLine.rotation.x = -Math.PI / 2;
-      wLine.position.set(hw - 0.3, 0.02, 0);
+      wLine.position.set(-hw + 0.3, 0.02, 0);
       group.add(wLine);
 
       // 3. 3 Dashed Lane Lines for 4 Lanes (at X = -6.5, 0, +6.5)
@@ -1155,7 +1155,7 @@ export class Track3D {
           this.playerCar.userData.steerWheels(steerDiff);
         }
 
-        const roll = -steerDiff * 0.15;
+        const roll = steerDiff * 0.12;
         const pitch = this.isBraking ? 0.07 : (-this.wpmRatio * 0.035);
         if (this.playerCar.userData.setTilt) {
           this.playerCar.userData.setTilt(pitch, roll);
@@ -1170,7 +1170,7 @@ export class Track3D {
           this.playerCar.userData.steerWheels(steerDiff * 0.18);
         }
 
-        const roll = -steerDiff * 0.05;
+        const roll = steerDiff * 0.05;
         const pitch = this.isBraking ? 0.07 : (-this.wpmRatio * 0.035);
         if (this.playerCar.userData.setTilt) {
           this.playerCar.userData.setTilt(pitch, roll);
