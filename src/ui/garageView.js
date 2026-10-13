@@ -44,14 +44,16 @@ export class GarageView {
   }
 
   async render() {
-    this.garageData = await storage.getGarage() || {};
+    this.garageData = (await storage.getGarage()) || {};
     const equippedCarId = this.garageData?.activeVehicleId || 'talon';
-    
+
     // Ensure all vehicles have unlocked state checked (Apex Talon unlocked by default)
     const unlockedSet = new Set(this.garageData?.unlockedVehicles || ['talon']);
-    
+
     // Set selected index to equipped car or default 0
-    const initialIndex = VEHICLE_CATALOG.findIndex(c => c.id === (this.selectedCarId || equippedCarId));
+    const initialIndex = VEHICLE_CATALOG.findIndex(
+      (c) => c.id === (this.selectedCarId || equippedCarId)
+    );
     this.selectedCarIndex = initialIndex >= 0 ? initialIndex : 0;
     const activeCar = VEHICLE_CATALOG[this.selectedCarIndex] || VEHICLE_CATALOG[0];
     this.selectedCarId = activeCar.id;
@@ -159,9 +161,11 @@ export class GarageView {
 
               <!-- Pagination Indicators -->
               <div class="stage-pagination-dots" id="stage-pagination-dots">
-                ${VEHICLE_CATALOG.map((_, idx) => `
+                ${VEHICLE_CATALOG.map(
+                  (_, idx) => `
                   <span class="stage-dash-dot ${idx === this.selectedCarIndex ? 'active' : ''}" data-index="${idx}"></span>
-                `).join('')}
+                `
+                ).join('')}
               </div>
             </section>
 
@@ -227,7 +231,7 @@ export class GarageView {
               <div class="customizer-tab-content" id="tab-content-color">
                 <div class="swatches-grid-container" id="garage-swatches-grid">
                   ${COLOR_PALETTE.map((c) => {
-                    const isSelected = (this.currentPaint.toLowerCase() === c.hex.toLowerCase());
+                    const isSelected = this.currentPaint.toLowerCase() === c.hex.toLowerCase();
                     return `
                       <button 
                         class="garage-color-swatch ${isSelected ? 'selected' : ''}" 
@@ -327,16 +331,20 @@ export class GarageView {
   }
 
   renderCollectionCards(unlockedSet, equippedCarId) {
-    const filteredCars = this.activeCategory === 'all' 
-      ? VEHICLE_CATALOG 
-      : VEHICLE_CATALOG.filter(c => (c.category || '').toLowerCase() === this.activeCategory.toLowerCase());
+    const filteredCars =
+      this.activeCategory === 'all'
+        ? VEHICLE_CATALOG
+        : VEHICLE_CATALOG.filter(
+            (c) => (c.category || '').toLowerCase() === this.activeCategory.toLowerCase()
+          );
 
-    return filteredCars.map((car, idx) => {
-      const isSelected = (this.selectedCarId === car.id);
-      const isEquipped = (equippedCarId === car.id);
-      const isUnlocked = unlockedSet.has(car.id) || isEquipped || car.unlocked;
+    return filteredCars
+      .map((car, idx) => {
+        const isSelected = this.selectedCarId === car.id;
+        const isEquipped = equippedCarId === car.id;
+        const isUnlocked = unlockedSet.has(car.id) || isEquipped || car.unlocked;
 
-      return `
+        return `
         <div 
           class="collection-car-card ${isSelected ? 'active-spotlight' : ''} ${!isUnlocked ? 'is-locked' : ''}" 
           data-car-id="${car.id}"
@@ -357,20 +365,22 @@ export class GarageView {
           </div>
 
           <div class="card-action-slot">
-            ${isEquipped 
-              ? `<button class="card-state-btn btn-selected" data-action="equip">✓ Selected</button>`
-              : (isUnlocked 
-                ? `<button class="card-state-btn btn-equip" data-action="equip">Equip</button>`
-                : `<button class="card-state-btn btn-locked" data-action="unlock">🔒 Unlock</button>`)
+            ${
+              isEquipped
+                ? `<button class="card-state-btn btn-selected" data-action="equip">✓ Selected</button>`
+                : isUnlocked
+                  ? `<button class="card-state-btn btn-equip" data-action="equip">Equip</button>`
+                  : `<button class="card-state-btn btn-locked" data-action="unlock">🔒 Unlock</button>`
             }
           </div>
         </div>
       `;
-    }).join('');
+      })
+      .join('');
   }
 
   getColorName(hex) {
-    const match = COLOR_PALETTE.find(c => c.hex.toLowerCase() === hex.toLowerCase());
+    const match = COLOR_PALETTE.find((c) => c.hex.toLowerCase() === hex.toLowerCase());
     return match ? match.name : 'Custom Finish';
   }
 
@@ -434,7 +444,7 @@ export class GarageView {
     if (tierTitle) tierTitle.textContent = car.rarity;
 
     // 5. Update collection card active state
-    document.querySelectorAll('.collection-car-card').forEach(c => {
+    document.querySelectorAll('.collection-car-card').forEach((c) => {
       c.classList.toggle('active-spotlight', c.getAttribute('data-car-id') === car.id);
     });
 
@@ -448,15 +458,17 @@ export class GarageView {
     this.garageData.activeVehicleId = carId;
     await storage.saveGarage(this.garageData);
     soundEffects.playVictoryFanfare();
-    
+
     // Update collection cards visually
-    const unlockedSet = new Set(this.garageData?.unlockedVehicles || ['talon', 'vortex', 'chronos']);
+    const unlockedSet = new Set(
+      this.garageData?.unlockedVehicles || ['talon', 'vortex', 'chronos']
+    );
     const track = document.getElementById('collection-cards-track');
     if (track) {
       track.innerHTML = this.renderCollectionCards(unlockedSet, carId);
       this.bindCardEvents();
     }
-    
+
     // Update user's active vehicle in header
     this.app.updateHeader();
   }
@@ -476,7 +488,7 @@ export class GarageView {
     });
 
     // Pagination dots
-    document.querySelectorAll('.stage-dash-dot').forEach(dot => {
+    document.querySelectorAll('.stage-dash-dot').forEach((dot) => {
       dot.addEventListener('click', () => {
         const idx = parseInt(dot.getAttribute('data-index'), 10);
         soundEffects.playUiClick();
@@ -495,7 +507,9 @@ export class GarageView {
     document.getElementById('btn-stage-details')?.addEventListener('click', () => {
       soundEffects.playUiClick();
       const car = VEHICLE_CATALOG[this.selectedCarIndex];
-      alert(`🏎️ ${car.name.toUpperCase()} TECHNICAL TELEMETRY:\n\n• Tier: ${car.tier}\n• Top Speed: ${car.baseTopSpeed}\n• 0-100 km/h: ${car.acceleration}\n• Cornering Aero Grip: ${car.handling}\n• Nitro Boost: ${car.nitroVal}%\n• Category: ${car.category}\n\n${car.description}`);
+      alert(
+        `🏎️ ${car.name.toUpperCase()} TECHNICAL TELEMETRY:\n\n• Tier: ${car.tier}\n• Top Speed: ${car.baseTopSpeed}\n• 0-100 km/h: ${car.acceleration}\n• Cornering Aero Grip: ${car.handling}\n• Nitro Boost: ${car.nitroVal}%\n• Category: ${car.category}\n\n${car.description}`
+      );
     });
 
     // Toggle 3D Mode vs Studio View
@@ -530,14 +544,16 @@ export class GarageView {
     });
 
     // Category filter tabs
-    document.querySelectorAll('.cat-tab-btn').forEach(btn => {
+    document.querySelectorAll('.cat-tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         soundEffects.playUiClick();
-        document.querySelectorAll('.cat-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.cat-tab-btn').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
 
         this.activeCategory = btn.getAttribute('data-cat') || 'all';
-        const unlockedSet = new Set(this.garageData?.unlockedVehicles || ['talon', 'vortex', 'chronos']);
+        const unlockedSet = new Set(
+          this.garageData?.unlockedVehicles || ['talon', 'vortex', 'chronos']
+        );
         const equippedCarId = this.garageData?.activeVehicleId || 'talon';
 
         const track = document.getElementById('collection-cards-track');
@@ -560,17 +576,17 @@ export class GarageView {
     });
 
     // Customizer tabs (Color, Design, Wheels, Effects)
-    document.querySelectorAll('.cust-tab-btn').forEach(btn => {
+    document.querySelectorAll('.cust-tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         soundEffects.playUiClick();
-        document.querySelectorAll('.cust-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.cust-tab-btn').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         this.activeCustomizerTab = btn.getAttribute('data-tab');
       });
     });
 
     // Color Swatches
-    document.querySelectorAll('.garage-color-swatch').forEach(swatch => {
+    document.querySelectorAll('.garage-color-swatch').forEach((swatch) => {
       swatch.addEventListener('click', async () => {
         const hex = swatch.getAttribute('data-hex');
         const name = swatch.getAttribute('data-name');
@@ -581,7 +597,7 @@ export class GarageView {
         await storage.saveGarage(this.garageData);
 
         // Update active swatch
-        document.querySelectorAll('.garage-color-swatch').forEach(s => {
+        document.querySelectorAll('.garage-color-swatch').forEach((s) => {
           s.classList.remove('selected');
           s.innerHTML = '';
         });
@@ -606,10 +622,10 @@ export class GarageView {
 
   bindCardEvents() {
     // Collection card click -> updates spotlight
-    document.querySelectorAll('.collection-car-card').forEach(card => {
+    document.querySelectorAll('.collection-car-card').forEach((card) => {
       card.addEventListener('click', async (e) => {
         const carId = card.getAttribute('data-car-id');
-        const carIndex = VEHICLE_CATALOG.findIndex(c => c.id === carId);
+        const carIndex = VEHICLE_CATALOG.findIndex((c) => c.id === carId);
 
         // Check if user clicked action button
         const actionBtn = e.target.closest('.card-state-btn');
@@ -618,9 +634,11 @@ export class GarageView {
           if (action === 'equip') {
             await this.equipCar(carId);
           } else if (action === 'unlock') {
-            const car = VEHICLE_CATALOG.find(c => c.id === carId);
+            const car = VEHICLE_CATALOG.find((c) => c.id === carId);
             soundEffects.playUiClick();
-            const shouldUnlock = confirm(`🔒 ${car.name} Unlock Requirement:\n\n${car.unlockCondition}\n\nWould you like to unlock this vehicle now for your collection?`);
+            const shouldUnlock = confirm(
+              `🔒 ${car.name} Unlock Requirement:\n\n${car.unlockCondition}\n\nWould you like to unlock this vehicle now for your collection?`
+            );
             if (shouldUnlock) {
               const currentUnlocked = this.garageData?.unlockedVehicles || ['talon', 'vortex'];
               if (!currentUnlocked.includes(carId)) {

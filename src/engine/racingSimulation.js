@@ -31,16 +31,16 @@ export class RacingSimulation {
       isPlayer: true,
 
       // Longitudinal Physics
-      distance: 0.0,          // Monotonic race distance in metres
-      speedMps: 0.0,          // Actual longitudinal speed in m/s
-      targetSpeedMps: 0.0,    // Target speed in m/s driven by typing cadence
-      maxSpeedMps: 76.0,      // Max top speed (~274 km/h)
-      accelRate: 14.5,        // Acceleration response in m/s^2
-      dragCoeff: 0.0075,      // Aerodynamic drag
-      rollingFriction: 2.2,   // Rolling friction in m/s^2
+      distance: 0.0, // Monotonic race distance in metres
+      speedMps: 0.0, // Actual longitudinal speed in m/s
+      targetSpeedMps: 0.0, // Target speed in m/s driven by typing cadence
+      maxSpeedMps: 76.0, // Max top speed (~274 km/h)
+      accelRate: 14.5, // Acceleration response in m/s^2
+      dragCoeff: 0.0075, // Aerodynamic drag
+      rollingFriction: 2.2, // Rolling friction in m/s^2
 
       // Lateral Lane State
-      laneIndex: 1,           // Default to Center-Left lane (-3.25)
+      laneIndex: 1, // Default to Center-Left lane (-3.25)
       targetLaneIndex: 1,
       laneX: this.lanes[1],
       targetLaneX: this.lanes[1],
@@ -73,7 +73,11 @@ export class RacingSimulation {
     let rosterKeys = [];
     if (this.difficulty === 'NOVICE' || this.difficulty === 'ROOKIE') {
       rosterKeys = ['beginner', 'drift_king', 'intermediate', 'adaptive'];
-    } else if (this.difficulty === 'PRO' || this.difficulty === 'EXPERT' || this.difficulty === 'CHAMPION') {
+    } else if (
+      this.difficulty === 'PRO' ||
+      this.difficulty === 'EXPERT' ||
+      this.difficulty === 'CHAMPION'
+    ) {
       rosterKeys = ['advanced', 'ghost_rider', 'titan_overdrive', 'expert'];
     } else {
       rosterKeys = ['intermediate', 'drift_king', 'advanced', 'adaptive'];
@@ -93,7 +97,7 @@ export class RacingSimulation {
       if (key === 'adaptive') {
         baseWpm = Math.max(38, Math.min(115, this.playerAvgWpm + (Math.random() * 4 - 2)));
       }
-      const baseTargetMps = (baseWpm / 1.75) + 5.0;
+      const baseTargetMps = baseWpm / 1.75 + 5.0;
 
       return {
         id: preset.id || `ai_${idx + 1}`,
@@ -204,7 +208,7 @@ export class RacingSimulation {
     //          70 WPM -> ~45 m/s (~162 km/h)
     //          100 WPM -> ~62 m/s (~223 km/h)
     const streakBonus = Math.min(6.0, this.player.streak * 0.25);
-    const calculatedTarget = Math.max(12.0, (this.player.wpm / 1.75) + 5.0 + streakBonus);
+    const calculatedTarget = Math.max(12.0, this.player.wpm / 1.75 + 5.0 + streakBonus);
     this.player.targetSpeedMps = Math.min(this.player.maxSpeedMps, calculatedTarget);
 
     // Immediate acceleration impulse from crisp keystroke
@@ -218,14 +222,14 @@ export class RacingSimulation {
   handleMistake(stats) {
     if (this.state !== 'racing') return;
 
-    this.player.errorCount = stats.errorCount || (this.player.errorCount + 1);
+    this.player.errorCount = stats.errorCount || this.player.errorCount + 1;
     this.player.accuracy = stats.accuracy || this.player.accuracy;
     this.player.streak = 0;
     this.player.isBraking = true;
 
     // Apply speed penalty: 14% reduction + drop target speed
     this.player.speedMps = Math.max(0, this.player.speedMps * 0.86);
-    this.player.targetSpeedMps = Math.max(0, this.player.targetSpeedMps * 0.80);
+    this.player.targetSpeedMps = Math.max(0, this.player.targetSpeedMps * 0.8);
 
     setTimeout(() => {
       this.player.isBraking = false;
@@ -251,7 +255,7 @@ export class RacingSimulation {
     }
 
     // Collision Check: Check if an opponent car currently occupies destination lane
-    const isOccupied = this.opponents.some(opp => {
+    const isOccupied = this.opponents.some((opp) => {
       if (opp.targetLaneIndex === nextLane || Math.abs(opp.laneX - this.lanes[nextLane]) < 2.0) {
         // Longitudinal proximity check: within 4.5 metres
         const distDiff = Math.abs(opp.distance - this.player.distance);
@@ -285,18 +289,21 @@ export class RacingSimulation {
     const timeSinceType = now - this.player.lastKeystrokeTime;
     if (timeSinceType > 450) {
       // Target speed decays toward 0
-      this.player.targetSpeedMps = Math.max(0, this.player.targetSpeedMps - (16.0 * delta));
+      this.player.targetSpeedMps = Math.max(0, this.player.targetSpeedMps - 16.0 * delta);
     }
 
     // Vehicle inertia integration
     if (this.player.speedMps < this.player.targetSpeedMps) {
       this.player.speedMps = Math.min(
         this.player.targetSpeedMps,
-        this.player.speedMps + (this.player.accelRate * delta)
+        this.player.speedMps + this.player.accelRate * delta
       );
     } else if (this.player.speedMps > this.player.targetSpeedMps) {
       // Natural deceleration from aerodynamic drag + friction
-      const drag = (this.player.rollingFriction + (this.player.dragCoeff * this.player.speedMps * this.player.speedMps)) * delta;
+      const drag =
+        (this.player.rollingFriction +
+          this.player.dragCoeff * this.player.speedMps * this.player.speedMps) *
+        delta;
       this.player.speedMps = Math.max(this.player.targetSpeedMps, this.player.speedMps - drag);
     }
 
@@ -305,7 +312,11 @@ export class RacingSimulation {
 
     // Smooth lateral lane interpolation
     const prevLaneX = this.player.laneX;
-    this.player.laneX = this.lerp(this.player.laneX, this.player.targetLaneX, Math.min(1.0, delta * 8.5));
+    this.player.laneX = this.lerp(
+      this.player.laneX,
+      this.player.targetLaneX,
+      Math.min(1.0, delta * 8.5)
+    );
     this.player.steerAngle = (this.player.targetLaneX - this.player.laneX) * 0.18;
 
     // Check Player finish condition
@@ -315,14 +326,18 @@ export class RacingSimulation {
     }
 
     // 2. UPDATE AI COMPETITORS
-    this.opponents.forEach(opp => {
+    this.opponents.forEach((opp) => {
       if (opp.isFinished) return;
 
       opp.timeSinceDecision += delta;
 
       // Realistic speed modulation (sinusoidal human-like cadence drift)
-      const cadenceDrift = Math.sin(this.elapsedTime * opp.cadenceFreq + opp.cadencePhase) * opp.speedVariance;
-      let desiredSpeed = Math.min(opp.maxSpeedMps, Math.max(15.0, opp.baseTargetMps + cadenceDrift));
+      const cadenceDrift =
+        Math.sin(this.elapsedTime * opp.cadenceFreq + opp.cadencePhase) * opp.speedVariance;
+      let desiredSpeed = Math.min(
+        opp.maxSpeedMps,
+        Math.max(15.0, opp.baseTargetMps + cadenceDrift)
+      );
 
       // AI Radar & Traffic Avoidance: look for vehicles ahead in current lane
       if (opp.timeSinceDecision >= opp.reactionTimer) {
@@ -330,11 +345,12 @@ export class RacingSimulation {
         opp.reactionTimer = 0.5 + Math.random() * 0.5;
 
         const vehicleAhead = this.findVehicleAheadInLane(opp.targetLaneIndex, opp.distance);
-        if (vehicleAhead && (vehicleAhead.distance - opp.distance) < 14.0) {
+        if (vehicleAhead && vehicleAhead.distance - opp.distance < 14.0) {
           // Path blocked! Look to adjacent lanes for safe overtaking maneuver
           const laneOptions = [];
           if (opp.targetLaneIndex > 0) laneOptions.push(opp.targetLaneIndex - 1);
-          if (opp.targetLaneIndex < this.lanes.length - 1) laneOptions.push(opp.targetLaneIndex + 1);
+          if (opp.targetLaneIndex < this.lanes.length - 1)
+            laneOptions.push(opp.targetLaneIndex + 1);
 
           // Find clear adjacent lane
           let safeLane = null;
@@ -360,9 +376,9 @@ export class RacingSimulation {
 
       // Inertia acceleration/braking
       if (opp.speedMps < opp.targetSpeedMps) {
-        opp.speedMps = Math.min(opp.targetSpeedMps, opp.speedMps + (opp.accelRate * delta));
+        opp.speedMps = Math.min(opp.targetSpeedMps, opp.speedMps + opp.accelRate * delta);
       } else {
-        opp.speedMps = Math.max(opp.targetSpeedMps, opp.speedMps - (4.5 * delta));
+        opp.speedMps = Math.max(opp.targetSpeedMps, opp.speedMps - 4.5 * delta);
       }
 
       // Integrate forward longitudinal movement
@@ -387,7 +403,7 @@ export class RacingSimulation {
     this.updateStandings();
 
     // Check if entire grid or player has completed race
-    if (this.player.isFinished && this.opponents.every(o => o.isFinished)) {
+    if (this.player.isFinished && this.opponents.every((o) => o.isFinished)) {
       this.state = 'finished';
     }
   }
@@ -404,7 +420,7 @@ export class RacingSimulation {
     }
 
     // Check other AI racers
-    this.opponents.forEach(other => {
+    this.opponents.forEach((other) => {
       if (other.targetLaneIndex === laneIndex && other.distance > myDistance) {
         const gap = other.distance - myDistance;
         if (gap < closestGap) {
@@ -419,14 +435,20 @@ export class RacingSimulation {
 
   isLaneClear(laneIndex, myDistance, checkAheadDist = 12.0, checkBehindDist = 6.0) {
     // Check player
-    if (this.player.targetLaneIndex === laneIndex || Math.abs(this.player.laneX - this.lanes[laneIndex]) < 2.0) {
+    if (
+      this.player.targetLaneIndex === laneIndex ||
+      Math.abs(this.player.laneX - this.lanes[laneIndex]) < 2.0
+    ) {
       const diff = this.player.distance - myDistance;
       if (diff >= -checkBehindDist && diff <= checkAheadDist) return false;
     }
 
     // Check other opponents
     for (const other of this.opponents) {
-      if (other.targetLaneIndex === laneIndex || Math.abs(other.laneX - this.lanes[laneIndex]) < 2.0) {
+      if (
+        other.targetLaneIndex === laneIndex ||
+        Math.abs(other.laneX - this.lanes[laneIndex]) < 2.0
+      ) {
         const diff = other.distance - myDistance;
         if (diff >= -checkBehindDist && diff <= checkAheadDist) return false;
       }
@@ -515,7 +537,7 @@ export class RacingSimulation {
         speedKmh: Math.round(this.player.speedMps * 3.6),
         progress: Math.min(1.0, this.player.distance / this.totalDistance)
       },
-      opponents: this.opponents.map(o => ({
+      opponents: this.opponents.map((o) => ({
         ...o,
         speedKmh: Math.round(o.speedMps * 3.6),
         progress: Math.min(1.0, o.distance / this.totalDistance)

@@ -14,8 +14,8 @@ class SoundEffectsEngine {
     this.soundEnabled = true;
     this.engineEnabled = true;
     this.sfxVolume = 0.35;
-    this.engineVolume = 0.40;
-    this.masterVolume = 0.70;
+    this.engineVolume = 0.4;
+    this.masterVolume = 0.7;
     this.muted = false;
     this.keyClickType = 'cherry-blue'; // cherry-blue, mx-red, cyber-blip, off
   }
@@ -42,7 +42,16 @@ class SoundEffectsEngine {
     return Math.max(0, Math.min(1, this.masterVolume * this.engineVolume));
   }
 
-  updateSettings({ soundEffects, engineAudio, sfxVolume, engineVolume, keyboardClickSound, masterVolume, musicMuted, soundMuted }) {
+  updateSettings({
+    soundEffects,
+    engineAudio,
+    sfxVolume,
+    engineVolume,
+    keyboardClickSound,
+    masterVolume,
+    musicMuted,
+    soundMuted
+  }) {
     if (soundEffects !== undefined) this.soundEnabled = soundEffects;
     if (engineAudio !== undefined) this.engineEnabled = engineAudio;
     if (sfxVolume !== undefined) this.sfxVolume = sfxVolume;
@@ -56,7 +65,10 @@ class SoundEffectsEngine {
       this.stopEngine();
     } else if (this.isEngineRunning && this.engineGain && this.ctx) {
       try {
-        this.engineGain.gain.setValueAtTime(this.getEffectiveEngineVolume() * 0.35, this.ctx.currentTime);
+        this.engineGain.gain.setValueAtTime(
+          this.getEffectiveEngineVolume() * 0.35,
+          this.ctx.currentTime
+        );
       } catch (e) {}
     }
   }
@@ -85,7 +97,10 @@ class SoundEffectsEngine {
       // Master engine gain
       this.engineGain = this.ctx.createGain();
       this.engineGain.gain.setValueAtTime(0.005, this.ctx.currentTime);
-      this.engineGain.gain.linearRampToValueAtTime(this.getEffectiveEngineVolume() * 0.45, this.ctx.currentTime + 0.3);
+      this.engineGain.gain.linearRampToValueAtTime(
+        this.getEffectiveEngineVolume() * 0.45,
+        this.ctx.currentTime + 0.3
+      );
 
       this.engineOsc1.connect(this.engineFilter);
       this.engineOsc2.connect(this.engineFilter);
@@ -105,7 +120,7 @@ class SoundEffectsEngine {
     try {
       const now = this.ctx.currentTime;
       // Base idle is 45Hz, redline at 180Hz
-      const targetFreq = 45 + Math.min(1.2, wpmRatio) * 110 + (rpmRatio * 25);
+      const targetFreq = 45 + Math.min(1.2, wpmRatio) * 110 + rpmRatio * 25;
       this.engineOsc1.frequency.setTargetAtTime(targetFreq, now, 0.08);
       this.engineOsc2.frequency.setTargetAtTime(targetFreq * 0.5, now, 0.08);
 
@@ -160,7 +175,6 @@ class SoundEffectsEngine {
       gain.connect(this.ctx.destination);
       osc.start(now);
       osc.stop(now + 0.04);
-
     } else if (this.keyClickType === 'mx-red') {
       // MX Red: Smooth, lower-pitched dampened thud
       const osc = this.ctx.createOscillator();
@@ -176,7 +190,6 @@ class SoundEffectsEngine {
       gain.connect(this.ctx.destination);
       osc.start(now);
       osc.stop(now + 0.03);
-
     } else if (this.keyClickType === 'cyber-blip') {
       // Futuristic cyber blip
       const osc = this.ctx.createOscillator();
@@ -308,7 +321,7 @@ class SoundEffectsEngine {
     const sfxVol = this.getEffectiveSfxVolume();
     if (sfxVol <= 0) return;
 
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+    const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
     notes.forEach((freq, idx) => {
       const now = this.ctx.currentTime + idx * 0.12;
       const osc = this.ctx.createOscillator();

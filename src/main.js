@@ -4,26 +4,26 @@
  */
 
 import './style.css';
-import { storage } from './db/storage.js';
-import { soundEffects } from './audio/soundEffects.js';
-import { musicManager } from './audio/musicManager.js';
-import { NavigationManager } from './ui/navigation.js';
-import { LandingView } from './ui/landingView.js';
-import { DashboardView } from './ui/dashboardView.js';
-import { RaceModesView } from './ui/raceModesView.js';
-import { RaceView } from './ui/raceView.js';
-import { DiagnosticView } from './ui/diagnosticView.js';
-import { MultiplayerView } from './ui/multiplayerView.js';
-import { AiSelectView } from './ui/aiSelectView.js';
-import { AcademyView } from './ui/academyView.js';
-import { GarageView } from './ui/garageView.js';
-import { LeaderboardView } from './ui/leaderboardView.js';
-import { AnalyticsView } from './ui/analyticsView.js';
-import { MissionsView } from './ui/missionsView.js';
-import { SettingsView } from './ui/settingsView.js';
-import { ProfileView } from './ui/profileView.js';
-import { LegalView } from './ui/legalView.js';
-
+import { storage } from './db/index.js';
+import { soundEffects, musicManager } from './audio/index.js';
+import {
+  NavigationManager,
+  LandingView,
+  DashboardView,
+  RaceModesView,
+  RaceView,
+  DiagnosticView,
+  MultiplayerView,
+  AiSelectView,
+  AcademyView,
+  GarageView,
+  LeaderboardView,
+  AnalyticsView,
+  MissionsView,
+  SettingsView,
+  ProfileView,
+  LegalView
+} from './ui/index.js';
 
 class KeyRushApp {
   constructor() {
@@ -55,10 +55,23 @@ class KeyRushApp {
     this.navManager.bindEvents();
 
     // 5. Initial View Route — Stop direct access to main page; must enter via Get Started button
-    const validScreens = ['landing', 'dashboard', 'race', 'race-modes', 'diagnostic', 'academy', 'garage', 'leaderboard', 'analytics', 'missions', 'settings', 'profile', 'legal'];
+    const validScreens = [
+      'landing',
+      'dashboard',
+      'race',
+      'race-modes',
+      'diagnostic',
+      'academy',
+      'garage',
+      'leaderboard',
+      'analytics',
+      'missions',
+      'settings',
+      'profile',
+      'legal'
+    ];
     const initialHash = window.location.hash.replace('#', '').trim();
     const hasEntered = sessionStorage.getItem('keyrush_entered') === 'true';
-
 
     if (!hasEntered) {
       // Force Landing overview page on initial load or direct URL access
@@ -77,7 +90,11 @@ class KeyRushApp {
         this.showScreen('landing');
         return;
       }
-      if (targetHash && (validScreens.includes(targetHash) || targetHash.startsWith('legal')) && targetHash !== this.currentScreen) {
+      if (
+        targetHash &&
+        (validScreens.includes(targetHash) || targetHash.startsWith('legal')) &&
+        targetHash !== this.currentScreen
+      ) {
         this.showScreen(targetHash);
       }
     });
@@ -171,7 +188,9 @@ class KeyRushApp {
 
       case 'race':
         this.currentViewInstance = new RaceView(mainEl, this);
-        await this.currentViewInstance.setup(params || { mode: 'AI Racing', difficulty: 'AMATEUR' });
+        await this.currentViewInstance.setup(
+          params || { mode: 'AI Racing', difficulty: 'AMATEUR' }
+        );
         break;
 
       case 'diagnostic':
@@ -246,11 +265,12 @@ class KeyRushApp {
   registerServiceWorker() {
     if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => {
+        navigator.serviceWorker
+          .register('/sw.js')
+          .then((reg) => {
             console.log('KeyRush ServiceWorker registered successfully:', reg.scope);
           })
-          .catch(err => {
+          .catch((err) => {
             console.log('KeyRush ServiceWorker registration skipped/failed:', err);
           });
       });
@@ -269,4 +289,3 @@ if (document.readyState === 'loading') {
 } else {
   app.init();
 }
-

@@ -210,7 +210,7 @@ export class LandingView {
               <!-- 1. Solo Practice -->
               <div class="mode-showcase-card" data-nav="diagnostic" role="button" tabindex="0">
                 <div class="mode-card-thumb-wrap">
-                  <img src="/images/game-modes/landing-mode-solo.jpg" alt="Solo Practice" class="mode-card-img" />
+                  <img src="/images/game-modes/mode-solo.png" alt="Solo Practice" class="mode-card-img" />
                 </div>
                 <div class="mode-card-footer-info">
                   <div class="mode-icon-circle purple-glow">
@@ -230,7 +230,7 @@ export class LandingView {
               <!-- 2. Race Against AI -->
               <div class="mode-showcase-card" data-nav="race" data-mode="AI Racing" role="button" tabindex="0">
                 <div class="mode-card-thumb-wrap">
-                  <img src="/images/game-modes/landing-mode-ai.jpg" alt="Race Against AI" class="mode-card-img" />
+                  <img src="/images/game-modes/mode-ai.png" alt="Race Against AI" class="mode-card-img" />
                 </div>
                 <div class="mode-card-footer-info">
                   <div class="mode-icon-circle purple-glow">
@@ -253,7 +253,7 @@ export class LandingView {
               <!-- 3. Local Multiplayer -->
               <div class="mode-showcase-card" data-nav="race-modes" role="button" tabindex="0">
                 <div class="mode-card-thumb-wrap">
-                  <img src="/images/game-modes/landing-mode-local.jpg" alt="Local Multiplayer" class="mode-card-img" />
+                  <img src="/images/game-modes/mode-local.png" alt="Local Multiplayer" class="mode-card-img" />
                 </div>
                 <div class="mode-card-footer-info">
                   <div class="mode-icon-circle purple-glow">
@@ -275,7 +275,7 @@ export class LandingView {
               <!-- 4. Online Multiplayer -->
               <div class="mode-showcase-card" data-nav="race-modes" role="button" tabindex="0">
                 <div class="mode-card-thumb-wrap">
-                  <img src="/images/game-modes/landing-mode-online.jpg" alt="Online Multiplayer" class="mode-card-img" />
+                  <img src="/images/game-modes/mode-online.png" alt="Online Multiplayer" class="mode-card-img" />
                 </div>
                 <div class="mode-card-footer-info">
                   <div class="mode-icon-circle purple-glow">
@@ -296,7 +296,7 @@ export class LandingView {
               <!-- 5. Ranked Championship -->
               <div class="mode-showcase-card" data-nav="leaderboard" role="button" tabindex="0">
                 <div class="mode-card-thumb-wrap">
-                  <img src="/images/game-modes/landing-mode-ranked.jpg" alt="Ranked Championship" class="mode-card-img" />
+                  <img src="/images/game-modes/mode-ranked.png" alt="Ranked Championship" class="mode-card-img" />
                 </div>
                 <div class="mode-card-footer-info">
                   <div class="mode-icon-circle purple-glow">
@@ -375,7 +375,7 @@ export class LandingView {
 
             <!-- Banner Card on the Right (YOUR SKILLS. YOUR RIDE.) -->
             <div class="value-banner-card" data-nav="garage" role="button" tabindex="0" title="Explore Supercar Garage">
-              <img src="/images/cars/landing-banner-car.jpg" alt="Your Skills Your Ride" class="banner-car-thumb" />
+              <img src="/images/cars/garage-hero-car.jpg" alt="Your Skills Your Ride" class="banner-car-thumb" />
               <div class="banner-card-text">
                 <span class="banner-line-1">YOUR SKILLS.</span>
                 <span class="banner-line-2">YOUR RIDE.</span>
@@ -416,7 +416,7 @@ export class LandingView {
               <button class="modal-close-btn" id="trailer-modal-close" aria-label="Close Trailer">✕</button>
             </div>
             <div class="trailer-video-stage">
-              <img src="/images/branding/landing-reference.jpg" alt="KeyRush Trailer" class="trailer-preview-frame" />
+              <img src="/images/heroes/landing-hero-car.jpg" alt="KeyRush Trailer" class="trailer-preview-frame" />
               <div class="trailer-overlay-hud">
                 <div class="hud-pulse-ring"></div>
                 <button class="hud-launch-race-btn" data-nav="race">

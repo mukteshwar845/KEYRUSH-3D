@@ -158,12 +158,12 @@ export class AiSelectView {
   }
 
   bindEvents() {
-    this.container.querySelectorAll('.btn-select-ai').forEach(btn => {
+    this.container.querySelectorAll('.btn-select-ai').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const tier = btn.getAttribute('data-ai-tier');
         this.selectedTier = tier;
 
-        this.container.querySelectorAll('.ai-card').forEach(c => {
+        this.container.querySelectorAll('.ai-card').forEach((c) => {
           c.classList.toggle('active', c.getAttribute('data-ai-tier') === tier);
         });
 

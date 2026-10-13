@@ -182,16 +182,16 @@ export class RaceModesView {
 
   bindEvents() {
     // Mode Card Selection
-    this.container.querySelectorAll('.race-mode-hub-card').forEach(card => {
+    this.container.querySelectorAll('.race-mode-hub-card').forEach((card) => {
       card.addEventListener('click', () => {
         soundEffects.playKeyClick(true);
         this.selectedMode = card.getAttribute('data-mode');
-        this.container.querySelectorAll('.race-mode-hub-card').forEach(c => {
+        this.container.querySelectorAll('.race-mode-hub-card').forEach((c) => {
           c.classList.toggle('active-mode', c === card);
           const btn = c.querySelector('.mode-select-btn');
           if (btn) {
             btn.classList.toggle('selected', c === card);
-            btn.textContent = (c === card) ? '✓ SELECTED' : 'SELECT MODE';
+            btn.textContent = c === card ? '✓ SELECTED' : 'SELECT MODE';
           }
         });
         const summaryMode = this.container.querySelector('.summary-mode');
@@ -200,11 +200,11 @@ export class RaceModesView {
     });
 
     // Difficulty Pills
-    this.container.querySelectorAll('.diff-pill').forEach(pill => {
+    this.container.querySelectorAll('.diff-pill').forEach((pill) => {
       pill.addEventListener('click', () => {
         soundEffects.playKeyClick(true);
         this.selectedDifficulty = pill.getAttribute('data-diff');
-        this.container.querySelectorAll('.diff-pill').forEach(p => {
+        this.container.querySelectorAll('.diff-pill').forEach((p) => {
           p.classList.toggle('active', p === pill);
         });
         const summaryMeta = this.container.querySelector('.summary-meta');
@@ -215,11 +215,11 @@ export class RaceModesView {
     });
 
     // Circuit Cards
-    this.container.querySelectorAll('.circuit-choice-card').forEach(cCard => {
+    this.container.querySelectorAll('.circuit-choice-card').forEach((cCard) => {
       cCard.addEventListener('click', () => {
         soundEffects.playKeyClick(true);
         this.selectedCircuit = cCard.getAttribute('data-circuit');
-        this.container.querySelectorAll('.circuit-choice-card').forEach(c => {
+        this.container.querySelectorAll('.circuit-choice-card').forEach((c) => {
           c.classList.toggle('active', c === cCard);
         });
         const summaryMeta = this.container.querySelector('.summary-meta');

@@ -143,15 +143,15 @@ test('7. Opponent progress and live ranking derivation', () => {
   grid.opponents[0].wpm = 75;
   grid.opponents[1].progress = 0.65;
   grid.opponents[1].wpm = 60;
-  grid.opponents[2].progress = 0.40;
+  grid.opponents[2].progress = 0.4;
   grid.opponents[2].wpm = 50;
-  grid.opponents[3].progress = 0.20;
+  grid.opponents[3].progress = 0.2;
   grid.opponents[3].wpm = 45;
 
   // Player at 0.70 progress
   const standingsResult = grid.calculateStandings({
     name: 'You',
-    progress: 0.70,
+    progress: 0.7,
     wpm: 68
   });
 
@@ -232,7 +232,7 @@ test('10. Clean restart without duplicated state', () => {
 
 test('11. Vehicle and track selection integrity', () => {
   assert.ok(VEHICLE_CATALOG.length >= 6);
-  const vehicleIds = VEHICLE_CATALOG.map(v => v.id);
+  const vehicleIds = VEHICLE_CATALOG.map((v) => v.id);
   assert.ok(vehicleIds.includes('talon'));
   assert.ok(vehicleIds.includes('vortex'));
   assert.ok(vehicleIds.includes('nebula'));
@@ -241,7 +241,7 @@ test('11. Vehicle and track selection integrity', () => {
   assert.ok(vehicleIds.includes('shadow'));
 
   // Test 3D procedural vehicle mesh creation for each catalog entry
-  VEHICLE_CATALOG.forEach(v => {
+  VEHICLE_CATALOG.forEach((v) => {
     const mesh = createCarMesh(v.id, { paintColor: '#00e5ff', underglowColor: '#a855f7' });
     assert.ok(mesh);
     assert.ok(mesh.userData);
@@ -314,7 +314,10 @@ test('14. Authoritative Physics: typing accelerates vehicle, idle triggers drag 
   for (let i = 0; i < 10; i++) {
     sim.update(0.1);
   }
-  assert.ok(sim.player.targetSpeedMps < beforeDecelTarget, 'Target speed should decay when typing stops');
+  assert.ok(
+    sim.player.targetSpeedMps < beforeDecelTarget,
+    'Target speed should decay when typing stops'
+  );
 
   // Further updates decelerate the vehicle via aerodynamic drag & rolling friction
   for (let i = 0; i < 30; i++) {
@@ -445,7 +448,7 @@ test('19. AI competitors possess distinct personalities and execute tactical lan
   assert.equal(sim.opponents.length, 4);
 
   // Verify opponents have distinct initial configurations
-  const speeds = new Set(sim.opponents.map(o => o.baseTargetMps));
+  const speeds = new Set(sim.opponents.map((o) => o.baseTargetMps));
   assert.ok(speeds.size >= 2, 'Opponents must have varied target speed profiles');
 
   // Place slower car directly in front of fast car in the same lane
@@ -471,7 +474,11 @@ test('19. AI competitors possess distinct personalities and execute tactical lan
 
   // Run update: chaser detects blocker ahead and changes lane to overtake
   sim.update(0.1);
-  assert.notEqual(chaser.targetLaneIndex, blocker.targetLaneIndex, 'Chaser AI should switch lane to overtake blocking vehicle');
+  assert.notEqual(
+    chaser.targetLaneIndex,
+    blocker.targetLaneIndex,
+    'Chaser AI should switch lane to overtake blocking vehicle'
+  );
 });
 
 test('20. Authoritative race standings derive strictly from actual race progress', () => {
@@ -496,4 +503,3 @@ test('20. Authoritative race standings derive strictly from actual race progress
 
   assert.equal(sim.player.rank, 3);
 });
-

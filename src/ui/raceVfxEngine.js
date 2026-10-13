@@ -54,7 +54,7 @@ export class RaceVfxEngine {
   updateSpeed(wpm, kmh) {
     this.wpm = wpm;
     this.targetSpeedKmh = kmh;
-    this.flameIntensity = Math.min(2.2, 0.8 + (wpm / 60));
+    this.flameIntensity = Math.min(2.2, 0.8 + wpm / 60);
   }
 
   triggerBrakeFeedback() {
@@ -73,7 +73,7 @@ export class RaceVfxEngine {
 
   spawnExhaustParticles(count = 3, isBurst = false) {
     // Twin exhaust locations on the player car (centered horizontally, ~78% down screen)
-    const centerX = this.width * 0.50;
+    const centerX = this.width * 0.5;
     const exhaustY = this.height * 0.725;
     const offsets = [-34, -20, 20, 34]; // Dual twin pipes
 
@@ -81,10 +81,10 @@ export class RaceVfxEngine {
       const offsetX = offsets[Math.floor(Math.random() * offsets.length)] + (Math.random() * 6 - 3);
       this.particles.push({
         x: centerX + offsetX,
-        y: exhaustY + (Math.random() * 6),
+        y: exhaustY + Math.random() * 6,
         vx: (Math.random() - 0.5) * 1.5,
         vy: 4 + Math.random() * (isBurst ? 18 : 10),
-        size: isBurst ? (4 + Math.random() * 8) : (2 + Math.random() * 5),
+        size: isBurst ? 4 + Math.random() * 8 : 2 + Math.random() * 5,
         alpha: 0.9,
         life: 1.0,
         decay: isBurst ? 0.05 : 0.08,
@@ -160,7 +160,7 @@ export class RaceVfxEngine {
     }
 
     // 2. Twin Cyan Nitro Exhaust Flames
-    const centerX = this.width * 0.50;
+    const centerX = this.width * 0.5;
     const exhaustY = this.height * 0.725;
     const baseFlameLen = 22 * this.flameIntensity;
 
@@ -180,8 +180,12 @@ export class RaceVfxEngine {
 
         // Outer cyan bloom
         const glowGrad = ctx.createRadialGradient(
-          port.x, exhaustY + 12, 2,
-          port.x, exhaustY + 12, 35 * this.flameIntensity
+          port.x,
+          exhaustY + 12,
+          2,
+          port.x,
+          exhaustY + 12,
+          35 * this.flameIntensity
         );
         glowGrad.addColorStop(0, 'rgba(0, 229, 255, 0.75)');
         glowGrad.addColorStop(0.5, 'rgba(0, 145, 255, 0.35)');
@@ -193,7 +197,12 @@ export class RaceVfxEngine {
         ctx.fill();
 
         // Inner electric core flame cone
-        const flameGrad = ctx.createLinearGradient(port.x, exhaustY, port.x, exhaustY + baseFlameLen);
+        const flameGrad = ctx.createLinearGradient(
+          port.x,
+          exhaustY,
+          port.x,
+          exhaustY + baseFlameLen
+        );
         flameGrad.addColorStop(0, '#ffffff');
         flameGrad.addColorStop(0.3, '#00e5ff');
         flameGrad.addColorStop(0.8, 'rgba(0, 145, 255, 0.8)');
@@ -205,7 +214,7 @@ export class RaceVfxEngine {
         ctx.lineTo(port.x + port.w * 0.5, exhaustY);
         // Turbulent tip
         const jitterX = (Math.random() - 0.5) * 4;
-        ctx.lineTo(port.x + jitterX, exhaustY + baseFlameLen + (Math.random() * 8));
+        ctx.lineTo(port.x + jitterX, exhaustY + baseFlameLen + Math.random() * 8);
         ctx.closePath();
         ctx.fill();
 
@@ -216,8 +225,12 @@ export class RaceVfxEngine {
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
       const wetRoadGrad = ctx.createRadialGradient(
-        centerX, exhaustY + 50, 5,
-        centerX, exhaustY + 50, 90 * this.flameIntensity
+        centerX,
+        exhaustY + 50,
+        5,
+        centerX,
+        exhaustY + 50,
+        90 * this.flameIntensity
       );
       wetRoadGrad.addColorStop(0, 'rgba(0, 229, 255, 0.45)');
       wetRoadGrad.addColorStop(0.6, 'rgba(0, 120, 255, 0.18)');

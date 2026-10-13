@@ -25,7 +25,8 @@ export const VEHICLE_CATALOG = [
     tagline: 'Precision. Power. Perfection.',
     image: '/images/cars/garage-hero-car.jpg',
     unlockCondition: 'Default Active Vehicle',
-    description: 'Precision-crafted hypercar engineered for razor-sharp response, active aerodynamics, and maximum cornering velocity.',
+    description:
+      'Precision-crafted hypercar engineered for razor-sharp response, active aerodynamics, and maximum cornering velocity.',
     unlocked: true
   },
   {
@@ -63,7 +64,8 @@ export const VEHICLE_CATALOG = [
     tagline: 'Instant Torque. Quantum Ground-Effects.',
     image: '/images/cars/garage-nebula.jpg',
     unlockCondition: 'Complete a 7-day practice streak',
-    description: 'All-electric hypercraft delivering instantaneous dual-motor torque and active underbody suction.',
+    description:
+      'All-electric hypercraft delivering instantaneous dual-motor torque and active underbody suction.',
     unlocked: false
   },
   {
@@ -82,7 +84,8 @@ export const VEHICLE_CATALOG = [
     tagline: 'V12 Symphony & Raw Mechanical Grip.',
     image: '/images/cars/garage-chronos.jpg',
     unlockCondition: 'Reach 90 WPM with ≥ 96% Accuracy',
-    description: 'Naturally aspirated V12 endurance racer with titanium chassis and carbon-ceramic downforce.',
+    description:
+      'Naturally aspirated V12 endurance racer with titanium chassis and carbon-ceramic downforce.',
     unlocked: false
   },
   {
@@ -101,7 +104,8 @@ export const VEHICLE_CATALOG = [
     tagline: 'Polished 24K Carbon Monocoque.',
     image: '/images/cars/garage-gold.jpg',
     unlockCondition: 'Unlock at Player Level 5',
-    description: 'Special exhibition edition with 24-karat gold leaf finish and hand-tuned aero wing.',
+    description:
+      'Special exhibition edition with 24-karat gold leaf finish and hand-tuned aero wing.',
     unlocked: false
   },
   {
@@ -120,7 +124,8 @@ export const VEHICLE_CATALOG = [
     tagline: 'Dark Stealth Aero & Unbridled Torque.',
     image: '/images/cars/garage-shadow.jpg',
     unlockCondition: 'Achieve 98% Accuracy on 5 Tests',
-    description: 'Supercharged widebody muscle missile built for brute-force acceleration and aggressive slipstreams.',
+    description:
+      'Supercharged widebody muscle missile built for brute-force acceleration and aggressive slipstreams.',
     unlocked: false
   }
 ];
@@ -134,7 +139,7 @@ export function getNightEnvironmentTexture() {
   canvas.width = 512;
   canvas.height = 256;
   const ctx = canvas.getContext('2d');
-  
+
   // Sky gradient from deep zenith indigo to horizon skyline haze
   const grad = ctx.createLinearGradient(0, 0, 0, 256);
   grad.addColorStop(0, '#02050e');
@@ -257,7 +262,7 @@ export function createOpponentNameplate(name = 'Racer', rank = 2, isAi = true) {
   ctx.stroke();
 
   // Rank Badge Box
-  ctx.fillStyle = rank === 1 ? '#F59E0B' : (rank === 2 ? '#94A3B8' : '#147BFF');
+  ctx.fillStyle = rank === 1 ? '#F59E0B' : rank === 2 ? '#94A3B8' : '#147BFF';
   ctx.beginPath();
   ctx.roundRect(12, 12, 38, 40, 10);
   ctx.fill();
@@ -401,7 +406,7 @@ export function createCarMesh(carId = 'talon', options = {}) {
   } else if (carId === 'nebula') {
     length = 4.72;
     width = 2.24;
-    height = 0.80;
+    height = 0.8;
   } else if (carId === 'chronos') {
     length = 4.82;
     width = 2.26;
@@ -453,7 +458,7 @@ export function createCarMesh(carId = 'talon', options = {}) {
   chassisGroup.add(hoodMesh);
 
   // Twin hood air extractor vents (sculpted carbon vents)
-  [-0.32, 0.32].forEach(side => {
+  [-0.32, 0.32].forEach((side) => {
     const vent = new THREE.Mesh(
       new THREE.BoxGeometry(width * 0.22, 0.04, hoodL * 0.55),
       carbonMaterial
@@ -473,11 +478,8 @@ export function createCarMesh(carId = 'talon', options = {}) {
   splitter.position.set(0, chassisY + 0.03, length * 0.46);
   chassisGroup.add(splitter);
 
-  [-1, 1].forEach(side => {
-    const canard = new THREE.Mesh(
-      new THREE.BoxGeometry(0.18, 0.03, 0.16),
-      carbonMaterial
-    );
+  [-1, 1].forEach((side) => {
+    const canard = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.03, 0.16), carbonMaterial);
     canard.position.set(side * splitterW * 0.48, chassisY + 0.12, length * 0.44);
     canard.rotation.z = side * 0.25;
     canard.rotation.x = -0.14;
@@ -493,11 +495,8 @@ export function createCarMesh(carId = 'talon', options = {}) {
   chassisGroup.add(frontGrille);
 
   // Angled laser LED headlights
-  [-1, 1].forEach(side => {
-    const hl = new THREE.Mesh(
-      new THREE.BoxGeometry(0.32, 0.05, 0.12),
-      headlightMaterial
-    );
+  [-1, 1].forEach((side) => {
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.05, 0.12), headlightMaterial);
     hl.position.set(side * (width * 0.33), chassisY + height * 0.22, length * 0.48);
     hl.rotation.y = -side * 0.18;
     chassisGroup.add(hl);
@@ -510,7 +509,7 @@ export function createCarMesh(carId = 'talon', options = {}) {
 
   // Streamlined center roof cap
   const roofCap = new THREE.Mesh(
-    new THREE.BoxGeometry(canopyWid * 0.70, 0.04, canopyLen * 0.48),
+    new THREE.BoxGeometry(canopyWid * 0.7, 0.04, canopyLen * 0.48),
     carbonMaterial
   );
   roofCap.position.set(0, chassisY + height * 0.34 + canopyH * 0.96, -length * 0.02);
@@ -518,7 +517,7 @@ export function createCarMesh(carId = 'talon', options = {}) {
 
   // Roof intake snorkel
   const roofScoop = new THREE.Mesh(
-    new THREE.BoxGeometry(0.20, 0.08, canopyLen * 0.40),
+    new THREE.BoxGeometry(0.2, 0.08, canopyLen * 0.4),
     carbonMaterial
   );
   roofScoop.position.set(0, chassisY + height * 0.34 + canopyH * 1.04, -length * 0.06);
@@ -543,22 +542,23 @@ export function createCarMesh(carId = 'talon', options = {}) {
   chassisGroup.add(rearGlass);
 
   // Tapered privacy side windows
-  [-1, 1].forEach(side => {
+  [-1, 1].forEach((side) => {
     const sideWin = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04, canopyH * 0.70, canopyLen * 0.52),
+      new THREE.BoxGeometry(0.04, canopyH * 0.7, canopyLen * 0.52),
       glassMaterial
     );
-    sideWin.position.set(side * (canopyWid * 0.36), chassisY + height * 0.34 + canopyH * 0.48, -length * 0.02);
+    sideWin.position.set(
+      side * (canopyWid * 0.36),
+      chassisY + height * 0.34 + canopyH * 0.48,
+      -length * 0.02
+    );
     sideWin.rotation.z = side * 0.18; // Taper inwards towards roof
     chassisGroup.add(sideWin);
   });
 
   // Carbon rear deck engine louvers (behind rear glass)
   for (let l = 0; l < 4; l++) {
-    const louver = new THREE.Mesh(
-      new THREE.BoxGeometry(width * 0.48, 0.02, 0.12),
-      carbonMaterial
-    );
+    const louver = new THREE.Mesh(new THREE.BoxGeometry(width * 0.48, 0.02, 0.12), carbonMaterial);
     louver.position.set(0, chassisY + height * 0.36 - l * 0.03, -length * 0.26 - l * 0.08);
     louver.rotation.x = 0.28;
     chassisGroup.add(louver);
@@ -566,13 +566,17 @@ export function createCarMesh(carId = 'talon', options = {}) {
 
   // --- 3. WIDEBODY SIDES, INTAKES & REAR HAUNCHES ---
   const fenderW = (width - width * 0.78) * 0.5 + 0.14;
-  [-1, 1].forEach(side => {
+  [-1, 1].forEach((side) => {
     // Front flared wheel arch
     const fArch = new THREE.Mesh(
-      new THREE.BoxGeometry(fenderW, height * 0.40, length * 0.30),
+      new THREE.BoxGeometry(fenderW, height * 0.4, length * 0.3),
       bodyMaterial
     );
-    fArch.position.set(side * (width * 0.40 + fenderW * 0.38), chassisY + height * 0.20, length * 0.27);
+    fArch.position.set(
+      side * (width * 0.4 + fenderW * 0.38),
+      chassisY + height * 0.2,
+      length * 0.27
+    );
     fArch.castShadow = true;
     chassisGroup.add(fArch);
 
@@ -581,7 +585,11 @@ export function createCarMesh(carId = 'talon', options = {}) {
       new THREE.BoxGeometry(fenderW * 1.18, height * 0.46, length * 0.36),
       bodyMaterial
     );
-    rArch.position.set(side * (width * 0.40 + fenderW * 0.46), chassisY + height * 0.22, -length * 0.25);
+    rArch.position.set(
+      side * (width * 0.4 + fenderW * 0.46),
+      chassisY + height * 0.22,
+      -length * 0.25
+    );
     rArch.castShadow = true;
     chassisGroup.add(rArch);
 
@@ -590,15 +598,12 @@ export function createCarMesh(carId = 'talon', options = {}) {
       new THREE.BoxGeometry(0.12, height * 0.32, length * 0.34),
       bodyMaterial
     );
-    door.position.set(side * (width * 0.40), chassisY + height * 0.18, 0.02);
+    door.position.set(side * (width * 0.4), chassisY + height * 0.18, 0.02);
     door.castShadow = true;
     chassisGroup.add(door);
 
     // Aerodynamic carbon side skirts with ground-effect channel
-    const skirt = new THREE.Mesh(
-      new THREE.BoxGeometry(0.14, 0.06, length * 0.56),
-      carbonMaterial
-    );
+    const skirt = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.06, length * 0.56), carbonMaterial);
     skirt.position.set(side * (width * 0.48), chassisY + 0.04, 0);
     chassisGroup.add(skirt);
 
@@ -635,7 +640,7 @@ export function createCarMesh(carId = 'talon', options = {}) {
     new THREE.BoxGeometry(width * 0.84, height * 0.18, 0.04),
     new THREE.MeshBasicMaterial({ color: 0x05070a })
   );
-  rearMesh.position.set(0, chassisY + height * 0.20, -length * 0.495);
+  rearMesh.position.set(0, chassisY + height * 0.2, -length * 0.495);
   chassisGroup.add(rearMesh);
 
   // A. Continuous Sleek Curved OLED Taillight Lightbar
@@ -643,15 +648,12 @@ export function createCarMesh(carId = 'talon', options = {}) {
     new THREE.BoxGeometry(width * 0.86, 0.08, 0.08),
     taillightMaterial
   );
-  taillightMesh.position.set(0, chassisY + height * 0.30, -length * 0.498);
+  taillightMesh.position.set(0, chassisY + height * 0.3, -length * 0.498);
   chassisGroup.add(taillightMesh);
 
   // Angled outer boomerang light blades for aggressive signature
-  [-1, 1].forEach(side => {
-    const blade = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 0.16, 0.08),
-      taillightMaterial
-    );
+  [-1, 1].forEach((side) => {
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, 0.08), taillightMaterial);
     blade.position.set(side * (width * 0.44), chassisY + height * 0.26, -length * 0.498);
     blade.rotation.z = side * 0.28;
     chassisGroup.add(blade);
@@ -668,31 +670,22 @@ export function createCarMesh(carId = 'talon', options = {}) {
 
   // C. Sculpted GT Rear Wing
   const wingW = width * 1.08;
-  const wingMesh = new THREE.Mesh(
-    new THREE.BoxGeometry(wingW, 0.05, 0.42),
-    carbonMaterial
-  );
+  const wingMesh = new THREE.Mesh(new THREE.BoxGeometry(wingW, 0.05, 0.42), carbonMaterial);
   wingMesh.position.set(0, chassisY + height * 0.82, -length * 0.44);
   wingMesh.rotation.x = -0.06;
   wingMesh.castShadow = true;
   chassisGroup.add(wingMesh);
 
   // Wing aerodynamic contoured endplates
-  [-1, 1].forEach(side => {
-    const endplate = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04, 0.24, 0.46),
-      secondaryBodyMat
-    );
+  [-1, 1].forEach((side) => {
+    const endplate = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.24, 0.46), secondaryBodyMat);
     endplate.position.set(side * (wingW * 0.5), chassisY + height * 0.82, -length * 0.44);
     chassisGroup.add(endplate);
   });
 
   // Swan-neck wing uprights
-  [-0.32, 0.32].forEach(x => {
-    const upright = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04, 0.42, 0.14),
-      carbonMaterial
-    );
+  [-0.32, 0.32].forEach((x) => {
+    const upright = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.42, 0.14), carbonMaterial);
     upright.position.set(x * width, chassisY + height * 0.62, -length * 0.43);
     upright.rotation.x = -0.18;
     chassisGroup.add(upright);
@@ -706,11 +699,8 @@ export function createCarMesh(carId = 'talon', options = {}) {
   diffuserMesh.position.set(0, chassisY + 0.08, -length * 0.48);
   chassisGroup.add(diffuserMesh);
 
-  [-0.38, -0.14, 0.14, 0.38].forEach(xOff => {
-    const fin = new THREE.Mesh(
-      new THREE.BoxGeometry(0.03, 0.18, 0.34),
-      carbonMaterial
-    );
+  [-0.38, -0.14, 0.14, 0.38].forEach((xOff) => {
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.18, 0.34), carbonMaterial);
     fin.position.set(xOff * width, chassisY + 0.08, -length * 0.48);
     chassisGroup.add(fin);
   });
@@ -719,14 +709,11 @@ export function createCarMesh(carId = 'talon', options = {}) {
   const exhaustFlames = [];
   const exhaustPositions = [-0.36, -0.22, 0.22, 0.36];
 
-  exhaustPositions.forEach(x => {
+  exhaustPositions.forEach((x) => {
     // Titanium tip barrel
-    const tip = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.065, 0.065, 0.18, 16),
-      chromeMaterial
-    );
+    const tip = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.065, 0.18, 16), chromeMaterial);
     tip.rotation.x = Math.PI / 2;
-    tip.position.set(x, chassisY + 0.14, -length * 0.50);
+    tip.position.set(x, chassisY + 0.14, -length * 0.5);
     chassisGroup.add(tip);
 
     // Glowing inner burner ring
@@ -766,10 +753,42 @@ export function createCarMesh(carId = 'talon', options = {}) {
 
   // --- 5. FOUR DETAILED CONCAVE ALLOY WHEELS ---
   const wheelConfigs = [
-    { x: -(width * 0.48), y: frontWheelR, z: length * 0.27, radius: frontWheelR, thick: frontWheelW, isFront: true, isLeft: true },
-    { x:  (width * 0.48), y: frontWheelR, z: length * 0.27, radius: frontWheelR, thick: frontWheelW, isFront: true, isLeft: false },
-    { x: -(width * 0.49), y: rearWheelR, z: -length * 0.26, radius: rearWheelR, thick: rearWheelW, isFront: false, isLeft: true },
-    { x:  (width * 0.49), y: rearWheelR, z: -length * 0.26, radius: rearWheelR, thick: rearWheelW, isFront: false, isLeft: false }
+    {
+      x: -(width * 0.48),
+      y: frontWheelR,
+      z: length * 0.27,
+      radius: frontWheelR,
+      thick: frontWheelW,
+      isFront: true,
+      isLeft: true
+    },
+    {
+      x: width * 0.48,
+      y: frontWheelR,
+      z: length * 0.27,
+      radius: frontWheelR,
+      thick: frontWheelW,
+      isFront: true,
+      isLeft: false
+    },
+    {
+      x: -(width * 0.49),
+      y: rearWheelR,
+      z: -length * 0.26,
+      radius: rearWheelR,
+      thick: rearWheelW,
+      isFront: false,
+      isLeft: true
+    },
+    {
+      x: width * 0.49,
+      y: rearWheelR,
+      z: -length * 0.26,
+      radius: rearWheelR,
+      thick: rearWheelW,
+      isFront: false,
+      isLeft: false
+    }
   ];
 
   const wheelSpinPivots = [];
@@ -798,7 +817,7 @@ export function createCarMesh(carId = 'talon', options = {}) {
     spinPivot.add(tire);
 
     // Tread Grooves
-    [-cfg.thick * 0.24, cfg.thick * 0.24].forEach(off => {
+    [-cfg.thick * 0.24, cfg.thick * 0.24].forEach((off) => {
       const tread = new THREE.Mesh(
         new THREE.TorusGeometry(cfg.radius * 0.985, 0.012, 6, 24),
         new THREE.MeshBasicMaterial({ color: 0x050608 })
@@ -824,7 +843,11 @@ export function createCarMesh(carId = 'talon', options = {}) {
         chromeMaterial
       );
       const outX = cfg.isLeft ? -cfg.thick * 0.46 : cfg.thick * 0.46;
-      spoke.position.set(outX, Math.cos(angle) * cfg.radius * 0.32, Math.sin(angle) * cfg.radius * 0.32);
+      spoke.position.set(
+        outX,
+        Math.cos(angle) * cfg.radius * 0.32,
+        Math.sin(angle) * cfg.radius * 0.32
+      );
       spoke.rotation.x = angle;
       spinPivot.add(spoke);
     }
@@ -904,13 +927,13 @@ export function createCarMesh(carId = 'talon', options = {}) {
     },
 
     spinWheels: (amount) => {
-      wheelSpinPivots.forEach(pivot => {
+      wheelSpinPivots.forEach((pivot) => {
         pivot.rotation.x += amount;
       });
     },
 
     steerWheels: (angle) => {
-      frontSteerGroups.forEach(g => {
+      frontSteerGroups.forEach((g) => {
         g.rotation.y = THREE.MathUtils.lerp(g.rotation.y, angle, 0.2);
       });
     },
@@ -923,7 +946,7 @@ export function createCarMesh(carId = 'talon', options = {}) {
     },
 
     setNitro: (active) => {
-      exhaustFlames.forEach(flame => {
+      exhaustFlames.forEach((flame) => {
         flame.visible = active;
         if (active) {
           const jitter = 0.85 + Math.random() * 0.35;

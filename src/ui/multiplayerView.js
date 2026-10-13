@@ -211,7 +211,9 @@ export class MultiplayerView {
     document.getElementById('btn-create-room')?.addEventListener('click', () => {
       const diff = document.getElementById('room-diff-select')?.value || 'AMATEUR';
       const roomCode = `KR-${Math.floor(1000 + Math.random() * 9000)}`;
-      alert(`Private Room Created!\nRoom Code: ${roomCode}\nShare this code with your friends to race.`);
+      alert(
+        `Private Room Created!\nRoom Code: ${roomCode}\nShare this code with your friends to race.`
+      );
       this.app.showScreen('race', { mode: 'Private Room', difficulty: diff, roomCode });
     });
 
@@ -241,7 +243,7 @@ export class MultiplayerView {
     });
 
     // Invite Friend
-    this.container.querySelectorAll('.btn-invite').forEach(btn => {
+    this.container.querySelectorAll('.btn-invite').forEach((btn) => {
       btn.addEventListener('click', () => {
         const name = btn.getAttribute('data-name');
         alert(`Invitation sent to ${name}! Loading duel...`);

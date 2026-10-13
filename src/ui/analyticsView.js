@@ -161,7 +161,9 @@ export class AnalyticsView {
                 </tr>
               </thead>
               <tbody>
-                ${sessions.map(s => `
+                ${sessions
+                  .map(
+                    (s) => `
                   <tr>
                     <td>${new Date(s.timestamp).toLocaleDateString()} ${new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                     <td><span class="mode-tag">${s.mode}</span></td>
@@ -172,7 +174,9 @@ export class AnalyticsView {
                     <td class="font-mono">${s.duration || 35}s</td>
                     <td><span class="result-badge ${s.won ? 'won' : 'loss'}">${s.won ? '1ST PLACE' : 'FINISH'}</span></td>
                   </tr>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </tbody>
             </table>
           </div>
@@ -197,24 +201,26 @@ export class AnalyticsView {
 
     const sorted = [...sessions].reverse();
     const labels = sorted.map((_, i) => `Lap ${i + 1}`);
-    const wpmData = sorted.map(s => s.wpm);
-    const scatterData = sorted.map(s => ({ x: s.wpm, y: s.accuracy }));
+    const wpmData = sorted.map((s) => s.wpm);
+    const scatterData = sorted.map((s) => ({ x: s.wpm, y: s.accuracy }));
 
     // WPM Line Chart
     this.wpmTrendChart = new Chart(wpmCanvas, {
       type: 'line',
       data: {
         labels,
-        datasets: [{
-          label: 'WPM',
-          data: wpmData,
-          borderColor: '#00e5ff',
-          backgroundColor: 'rgba(0, 229, 255, 0.12)',
-          fill: true,
-          tension: 0.35,
-          borderWidth: 3,
-          pointBackgroundColor: '#00e5ff'
-        }]
+        datasets: [
+          {
+            label: 'WPM',
+            data: wpmData,
+            borderColor: '#00e5ff',
+            backgroundColor: 'rgba(0, 229, 255, 0.12)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 3,
+            pointBackgroundColor: '#00e5ff'
+          }
+        ]
       },
       options: {
         responsive: true,
@@ -231,13 +237,15 @@ export class AnalyticsView {
     this.scatterChart = new Chart(scatterCanvas, {
       type: 'scatter',
       data: {
-        datasets: [{
-          label: 'Session',
-          data: scatterData,
-          backgroundColor: '#a855f7',
-          pointRadius: 6,
-          pointHoverRadius: 8
-        }]
+        datasets: [
+          {
+            label: 'Session',
+            data: scatterData,
+            backgroundColor: '#a855f7',
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }
+        ]
       },
       options: {
         responsive: true,
@@ -272,9 +280,9 @@ export class AnalyticsView {
     ];
 
     let html = '';
-    rows.forEach(r => {
+    rows.forEach((r) => {
       html += '<div class="heatmap-row">';
-      r.forEach(k => {
+      r.forEach((k) => {
         const errorCount = weakKeys[k] || 0;
         let heatClass = 'heat-low';
         if (errorCount >= 4) heatClass = 'heat-high';
@@ -296,8 +304,18 @@ export class AnalyticsView {
   bindEvents(sessions, profile, garage) {
     // Export CSV
     document.getElementById('btn-export-csv')?.addEventListener('click', () => {
-      const headers = ['Timestamp', 'Date', 'Mode', 'Difficulty', 'WPM', 'Accuracy', 'Errors', 'DurationSeconds', 'Won'];
-      const rows = sessions.map(s => [
+      const headers = [
+        'Timestamp',
+        'Date',
+        'Mode',
+        'Difficulty',
+        'WPM',
+        'Accuracy',
+        'Errors',
+        'DurationSeconds',
+        'Won'
+      ];
+      const rows = sessions.map((s) => [
         s.timestamp,
         new Date(s.timestamp).toISOString(),
         `"${s.mode}"`,
@@ -309,7 +327,7 @@ export class AnalyticsView {
         s.won ? 'YES' : 'NO'
       ]);
 
-      const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

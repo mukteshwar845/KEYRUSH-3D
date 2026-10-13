@@ -91,8 +91,9 @@ export class Track3D {
     const width = this.container.clientWidth || window.innerWidth;
     const height = this.container.clientHeight || window.innerHeight;
 
-    const isSunset = (this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset'));
-    const isRain = (this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain'));
+    const isSunset =
+      this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset');
+    const isRain = this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain');
 
     let bgColor = 0x050811;
     let fogDensity = 0.0034;
@@ -125,7 +126,7 @@ export class Track3D {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = isSunset ? 1.35 : (isRain ? 1.2 : 1.25);
+    this.renderer.toneMappingExposure = isSunset ? 1.35 : isRain ? 1.2 : 1.25;
     this.renderer.domElement.className = 'track-3d-webgl-canvas';
     this.container.appendChild(this.renderer.domElement);
 
@@ -185,7 +186,7 @@ export class Track3D {
 
     // Longitudinal wheel track shading (subtle darker parallel grooves)
     rCtx.fillStyle = 'rgba(4, 6, 10, 0.45)';
-    [120, 240, 380, 500, 640, 760, 890].forEach(tx => {
+    [120, 240, 380, 500, 640, 760, 890].forEach((tx) => {
       rCtx.fillRect(tx - 35, 0, 70, 1024);
     });
 
@@ -210,7 +211,7 @@ export class Track3D {
       { warm: '#ffcc77', cool: '#d0e6ff', accent: '#00e5ff' }
     ];
 
-    themes.forEach(th => {
+    themes.forEach((th) => {
       const winCanvas = document.createElement('canvas');
       winCanvas.width = 512;
       winCanvas.height = 1024;
@@ -226,7 +227,7 @@ export class Track3D {
 
       // Dark structural spandrel bands every 4 floors
       for (let r = 0; r < rows; r++) {
-        const isSpandrel = (r % 6 === 0);
+        const isSpandrel = r % 6 === 0;
         for (let c = 0; c < cols; c++) {
           if (isSpandrel) {
             wCtx.fillStyle = '#0e1524';
@@ -367,16 +368,17 @@ export class Track3D {
 
   // ------------------------------------------------------------------ WORLD LIGHTING
   setupLighting() {
-    const isSunset = (this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset'));
-    const isRain = (this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain'));
+    const isSunset =
+      this.circuit === 'Sunset Horizon Expressway' || this.circuit.includes('Sunset');
+    const isRain = this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain');
 
     // 1. Balanced Nocturnal Ambient Fill (Keeps cars and road readable without wash-out)
-    const ambCol = isSunset ? 0x2e1a38 : (isRain ? 0x141e2e : 0x162238);
+    const ambCol = isSunset ? 0x2e1a38 : isRain ? 0x141e2e : 0x162238;
     const ambient = new THREE.AmbientLight(ambCol, isSunset ? 2.2 : 2.0);
     this.scene.add(ambient);
 
     // 2. Directional Moonlight (Elevated cool-blue directional light casting soft shadows)
-    const moonCol = isSunset ? 0xffb86c : (isRain ? 0x7eb0db : 0x89b4e8);
+    const moonCol = isSunset ? 0xffb86c : isRain ? 0x7eb0db : 0x89b4e8;
     const moonLight = new THREE.DirectionalLight(moonCol, isSunset ? 3.0 : 2.6);
     moonLight.position.set(20, 55, 30);
     moonLight.castShadow = true;
@@ -433,7 +435,7 @@ export class Track3D {
     grad.addColorStop(0, '#02040a');
     grad.addColorStop(0.42, '#060d1a');
     grad.addColorStop(0.72, '#0c1a32');
-    grad.addColorStop(0.90, '#1c2844');
+    grad.addColorStop(0.9, '#1c2844');
     grad.addColorStop(1, '#080d18');
     dCtx.fillStyle = grad;
     dCtx.fillRect(0, 0, 1024, 512);
@@ -471,21 +473,29 @@ export class Track3D {
 
   // ------------------------------------------------------------------ ROAD TILE POOL & SCENERY
   buildRoadTilePool() {
-    const isRain = (this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain'));
+    const isRain = this.circuit === 'Tokyo Neon Rain Circuit' || this.circuit.includes('Rain');
 
     // PBR Wet Asphalt Roadbed Material with Sky Reflection
     const envMap = getNightEnvironmentTexture();
     const roadMat = new THREE.MeshStandardMaterial({
       map: this.roadTexture,
       roughness: isRain ? 0.16 : 0.22,
-      metalness: isRain ? 0.72 : 0.60,
+      metalness: isRain ? 0.72 : 0.6,
       envMap: envMap,
       envMapIntensity: 2.4
     });
 
     // Materials
-    const yellowLineMat = new THREE.MeshBasicMaterial({ color: 0xffcc00, transparent: true, opacity: 0.95 });
-    const whiteLineMat = new THREE.MeshBasicMaterial({ color: 0xf0f6ff, transparent: true, opacity: 0.92 });
+    const yellowLineMat = new THREE.MeshBasicMaterial({
+      color: 0xffcc00,
+      transparent: true,
+      opacity: 0.95
+    });
+    const whiteLineMat = new THREE.MeshBasicMaterial({
+      color: 0xf0f6ff,
+      transparent: true,
+      opacity: 0.92
+    });
     const barrierMetalMat = new THREE.MeshStandardMaterial({
       color: 0x94a3b8,
       metalness: 0.95,
@@ -533,7 +543,7 @@ export class Track3D {
 
       for (let d = 0; d < dashCount; d++) {
         const dz = -TILE_LENGTH / 2 + d * (dashLength + dashGap) + dashLength / 2 + 1;
-        [-6.5, 0, 6.5].forEach(x => {
+        [-6.5, 0, 6.5].forEach((x) => {
           const dash = new THREE.Mesh(dashGeo, whiteLineMat);
           dash.rotation.x = -Math.PI / 2;
           dash.position.set(x, 0.025, dz);
@@ -579,7 +589,7 @@ export class Track3D {
         lampGroup.position.set(lx, 0, 0);
 
         // Tapered highway luminaire pole
-        const poleGeo = new THREE.CylinderGeometry(0.10, 0.16, 8.2, 8);
+        const poleGeo = new THREE.CylinderGeometry(0.1, 0.16, 8.2, 8);
         const pole = new THREE.Mesh(poleGeo, barrierMetalMat);
         pole.position.set(0, 4.1, 0);
         lampGroup.add(pole);
@@ -636,7 +646,7 @@ export class Track3D {
   buildTileCityScenery(tileGroup, tileIdx, hw) {
     if (!this.windowTextures || this.windowTextures.length === 0) return;
 
-    [-1, 1].forEach(side => {
+    [-1, 1].forEach((side) => {
       for (let b = 0; b < 2; b++) {
         // High variation in skyscraper dimensions & realistic highway setbacks
         const height = 55 + Math.random() * 115;
@@ -670,7 +680,11 @@ export class Track3D {
         if (height > 65) {
           const crownHeight = 6.0;
           const crownGeo = new THREE.BoxGeometry(width * 0.72, crownHeight, depth * 0.72);
-          const crownMat = new THREE.MeshStandardMaterial({ color: 0x182438, metalness: 0.8, roughness: 0.3 });
+          const crownMat = new THREE.MeshStandardMaterial({
+            color: 0x182438,
+            metalness: 0.8,
+            roughness: 0.3
+          });
           const crown = new THREE.Mesh(crownGeo, crownMat);
           crown.position.set(posX, height + crownHeight / 2, posZ);
           tileGroup.add(crown);
@@ -678,7 +692,10 @@ export class Track3D {
           // Slender antenna spire with red flashing beacon
           const spireHeight = 16.0;
           const spireGeo = new THREE.CylinderGeometry(0.12, 0.28, spireHeight, 6);
-          const spire = new THREE.Mesh(spireGeo, new THREE.MeshStandardMaterial({ color: 0x64748b }));
+          const spire = new THREE.Mesh(
+            spireGeo,
+            new THREE.MeshStandardMaterial({ color: 0x64748b })
+          );
           spire.position.set(posX, height + crownHeight + spireHeight / 2, posZ);
           tileGroup.add(spire);
 
@@ -711,10 +728,14 @@ export class Track3D {
     const gantry = new THREE.Group();
     const gH = 10.2;
     const gW = this.trackWidth + 6.5;
-    const steelMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.9, roughness: 0.3 });
+    const steelMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      metalness: 0.9,
+      roughness: 0.3
+    });
 
     // Side support posts beyond guardrails
-    [-gW / 2, gW / 2].forEach(px => {
+    [-gW / 2, gW / 2].forEach((px) => {
       const p = new THREE.Mesh(new THREE.BoxGeometry(0.9, gH, 0.9), steelMat);
       p.position.set(px, gH / 2, 0);
       gantry.add(p);
@@ -738,7 +759,7 @@ export class Track3D {
       gantry.add(signBoard);
 
       // Downward sign floodlights facing front of sign
-      [-5.5, 0, 5.5].forEach(fx => {
+      [-5.5, 0, 5.5].forEach((fx) => {
         const fixtureGeo = new THREE.BoxGeometry(0.8, 0.2, 0.5);
         const fixture = new THREE.Mesh(fixtureGeo, steelMat);
         fixture.position.set(fx, gH + 0.7, -0.9);
@@ -763,7 +784,7 @@ export class Track3D {
     const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9 });
     const glowMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
 
-    [-this.trackWidth / 2 - 2, this.trackWidth / 2 + 2].forEach(x => {
+    [-this.trackWidth / 2 - 2, this.trackWidth / 2 + 2].forEach((x) => {
       const col = new THREE.Mesh(new THREE.BoxGeometry(1.6, 16, 1.6), steelMat);
       col.position.set(x, 8, 0);
       group.add(col);
@@ -778,7 +799,11 @@ export class Track3D {
     group.add(banner);
 
     const finishLineGeo = new THREE.PlaneGeometry(this.trackWidth, 4.0);
-    const finishLineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.95 });
+    const finishLineMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.95
+    });
     const finishLine = new THREE.Mesh(finishLineGeo, finishLineMat);
     finishLine.rotation.x = -Math.PI / 2;
     finishLine.position.set(0, 0.04, 0);
@@ -910,13 +935,16 @@ export class Track3D {
       return this.simulation.steerLane(direction);
     }
     // Fallback if simulation not attached
-    this.currentLaneIndex = Math.max(0, Math.min(this.lanes.length - 1, this.currentLaneIndex + direction));
+    this.currentLaneIndex = Math.max(
+      0,
+      Math.min(this.lanes.length - 1, this.currentLaneIndex + direction)
+    );
     this.targetPlayerX = this.lanes[this.currentLaneIndex];
     return true;
   }
 
   setOpponents(opponentsList) {
-    this.opponentCars.forEach(op => {
+    this.opponentCars.forEach((op) => {
       this.scene.remove(op.mesh);
     });
     this.opponentCars.clear();
@@ -930,8 +958,9 @@ export class Track3D {
         underglowColor: opp.color || '#ffb800'
       });
 
-      const laneX = opp.laneX !== undefined ? opp.laneX : laneDistribution[idx % laneDistribution.length];
-      const startZ = opp.startZ !== undefined ? opp.startZ : (this.playerBaseZ + 7.0 - idx * 7.5);
+      const laneX =
+        opp.laneX !== undefined ? opp.laneX : laneDistribution[idx % laneDistribution.length];
+      const startZ = opp.startZ !== undefined ? opp.startZ : this.playerBaseZ + 7.0 - idx * 7.5;
 
       mesh.position.set(laneX, 0, startZ);
       mesh.rotation.y = 0; // Face forward along +Z
@@ -1003,7 +1032,7 @@ export class Track3D {
     // Smooth starting grid fade-out into actual progress delta
     const relProgress = progress - this.playerProgress;
     const startGridFactor = Math.max(0, 1.0 - this.playerProgress * 3.5);
-    opp.targetVisualZ = (opp.startZ * startGridFactor) + (relProgress * 95);
+    opp.targetVisualZ = opp.startZ * startGridFactor + relProgress * 95;
 
     if (opp.mesh && opp.mesh.userData.setNitro) {
       opp.mesh.userData.setNitro(wpm >= 70);
@@ -1120,7 +1149,7 @@ export class Track3D {
     this.worldZ += moveStep;
 
     // Recycle infinite road tiles
-    this.tiles.forEach(tile => {
+    this.tiles.forEach((tile) => {
       tile.group.position.z = tile.baseZ - this.worldZ;
 
       // When tile passes camera behind player, wrap it far ahead
@@ -1138,8 +1167,8 @@ export class Track3D {
 
     // Flash red aviation beacons on spires
     if (this.beaconLights.length > 0) {
-      const beaconFlash = (Math.sin(this.elapsedTime * 4.0) > 0.2);
-      this.beaconLights.forEach(b => {
+      const beaconFlash = Math.sin(this.elapsedTime * 4.0) > 0.2;
+      this.beaconLights.forEach((b) => {
         b.visible = beaconFlash;
       });
     }
@@ -1156,13 +1185,17 @@ export class Track3D {
         }
 
         const roll = steerDiff * 0.12;
-        const pitch = this.isBraking ? 0.07 : (-this.wpmRatio * 0.035);
+        const pitch = this.isBraking ? 0.07 : -this.wpmRatio * 0.035;
         if (this.playerCar.userData.setTilt) {
           this.playerCar.userData.setTilt(pitch, roll);
         }
       } else {
         // Smooth lateral lane change lerp
-        this.playerCar.position.x = THREE.MathUtils.lerp(this.playerCar.position.x, this.targetPlayerX, delta * 7.5);
+        this.playerCar.position.x = THREE.MathUtils.lerp(
+          this.playerCar.position.x,
+          this.targetPlayerX,
+          delta * 7.5
+        );
         this.playerCar.position.z = this.playerBaseZ;
 
         const steerDiff = this.targetPlayerX - this.playerCar.position.x;
@@ -1171,7 +1204,7 @@ export class Track3D {
         }
 
         const roll = steerDiff * 0.05;
-        const pitch = this.isBraking ? 0.07 : (-this.wpmRatio * 0.035);
+        const pitch = this.isBraking ? 0.07 : -this.wpmRatio * 0.035;
         if (this.playerCar.userData.setTilt) {
           this.playerCar.userData.setTilt(pitch, roll);
         }
@@ -1205,7 +1238,7 @@ export class Track3D {
         const pushBack = -this.wpmRatio * 0.6;
         const desiredCam = new THREE.Vector3(
           carPos.x * 0.68,
-          carPos.y + this.cameraOffset.y - (this.wpmRatio * 0.15),
+          carPos.y + this.cameraOffset.y - this.wpmRatio * 0.15,
           carPos.z + this.cameraOffset.z + pushBack
         );
 
@@ -1223,11 +1256,7 @@ export class Track3D {
         }
         this.camera.position.copy(this.smoothedCamPos);
 
-        const lookTarget = new THREE.Vector3(
-          carPos.x * 0.70,
-          carPos.y + 1.35,
-          carPos.z + 42
-        );
+        const lookTarget = new THREE.Vector3(carPos.x * 0.7, carPos.y + 1.35, carPos.z + 42);
         this.smoothedLookAt.lerp(lookTarget, delta * 9.0);
         this.camera.lookAt(this.smoothedLookAt);
       }
@@ -1235,7 +1264,7 @@ export class Track3D {
 
     // ---- WHEEL ROLLING ANIMATION ----
     // Spins strictly corresponding to actual travel speed
-    const wheelSpinSpeed = (this.playerSpeed * 0.45) * delta;
+    const wheelSpinSpeed = this.playerSpeed * 0.45 * delta;
     if (this.playerCar && this.playerCar.userData.spinWheels) {
       this.playerCar.userData.spinWheels(wheelSpinSpeed);
     }
@@ -1244,16 +1273,16 @@ export class Track3D {
     if (this.simulation) {
       const pDist = this.simulation.player.distance;
       this.opponentCars.forEach((opp) => {
-        const simOpp = this.simulation.opponents.find(o => o.id === opp.id);
+        const simOpp = this.simulation.opponents.find((o) => o.id === opp.id);
         if (simOpp && opp.mesh) {
           const relativeZ = this.playerBaseZ + (simOpp.distance - pDist);
           opp.mesh.position.set(simOpp.laneX, 0, relativeZ);
 
           // Visibility clipping
-          opp.mesh.visible = (relativeZ > -45 && relativeZ < 350);
+          opp.mesh.visible = relativeZ > -45 && relativeZ < 350;
 
           if (opp.mesh.userData.spinWheels) {
-            opp.mesh.userData.spinWheels((simOpp.speedMps * 0.45) * delta);
+            opp.mesh.userData.spinWheels(simOpp.speedMps * 0.45 * delta);
           }
           if (opp.mesh.userData.steerWheels) {
             opp.mesh.userData.steerWheels(simOpp.steerAngle);
@@ -1272,11 +1301,7 @@ export class Track3D {
         opp.currentX = opp.laneX + wander;
 
         if (opp.mesh && this.playerCar) {
-          opp.mesh.position.set(
-            opp.currentX,
-            0,
-            this.playerCar.position.z + opp.visualZ
-          );
+          opp.mesh.position.set(opp.currentX, 0, this.playerCar.position.z + opp.visualZ);
 
           if (opp.mesh.userData.spinWheels) {
             opp.mesh.userData.spinWheels((opp.wpm * 0.038 + 1.0) * delta);
@@ -1298,7 +1323,7 @@ export class Track3D {
       for (let i = 0; i < this.nitroVelocities.length; i++) {
         vel[i].life -= delta;
         if (vel[i].life <= 0) {
-          const side = (i % 2 === 0) ? -0.32 : 0.32;
+          const side = i % 2 === 0 ? -0.32 : 0.32;
           pos[i * 3 + 0] = carPos.x + side;
           pos[i * 3 + 1] = carPos.y + 0.22;
           pos[i * 3 + 2] = carPos.z - 2.2;
@@ -1401,7 +1426,7 @@ export class Track3D {
         }
         if (obj.material) {
           if (Array.isArray(obj.material)) {
-            obj.material.forEach(m => m.dispose());
+            obj.material.forEach((m) => m.dispose());
           } else {
             obj.material.dispose();
           }
@@ -1412,7 +1437,7 @@ export class Track3D {
     if (this.roadTexture) this.roadTexture.dispose();
     if (this.gantrySignTexture) this.gantrySignTexture.dispose();
     if (this.rooftopSignTexture) this.rooftopSignTexture.dispose();
-    if (this.windowTextures) this.windowTextures.forEach(t => t.dispose());
+    if (this.windowTextures) this.windowTextures.forEach((t) => t.dispose());
 
     if (this.renderer && this.renderer.domElement && this.renderer.domElement.parentNode) {
       this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);

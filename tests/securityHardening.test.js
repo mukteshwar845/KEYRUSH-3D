@@ -22,7 +22,10 @@ import { auditLogger } from '../src/utils/securityAuditLogger.js';
 import { AccountLifecycleManager, DeletionState } from '../src/utils/accountLifecycle.js';
 
 test('1. XSS Input Sanitization: escapeHtml neutralizes script tags, attributes, and special characters', () => {
-  assert.equal(escapeHtml('<script>alert("xss")</script>'), '&lt;script&gt;alert(&quot;xss&quot;)&lt;&#47;script&gt;');
+  assert.equal(
+    escapeHtml('<script>alert("xss")</script>'),
+    '&lt;script&gt;alert(&quot;xss&quot;)&lt;&#47;script&gt;'
+  );
   assert.equal(escapeHtml('Pilot" onerror="alert(1)'), 'Pilot&quot; onerror&#61;&quot;alert(1)');
   assert.equal(escapeHtml("Apex' or '1'='1"), 'Apex&#39; or &#39;1&#39;&#61;&#39;1');
   assert.equal(escapeHtml('`test`'), '&#96;test&#96;');
@@ -41,9 +44,9 @@ test('2. Prototype Pollution Defense: sanitizeObject strips __proto__, construct
   const clean = sanitizeObject(maliciousPayload, ['username']);
   assert.equal(clean.username, 'Hacker');
   assert.equal(clean.__proto__.polluted, undefined);
-  assert.equal(({}).polluted, undefined);
+  assert.equal({}.polluted, undefined);
   assert.equal(clean.constructor.prototype?.admin, undefined);
-  assert.equal(({}).admin, undefined);
+  assert.equal({}.admin, undefined);
 });
 
 test('3. Mass Assignment Prevention & Profile Validation', () => {
@@ -72,9 +75,9 @@ test('3. Mass Assignment Prevention & Profile Validation', () => {
 test('4. Settings Validation: Clamps volumes and constrains options to safe bounds', () => {
   const unconstrainedSettings = {
     masterVolume: 2.5, // Exceeds 1.0
-    sfxVolume: -0.5,   // Below 0.0
+    sfxVolume: -0.5, // Below 0.0
     theme: 'evil-theme', // Unrecognized
-    targetWpm: 9999,     // Exceeds realistic bounds
+    targetWpm: 9999, // Exceeds realistic bounds
     reducedMotion: true
   };
 

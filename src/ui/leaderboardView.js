@@ -9,16 +9,107 @@ import { downloadPerformanceCard } from '../utils/shareCard.js';
 import { renderAvatarMarkup } from './profileView.js';
 
 export const LEADERBOARD_SEED = [
-  { rank: 1, name: 'QuantumRacer', avatar: '👑', league: 'Apex Legend', wpm: 154, accuracy: 99.4, car: 'CHRONOS V12', country: 'SE' },
-  { rank: 2, name: 'NeonSpectre', avatar: '⚡', league: 'Apex Legend', wpm: 148, accuracy: 99.1, car: 'NEBULA ZX', country: 'JP' },
-  { rank: 3, name: 'Veloce_God', avatar: '🔥', league: 'Diamond I', wpm: 139, accuracy: 98.8, car: 'PHANTOM GT', country: 'US' },
-  { rank: 4, name: 'HyperCadence', avatar: '🏎️', league: 'Diamond II', wpm: 126, accuracy: 98.2, car: 'VORTEX R34', country: 'DE' },
-  { rank: 5, name: 'MatrixPilot', avatar: '🤖', league: 'Diamond III', wpm: 118, accuracy: 97.9, car: 'PHANTOM GT', country: 'KR' },
-  { rank: 6, name: 'TurboFingers', avatar: '💨', league: 'Platinum I', wpm: 110, accuracy: 97.5, car: 'TALON', country: 'UK' },
-  { rank: 7, name: 'AeroShift', avatar: '🎯', league: 'Platinum II', wpm: 104, accuracy: 97.0, car: 'VORTEX R34', country: 'FR' },
-  { rank: 8, name: 'ApexPhantom', avatar: '🏁', league: 'Platinum III', wpm: 96, accuracy: 96.8, car: 'PHANTOM GT', country: 'CA' },
-  { rank: 9, name: 'CyberRacer (You)', avatar: '🏎️', league: 'Silver II', wpm: 84, accuracy: 96.4, car: 'TALON', country: 'INT', isUser: true },
-  { rank: 10, name: 'CircuitRookie', avatar: '🌱', league: 'Silver III', wpm: 68, accuracy: 94.2, car: 'TALON', country: 'AU' }
+  {
+    rank: 1,
+    name: 'QuantumRacer',
+    avatar: '👑',
+    league: 'Apex Legend',
+    wpm: 154,
+    accuracy: 99.4,
+    car: 'CHRONOS V12',
+    country: 'SE'
+  },
+  {
+    rank: 2,
+    name: 'NeonSpectre',
+    avatar: '⚡',
+    league: 'Apex Legend',
+    wpm: 148,
+    accuracy: 99.1,
+    car: 'NEBULA ZX',
+    country: 'JP'
+  },
+  {
+    rank: 3,
+    name: 'Veloce_God',
+    avatar: '🔥',
+    league: 'Diamond I',
+    wpm: 139,
+    accuracy: 98.8,
+    car: 'PHANTOM GT',
+    country: 'US'
+  },
+  {
+    rank: 4,
+    name: 'HyperCadence',
+    avatar: '🏎️',
+    league: 'Diamond II',
+    wpm: 126,
+    accuracy: 98.2,
+    car: 'VORTEX R34',
+    country: 'DE'
+  },
+  {
+    rank: 5,
+    name: 'MatrixPilot',
+    avatar: '🤖',
+    league: 'Diamond III',
+    wpm: 118,
+    accuracy: 97.9,
+    car: 'PHANTOM GT',
+    country: 'KR'
+  },
+  {
+    rank: 6,
+    name: 'TurboFingers',
+    avatar: '💨',
+    league: 'Platinum I',
+    wpm: 110,
+    accuracy: 97.5,
+    car: 'TALON',
+    country: 'UK'
+  },
+  {
+    rank: 7,
+    name: 'AeroShift',
+    avatar: '🎯',
+    league: 'Platinum II',
+    wpm: 104,
+    accuracy: 97.0,
+    car: 'VORTEX R34',
+    country: 'FR'
+  },
+  {
+    rank: 8,
+    name: 'ApexPhantom',
+    avatar: '🏁',
+    league: 'Platinum III',
+    wpm: 96,
+    accuracy: 96.8,
+    car: 'PHANTOM GT',
+    country: 'CA'
+  },
+  {
+    rank: 9,
+    name: 'CyberRacer (You)',
+    avatar: '🏎️',
+    league: 'Silver II',
+    wpm: 84,
+    accuracy: 96.4,
+    car: 'TALON',
+    country: 'INT',
+    isUser: true
+  },
+  {
+    rank: 10,
+    name: 'CircuitRookie',
+    avatar: '🌱',
+    league: 'Silver III',
+    wpm: 68,
+    accuracy: 94.2,
+    car: 'TALON',
+    country: 'AU'
+  }
 ];
 
 export class LeaderboardView {
@@ -120,12 +211,19 @@ export class LeaderboardView {
                   </tr>
                 </thead>
                 <tbody>
-                  ${LEADERBOARD_SEED.map(entry => `
+                  ${LEADERBOARD_SEED.map(
+                    (entry) => `
                     <tr class="${entry.isUser ? 'user-row' : ''}">
                       <td class="rank-cell">
-                        ${entry.rank === 1 ? '<span class="crown">👑 1</span>' :
-                          entry.rank === 2 ? '<span class="silver-medal">🥈 2</span>' :
-                          entry.rank === 3 ? '<span class="bronze-medal">🥉 3</span>' : `#${entry.rank}`}
+                        ${
+                          entry.rank === 1
+                            ? '<span class="crown">👑 1</span>'
+                            : entry.rank === 2
+                              ? '<span class="silver-medal">🥈 2</span>'
+                              : entry.rank === 3
+                                ? '<span class="bronze-medal">🥉 3</span>'
+                                : `#${entry.rank}`
+                        }
                       </td>
                       <td class="pilot-cell">
                         <span class="pilot-icon">${entry.avatar}</span>
@@ -136,7 +234,8 @@ export class LeaderboardView {
                       <td class="font-mono text-positive">${entry.accuracy}%</td>
                       <td class="font-mono text-dim">${entry.car}</td>
                     </tr>
-                  `).join('')}
+                  `
+                  ).join('')}
                 </tbody>
               </table>
             </div>

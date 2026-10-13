@@ -2,7 +2,7 @@
  * KEYRUSH — Security & Privacy Audit Logger
  * Maintains a structured, in-memory log of security-sensitive events,
  * data exports, resets, deletions, and validation rejections.
- * 
+ *
  * Strict Redaction Rule: Never logs passwords, tokens, auth keys,
  * or unnecessary personal identifiers.
  */
@@ -46,11 +46,15 @@ class SecurityAuditLogger {
   }
 
   exportLogs() {
-    return JSON.stringify({
-      auditExportTime: new Date().toISOString(),
-      totalEntries: this.logs.length,
-      logs: this.logs
-    }, null, 2);
+    return JSON.stringify(
+      {
+        auditExportTime: new Date().toISOString(),
+        totalEntries: this.logs.length,
+        logs: this.logs
+      },
+      null,
+      2
+    );
   }
 
   clearLogs() {
@@ -60,7 +64,15 @@ class SecurityAuditLogger {
   _sanitizeDetails(details) {
     if (!details || typeof details !== 'object') return {};
     const sanitized = {};
-    const sensitiveKeys = new Set(['password', 'token', 'secret', 'key', 'auth', 'cookie', 'sessionToken']);
+    const sensitiveKeys = new Set([
+      'password',
+      'token',
+      'secret',
+      'key',
+      'auth',
+      'cookie',
+      'sessionToken'
+    ]);
 
     for (const [k, v] of Object.entries(details)) {
       if (sensitiveKeys.has(k.toLowerCase())) {

@@ -172,9 +172,9 @@ export class RaceView {
     const carThumb = CAR_THUMBNAILS[this.playerCarId] || '/images/cars/thumb-talon-gt.png';
     const carDisplayName = this.playerCarId.toUpperCase().replace('_', ' ');
 
-      const isMultiplayer = (this.raceConfig.mode === 'Multiplayer');
+    const isMultiplayer = this.raceConfig.mode === 'Multiplayer';
 
-      this.container.innerHTML = `
+    this.container.innerHTML = `
       <div class="race-screen-wrapper">
         <!-- 1. FULLSCREEN 3D RACING ARENA STAGE -->
         <div class="race-arena-stage" id="race-arena-stage">
@@ -422,7 +422,9 @@ export class RaceView {
       });
       this.track3D.setPlayerCar(this.playerCarId, this.paintColor, this.underglowColor);
       if (this.simulation) {
-        this.track3D.setSimulation(this.simulation, (telemetry) => this.handleTelemetryTick(telemetry));
+        this.track3D.setSimulation(this.simulation, (telemetry) =>
+          this.handleTelemetryTick(telemetry)
+        );
         this.track3D.setOpponents(this.simulation.opponents);
       }
       this.track3D.setCountdownState(true);
@@ -438,7 +440,7 @@ export class RaceView {
     const radarTrack = document.getElementById('track-radar-bar');
     if (!radarTrack) return;
 
-    opponentsData.forEach(opp => {
+    opponentsData.forEach((opp) => {
       const marker = document.createElement('div');
       marker.className = 'track-radar-dot opponent-dot';
       marker.id = `radar-opp-${opp.id}`;
@@ -466,7 +468,7 @@ export class RaceView {
 
     soundEffects.startEngine();
     soundEffects.playCountdown(count);
-    musicManager.duck(0.70, 350);
+    musicManager.duck(0.7, 350);
 
     this.countdownInterval = setInterval(() => {
       count--;
@@ -474,12 +476,12 @@ export class RaceView {
         if (numberEl) numberEl.textContent = '2';
         if (light1) light1.classList.add('active');
         soundEffects.playCountdown(2);
-        musicManager.duck(0.70, 350);
+        musicManager.duck(0.7, 350);
       } else if (count === 1) {
         if (numberEl) numberEl.textContent = '1';
         if (light2) light2.classList.add('active');
         soundEffects.playCountdown(1);
-        musicManager.duck(0.70, 350);
+        musicManager.duck(0.7, 350);
       } else if (count === 0) {
         if (numberEl) {
           numberEl.textContent = 'GO!';
@@ -488,7 +490,7 @@ export class RaceView {
         if (light3) light3.classList.add('active');
         soundEffects.playCountdown(0);
         soundEffects.playNitroBoost();
-        musicManager.duck(0.60, 500);
+        musicManager.duck(0.6, 500);
 
         if (this.track3D) {
           this.track3D.setCountdownState(false);
@@ -601,7 +603,7 @@ export class RaceView {
     if (progressFill) progressFill.style.width = `${progPercent}%`;
     if (playerMarker) playerMarker.style.left = `${progPercent}%`;
 
-    telemetry.opponents.forEach(opp => {
+    telemetry.opponents.forEach((opp) => {
       const marker = document.getElementById(`radar-opp-${opp.id}`);
       if (marker) {
         const oppPct = Math.min(100, Math.round(opp.progress * 100));
@@ -628,14 +630,16 @@ export class RaceView {
     // Standings rows list
     const listEl = document.getElementById('leaderboard-racers-list');
     if (listEl) {
-      listEl.innerHTML = telemetry.standings.map(r => {
-        const isPlayer = r.isPlayer;
-        const thumbKey = isPlayer ? 'player' : (r.id || 'nitro_phantom');
-        const thumbSrc = CAR_THUMBNAILS[thumbKey] || CAR_THUMBNAILS[r.carModel] || '/images/cars/thumb-you.png';
-        const gapDisplay = r.rank === 1 ? 'LEADER' : (r.gapText || '--');
-        const displayName = isPlayer ? (this.profile?.username || 'You') : r.name;
+      listEl.innerHTML = telemetry.standings
+        .map((r) => {
+          const isPlayer = r.isPlayer;
+          const thumbKey = isPlayer ? 'player' : r.id || 'nitro_phantom';
+          const thumbSrc =
+            CAR_THUMBNAILS[thumbKey] || CAR_THUMBNAILS[r.carModel] || '/images/cars/thumb-you.png';
+          const gapDisplay = r.rank === 1 ? 'LEADER' : r.gapText || '--';
+          const displayName = isPlayer ? this.profile?.username || 'You' : r.name;
 
-        return `
+          return `
           <div class="standings-row ${isPlayer ? 'player-active-row' : ''}">
             <span class="racer-livery-strip" style="background-color: ${r.color || '#00e5ff'};"></span>
             <span class="racer-rank-num font-mono rank-${r.rank}">${r.rank}</span>
@@ -656,7 +660,8 @@ export class RaceView {
             <div class="racer-gap font-mono ${r.rank === 1 ? 'leader' : ''}">${gapDisplay}</div>
           </div>
         `;
-      }).join('');
+        })
+        .join('');
     }
 
     // 4. Check Race Finish Condition
@@ -678,20 +683,20 @@ export class RaceView {
 
     // Transmission Gear Calculation
     if (gearEl) {
-      const gear = kmh < 35 ? 1 : (kmh < 75 ? 2 : (kmh < 120 ? 3 : (kmh < 165 ? 4 : (kmh < 210 ? 5 : 6))));
+      const gear = kmh < 35 ? 1 : kmh < 75 ? 2 : kmh < 120 ? 3 : kmh < 165 ? 4 : kmh < 210 ? 5 : 6;
       gearEl.textContent = gear.toString();
     }
 
     // SVG Circular Speedometer Fill Arc
     const ratio = Math.min(1.0, kmh / 260);
     if (arcFill) {
-      const offset = 320 - (ratio * 255);
+      const offset = 320 - ratio * 255;
       arcFill.style.strokeDashoffset = offset;
     }
 
     // 7-segment Vertical Nitro Gauge
     const streak = stats.currentStreak || 0;
-    const mps = speedMps !== null ? speedMps : (kmh / 3.6);
+    const mps = speedMps !== null ? speedMps : kmh / 3.6;
     const nitroRatio = Math.min(1.0, (mps / 62.0) * 0.7 + (streak / 25) * 0.3);
     const activeSegments = Math.round(nitroRatio * 7);
 
@@ -737,7 +742,7 @@ export class RaceView {
     if (this.aiGrid) this.aiGrid.stop();
 
     soundEffects.stopEngine();
-    musicManager.duck(0.50, 1100);
+    musicManager.duck(0.5, 1100);
     soundEffects.playVictoryFanfare();
 
     musicManager.playInterior(1500);
@@ -754,7 +759,7 @@ export class RaceView {
 
     const baseExp = Math.round(finalStats.wpm * 2.5);
     const accuracyBonus = Math.round(finalStats.accuracy * 1.5);
-    const rankBonus = this.playerRank === 1 ? 180 : (this.playerRank === 2 ? 100 : 50);
+    const rankBonus = this.playerRank === 1 ? 180 : this.playerRank === 2 ? 100 : 50;
     const totalXp = baseExp + accuracyBonus + rankBonus;
 
     const sessionRecord = {
@@ -783,7 +788,8 @@ export class RaceView {
       if (finalStats.wpm > (profile.bestWpm || 0)) {
         profile.bestWpm = finalStats.wpm;
       }
-      profile.totalPracticeTimeSec = (profile.totalPracticeTimeSec || 0) + Math.round(finalStats.elapsedSeconds);
+      profile.totalPracticeTimeSec =
+        (profile.totalPracticeTimeSec || 0) + Math.round(finalStats.elapsedSeconds);
 
       profile.weakKeys = profile.weakKeys || {};
       for (const [k, count] of Object.entries(finalStats.keyErrors)) {
@@ -801,7 +807,11 @@ export class RaceView {
         unlockedVehicleName = 'Phantom GT (Epic Supercar)';
         await storage.saveGarage(garage);
       }
-      if (finalStats.wpm >= 100 && finalStats.accuracy >= 98 && !garage.unlockedVehicles.includes('chronos')) {
+      if (
+        finalStats.wpm >= 100 &&
+        finalStats.accuracy >= 98 &&
+        !garage.unlockedVehicles.includes('chronos')
+      ) {
         garage.unlockedVehicles.push('chronos');
         unlockedVehicleName = 'Chronos V12 (Mythic Hypercar)';
         await storage.saveGarage(garage);
@@ -817,9 +827,12 @@ export class RaceView {
 
     modal.classList.remove('hidden');
 
-    const rankTitle = this.playerRank === 1
-      ? '🏆 1ST PLACE CHAMPION'
-      : (this.playerRank === 2 ? '🥈 2ND PLACE PODIUM' : `🏁 P${this.playerRank} FINISH`);
+    const rankTitle =
+      this.playerRank === 1
+        ? '🏆 1ST PLACE CHAMPION'
+        : this.playerRank === 2
+          ? '🥈 2ND PLACE PODIUM'
+          : `🏁 P${this.playerRank} FINISH`;
 
     modal.innerHTML = `
       <div class="results-card card-dark">
@@ -860,7 +873,9 @@ export class RaceView {
         <div class="results-standings-section">
           <h3 class="results-standings-title">FINAL GRID STANDINGS</h3>
           <div class="results-table">
-            ${this.currentStandings.map(r => `
+            ${this.currentStandings
+              .map(
+                (r) => `
               <div class="results-table-row ${r.isPlayer ? 'player-row' : ''}">
                 <span class="res-rank">P${r.rank}</span>
                 <span class="res-avatar">${r.avatar}</span>
@@ -868,11 +883,15 @@ export class RaceView {
                 <span class="res-wpm font-mono">${r.wpm} WPM</span>
                 <span class="res-acc font-mono">${r.accuracy}% ACC</span>
               </div>
-            `).join('')}
+            `
+              )
+              .join('')}
           </div>
         </div>
 
-        ${unlockedVehicleName ? `
+        ${
+          unlockedVehicleName
+            ? `
           <div class="unlock-alert-banner">
             <span class="alert-icon">🎁</span>
             <div class="alert-text">
@@ -881,7 +900,9 @@ export class RaceView {
             </div>
             <button class="btn btn-small btn-primary" data-nav="garage">View Garage</button>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
 
         <div class="results-actions">
           <button class="btn btn-primary btn-large glow-primary" id="btn-rematch">
@@ -907,9 +928,10 @@ export class RaceView {
 
     document.getElementById('btn-practice-weak-keys')?.addEventListener('click', () => {
       const weakKeys = Object.keys(stats.keyErrors);
-      const drillText = weakKeys.length > 0
-        ? weakKeys.map(k => `${k}${k}${k} ${k}a${k} ${k}e${k} ${k}o${k}`).join(' ')
-        : 'focus speed precision consistency accuracy flow rhythm cadence';
+      const drillText =
+        weakKeys.length > 0
+          ? weakKeys.map((k) => `${k}${k}${k} ${k}a${k} ${k}e${k} ${k}o${k}`).join(' ')
+          : 'focus speed precision consistency accuracy flow rhythm cadence';
       this.dispose();
       this.setup({ mode: 'Solo Practice', customText: drillText });
     });
@@ -1070,10 +1092,11 @@ export class RaceView {
 
   async enterFullscreen() {
     const target = document.documentElement || document.body;
-    const reqFn = target.requestFullscreen ||
-                  target.webkitRequestFullscreen ||
-                  target.mozRequestFullScreen ||
-                  target.msRequestFullscreen;
+    const reqFn =
+      target.requestFullscreen ||
+      target.webkitRequestFullscreen ||
+      target.mozRequestFullScreen ||
+      target.msRequestFullscreen;
 
     if (reqFn) {
       try {
@@ -1084,7 +1107,10 @@ export class RaceView {
         this.updateFullscreenUI();
         return;
       } catch (err) {
-        console.warn('Native requestFullscreen denied or failed, switching to pseudo-fullscreen fallback:', err);
+        console.warn(
+          'Native requestFullscreen denied or failed, switching to pseudo-fullscreen fallback:',
+          err
+        );
       }
     }
 
@@ -1106,10 +1132,11 @@ export class RaceView {
     );
 
     if (isNative) {
-      const exitFn = document.exitFullscreen ||
-                     document.webkitExitFullscreen ||
-                     document.mozCancelFullScreen ||
-                     document.msExitFullscreen;
+      const exitFn =
+        document.exitFullscreen ||
+        document.webkitExitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.msExitFullscreen;
       if (exitFn) {
         try {
           const promise = exitFn.call(document);

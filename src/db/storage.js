@@ -3,9 +3,12 @@
  * Offline-first persistent storage for player profiles, race sessions,
  * vehicle unlocks, daily streaks, missions, and configuration.
  */
-import { validateProfileSchema, validateSettingsSchema, sanitizeObject } from '../utils/security.js';
+import {
+  validateProfileSchema,
+  validateSettingsSchema,
+  sanitizeObject
+} from '../utils/security.js';
 import { auditLogger } from '../utils/securityAuditLogger.js';
-
 
 const DB_NAME = 'keyrush_database';
 const DB_VERSION = 1;
@@ -41,17 +44,108 @@ class KeyRushStorage {
           currentStreak: 7,
           longestStreak: 7,
           lastActiveDate: new Date().toISOString().split('T')[0],
-          weakKeys: { 'p': 5, 'q': 4, 'z': 3, 'x': 2 }
+          weakKeys: { p: 5, q: 4, z: 3, x: 2 }
         }
       },
       sessions: [
-        { timestamp: Date.now() - 86400000 * 6, mode: 'AI Racing', difficulty: 'ROOKIE', wpm: 58, accuracy: 94.2, errorCount: 6, duration: 42, won: true, opponentWpm: 48, cpm: 290, consistency: 88, keyErrors: { 'c': 2, 'v': 2, 'b': 2 } },
-        { timestamp: Date.now() - 86400000 * 5, mode: 'Solo Practice', difficulty: 'AMATEUR', wpm: 62, accuracy: 95.8, errorCount: 4, duration: 45, won: true, opponentWpm: 0, cpm: 310, consistency: 91, keyErrors: { 'r': 2, 't': 1, 'p': 1 } },
-        { timestamp: Date.now() - 86400000 * 4, mode: 'AI Racing', difficulty: 'AMATEUR', wpm: 66, accuracy: 96.1, errorCount: 3, duration: 41, won: true, opponentWpm: 60, cpm: 330, consistency: 93, keyErrors: { 'p': 2, 'q': 1 } },
-        { timestamp: Date.now() - 86400000 * 3, mode: 'Online Multiplayer', difficulty: 'PRO', wpm: 71, accuracy: 97.4, errorCount: 2, duration: 38, won: true, opponentWpm: 68, cpm: 355, consistency: 94, keyErrors: { 'z': 1, 'x': 1 } },
-        { timestamp: Date.now() - 86400000 * 2, mode: 'AI Racing', difficulty: 'PRO', wpm: 74, accuracy: 95.9, errorCount: 4, duration: 39, won: true, opponentWpm: 72, cpm: 370, consistency: 90, keyErrors: { 'b': 2, 'm': 2 } },
-        { timestamp: Date.now() - 86400000 * 1, mode: 'Solo Practice', difficulty: 'PRO', wpm: 79, accuracy: 98.2, errorCount: 1, duration: 36, won: true, opponentWpm: 0, cpm: 395, consistency: 96, keyErrors: { 'p': 1 } },
-        { timestamp: Date.now() - 3600000 * 3, mode: 'AI Racing', difficulty: 'PRO', wpm: 84, accuracy: 97.8, errorCount: 2, duration: 34, won: true, opponentWpm: 78, cpm: 420, consistency: 95, keyErrors: { 'q': 1, 'x': 1 } }
+        {
+          timestamp: Date.now() - 86400000 * 6,
+          mode: 'AI Racing',
+          difficulty: 'ROOKIE',
+          wpm: 58,
+          accuracy: 94.2,
+          errorCount: 6,
+          duration: 42,
+          won: true,
+          opponentWpm: 48,
+          cpm: 290,
+          consistency: 88,
+          keyErrors: { c: 2, v: 2, b: 2 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 5,
+          mode: 'Solo Practice',
+          difficulty: 'AMATEUR',
+          wpm: 62,
+          accuracy: 95.8,
+          errorCount: 4,
+          duration: 45,
+          won: true,
+          opponentWpm: 0,
+          cpm: 310,
+          consistency: 91,
+          keyErrors: { r: 2, t: 1, p: 1 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 4,
+          mode: 'AI Racing',
+          difficulty: 'AMATEUR',
+          wpm: 66,
+          accuracy: 96.1,
+          errorCount: 3,
+          duration: 41,
+          won: true,
+          opponentWpm: 60,
+          cpm: 330,
+          consistency: 93,
+          keyErrors: { p: 2, q: 1 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 3,
+          mode: 'Online Multiplayer',
+          difficulty: 'PRO',
+          wpm: 71,
+          accuracy: 97.4,
+          errorCount: 2,
+          duration: 38,
+          won: true,
+          opponentWpm: 68,
+          cpm: 355,
+          consistency: 94,
+          keyErrors: { z: 1, x: 1 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 2,
+          mode: 'AI Racing',
+          difficulty: 'PRO',
+          wpm: 74,
+          accuracy: 95.9,
+          errorCount: 4,
+          duration: 39,
+          won: true,
+          opponentWpm: 72,
+          cpm: 370,
+          consistency: 90,
+          keyErrors: { b: 2, m: 2 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 1,
+          mode: 'Solo Practice',
+          difficulty: 'PRO',
+          wpm: 79,
+          accuracy: 98.2,
+          errorCount: 1,
+          duration: 36,
+          won: true,
+          opponentWpm: 0,
+          cpm: 395,
+          consistency: 96,
+          keyErrors: { p: 1 }
+        },
+        {
+          timestamp: Date.now() - 3600000 * 3,
+          mode: 'AI Racing',
+          difficulty: 'PRO',
+          wpm: 84,
+          accuracy: 97.8,
+          errorCount: 2,
+          duration: 34,
+          won: true,
+          opponentWpm: 78,
+          cpm: 420,
+          consistency: 95,
+          keyErrors: { q: 1, x: 1 }
+        }
       ],
       garage: {
         user_garage: {
@@ -71,9 +165,9 @@ class KeyRushStorage {
           theme: 'cyber-dark',
           soundEffects: true,
           engineAudio: true,
-          sfxVolume: 0.60,
-          engineVolume: 0.50,
-          masterVolume: 0.80,
+          sfxVolume: 0.6,
+          engineVolume: 0.5,
+          masterVolume: 0.8,
           interiorVolume: 0.55,
           racingVolume: 0.65,
           musicMuted: false,
@@ -109,7 +203,10 @@ class KeyRushStorage {
 
         // Sessions store (all completed races & practices)
         if (!db.objectStoreNames.contains('sessions')) {
-          const sessionsStore = db.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
+          const sessionsStore = db.createObjectStore('sessions', {
+            keyPath: 'id',
+            autoIncrement: true
+          });
           sessionsStore.createIndex('timestamp', 'timestamp', { unique: false });
           sessionsStore.createIndex('mode', 'mode', { unique: false });
           sessionsStore.createIndex('difficulty', 'difficulty', { unique: false });
@@ -132,7 +229,10 @@ class KeyRushStorage {
 
         // Leaderboard store (local + synced)
         if (!db.objectStoreNames.contains('leaderboard')) {
-          const lbStore = db.createObjectStore('leaderboard', { keyPath: 'id', autoIncrement: true });
+          const lbStore = db.createObjectStore('leaderboard', {
+            keyPath: 'id',
+            autoIncrement: true
+          });
           lbStore.createIndex('wpm', 'wpm', { unique: false });
         }
       };
@@ -183,7 +283,7 @@ class KeyRushStorage {
         currentStreak: 7,
         longestStreak: 7,
         lastActiveDate: new Date().toISOString().split('T')[0],
-        weakKeys: { 'p': 5, 'q': 4, 'z': 3, 'x': 2 }
+        weakKeys: { p: 5, q: 4, z: 3, x: 2 }
       });
     }
 
@@ -207,9 +307,9 @@ class KeyRushStorage {
         theme: 'cyber-dark',
         soundEffects: true,
         engineAudio: true,
-        sfxVolume: 0.60,
-        engineVolume: 0.50,
-        masterVolume: 0.80,
+        sfxVolume: 0.6,
+        engineVolume: 0.5,
+        masterVolume: 0.8,
         interiorVolume: 0.55,
         racingVolume: 0.65,
         musicMuted: false,
@@ -232,11 +332,56 @@ class KeyRushStorage {
         streakDays: 4,
         calendarDays: [true, true, true, true, false, false, false],
         list: [
-          { id: 'm1', title: 'Speed Demon', desc: 'Reach 70 WPM in any race', target: 1, current: 1, rewardXp: 150, completed: true, claimed: false },
-          { id: 'm2', title: 'Precision Master', desc: 'Finish a race with ≥ 96% accuracy', target: 1, current: 0, rewardXp: 200, completed: false, claimed: false },
-          { id: 'm3', title: 'Endurance Sprint', desc: 'Complete 3 races today', target: 3, current: 2, rewardXp: 250, completed: false, claimed: false },
-          { id: 'm4', title: 'Touch-Typing Drill', desc: 'Finish 1 Academy lesson', target: 1, current: 0, rewardXp: 180, completed: false, claimed: false },
-          { id: 'm5', title: 'AI Challenger', desc: 'Defeat an Advanced AI opponent', target: 1, current: 0, rewardXp: 300, completed: false, claimed: false }
+          {
+            id: 'm1',
+            title: 'Speed Demon',
+            desc: 'Reach 70 WPM in any race',
+            target: 1,
+            current: 1,
+            rewardXp: 150,
+            completed: true,
+            claimed: false
+          },
+          {
+            id: 'm2',
+            title: 'Precision Master',
+            desc: 'Finish a race with ≥ 96% accuracy',
+            target: 1,
+            current: 0,
+            rewardXp: 200,
+            completed: false,
+            claimed: false
+          },
+          {
+            id: 'm3',
+            title: 'Endurance Sprint',
+            desc: 'Complete 3 races today',
+            target: 3,
+            current: 2,
+            rewardXp: 250,
+            completed: false,
+            claimed: false
+          },
+          {
+            id: 'm4',
+            title: 'Touch-Typing Drill',
+            desc: 'Finish 1 Academy lesson',
+            target: 1,
+            current: 0,
+            rewardXp: 180,
+            completed: false,
+            claimed: false
+          },
+          {
+            id: 'm5',
+            title: 'AI Challenger',
+            desc: 'Defeat an Advanced AI opponent',
+            target: 1,
+            current: 0,
+            rewardXp: 300,
+            completed: false,
+            claimed: false
+          }
         ]
       });
     }
@@ -245,13 +390,104 @@ class KeyRushStorage {
     const sessions = await this.getSessions();
     if (sessions.length === 0) {
       const sampleSessions = [
-        { timestamp: Date.now() - 86400000 * 6, mode: 'AI Racing', difficulty: 'ROOKIE', wpm: 58, accuracy: 94.2, errorCount: 6, duration: 42, won: true, opponentWpm: 48, cpm: 290, consistency: 88, keyErrors: { 'c': 2, 'v': 2, 'b': 2 } },
-        { timestamp: Date.now() - 86400000 * 5, mode: 'Solo Practice', difficulty: 'AMATEUR', wpm: 62, accuracy: 95.8, errorCount: 4, duration: 45, won: true, opponentWpm: 0, cpm: 310, consistency: 91, keyErrors: { 'r': 2, 't': 1, 'p': 1 } },
-        { timestamp: Date.now() - 86400000 * 4, mode: 'AI Racing', difficulty: 'AMATEUR', wpm: 66, accuracy: 96.1, errorCount: 3, duration: 41, won: true, opponentWpm: 60, cpm: 330, consistency: 93, keyErrors: { 'p': 2, 'q': 1 } },
-        { timestamp: Date.now() - 86400000 * 3, mode: 'Online Multiplayer', difficulty: 'PRO', wpm: 71, accuracy: 97.4, errorCount: 2, duration: 38, won: true, opponentWpm: 68, cpm: 355, consistency: 94, keyErrors: { 'z': 1, 'x': 1 } },
-        { timestamp: Date.now() - 86400000 * 2, mode: 'AI Racing', difficulty: 'PRO', wpm: 74, accuracy: 95.9, errorCount: 4, duration: 39, won: true, opponentWpm: 72, cpm: 370, consistency: 90, keyErrors: { 'b': 2, 'm': 2 } },
-        { timestamp: Date.now() - 86400000 * 1, mode: 'Solo Practice', difficulty: 'PRO', wpm: 79, accuracy: 98.2, errorCount: 1, duration: 36, won: true, opponentWpm: 0, cpm: 395, consistency: 96, keyErrors: { 'p': 1 } },
-        { timestamp: Date.now() - 3600000 * 3, mode: 'AI Racing', difficulty: 'PRO', wpm: 84, accuracy: 97.8, errorCount: 2, duration: 34, won: true, opponentWpm: 78, cpm: 420, consistency: 95, keyErrors: { 'q': 1, 'x': 1 } }
+        {
+          timestamp: Date.now() - 86400000 * 6,
+          mode: 'AI Racing',
+          difficulty: 'ROOKIE',
+          wpm: 58,
+          accuracy: 94.2,
+          errorCount: 6,
+          duration: 42,
+          won: true,
+          opponentWpm: 48,
+          cpm: 290,
+          consistency: 88,
+          keyErrors: { c: 2, v: 2, b: 2 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 5,
+          mode: 'Solo Practice',
+          difficulty: 'AMATEUR',
+          wpm: 62,
+          accuracy: 95.8,
+          errorCount: 4,
+          duration: 45,
+          won: true,
+          opponentWpm: 0,
+          cpm: 310,
+          consistency: 91,
+          keyErrors: { r: 2, t: 1, p: 1 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 4,
+          mode: 'AI Racing',
+          difficulty: 'AMATEUR',
+          wpm: 66,
+          accuracy: 96.1,
+          errorCount: 3,
+          duration: 41,
+          won: true,
+          opponentWpm: 60,
+          cpm: 330,
+          consistency: 93,
+          keyErrors: { p: 2, q: 1 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 3,
+          mode: 'Online Multiplayer',
+          difficulty: 'PRO',
+          wpm: 71,
+          accuracy: 97.4,
+          errorCount: 2,
+          duration: 38,
+          won: true,
+          opponentWpm: 68,
+          cpm: 355,
+          consistency: 94,
+          keyErrors: { z: 1, x: 1 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 2,
+          mode: 'AI Racing',
+          difficulty: 'PRO',
+          wpm: 74,
+          accuracy: 95.9,
+          errorCount: 4,
+          duration: 39,
+          won: true,
+          opponentWpm: 72,
+          cpm: 370,
+          consistency: 90,
+          keyErrors: { b: 2, m: 2 }
+        },
+        {
+          timestamp: Date.now() - 86400000 * 1,
+          mode: 'Solo Practice',
+          difficulty: 'PRO',
+          wpm: 79,
+          accuracy: 98.2,
+          errorCount: 1,
+          duration: 36,
+          won: true,
+          opponentWpm: 0,
+          cpm: 395,
+          consistency: 96,
+          keyErrors: { p: 1 }
+        },
+        {
+          timestamp: Date.now() - 3600000 * 3,
+          mode: 'AI Racing',
+          difficulty: 'PRO',
+          wpm: 84,
+          accuracy: 97.8,
+          errorCount: 2,
+          duration: 34,
+          won: true,
+          opponentWpm: 78,
+          cpm: 420,
+          consistency: 95,
+          keyErrors: { q: 1, x: 1 }
+        }
       ];
       for (const s of sampleSessions) {
         await this.addSession(s);
@@ -313,7 +549,10 @@ class KeyRushStorage {
     await this.ready;
     const validated = validateProfileSchema(profile);
     const cleanProfile = validated.sanitized;
-    auditLogger.log('PROFILE_SAVED', { username: cleanProfile.username, visibility: cleanProfile.visibility });
+    auditLogger.log('PROFILE_SAVED', {
+      username: cleanProfile.username,
+      visibility: cleanProfile.visibility
+    });
 
     if (!this.db) {
       this.memoryStore.profile['user_profile'] = cleanProfile;
@@ -467,11 +706,11 @@ class KeyRushStorage {
       req.onsuccess = () => {
         const res = req.result;
         if (res) {
-          if (res.masterVolume === undefined) res.masterVolume = 0.80;
+          if (res.masterVolume === undefined) res.masterVolume = 0.8;
           if (res.interiorVolume === undefined) res.interiorVolume = 0.55;
           if (res.racingVolume === undefined) res.racingVolume = 0.65;
-          if (res.sfxVolume === undefined) res.sfxVolume = 0.60;
-          if (res.engineVolume === undefined) res.engineVolume = 0.50;
+          if (res.sfxVolume === undefined) res.sfxVolume = 0.6;
+          if (res.engineVolume === undefined) res.engineVolume = 0.5;
           if (res.musicMuted === undefined) res.musicMuted = false;
         }
         resolve(res || null);
@@ -506,16 +745,20 @@ class KeyRushStorage {
     const missions = await this.getMissions();
     const sessions = await this.getSessions(1000);
 
-    return JSON.stringify({
-      exportDate: new Date().toISOString(),
-      app: 'KEYRUSH',
-      version: '1.0.0',
-      profile,
-      garage,
-      settings,
-      missions,
-      sessions
-    }, null, 2);
+    return JSON.stringify(
+      {
+        exportDate: new Date().toISOString(),
+        app: 'KEYRUSH',
+        version: '1.0.0',
+        profile,
+        garage,
+        settings,
+        missions,
+        sessions
+      },
+      null,
+      2
+    );
   }
 
   async importFullData(jsonString) {
@@ -553,7 +796,7 @@ class KeyRushStorage {
     return new Promise((resolve) => {
       const stores = ['profile', 'sessions', 'garage', 'missions', 'settings', 'leaderboard'];
       const tx = this.db.transaction(stores, 'readwrite');
-      stores.forEach(s => tx.objectStore(s).clear());
+      stores.forEach((s) => tx.objectStore(s).clear());
       tx.oncomplete = async () => {
         await this.seedDefaults();
         resolve(true);

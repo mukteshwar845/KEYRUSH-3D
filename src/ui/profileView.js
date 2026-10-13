@@ -44,11 +44,19 @@ export const BUILTIN_AVATARS = [
 ];
 
 // Helper to render avatar HTML correctly whether it's an image, data URL, or emoji
-export function renderAvatarMarkup(avatarSource, altText = 'Pilot', className = 'profile-avatar-img') {
+export function renderAvatarMarkup(
+  avatarSource,
+  altText = 'Pilot',
+  className = 'profile-avatar-img'
+) {
   if (!avatarSource) {
     return `<img src="/images/ui/avatar-kartik.png" alt="${altText}" class="${className}" />`;
   }
-  if (avatarSource.startsWith('data:') || avatarSource.startsWith('/') || avatarSource.startsWith('http')) {
+  if (
+    avatarSource.startsWith('data:') ||
+    avatarSource.startsWith('/') ||
+    avatarSource.startsWith('http')
+  ) {
     return `<img src="${avatarSource}" alt="${altText}" class="${className}" onerror="this.onerror=null; this.src='/images/ui/avatar-kartik.png';" />`;
   }
   // Emoji string fallback
@@ -298,7 +306,9 @@ export class ProfileView {
           <section class="profile-section" aria-label="Career Milestones">
             <h2 class="profile-section-heading">Career Milestones</h2>
             <div class="achievements-list card-dark">
-              ${achievements.map(ach => `
+              ${achievements
+                .map(
+                  (ach) => `
                 <div class="achievement-row ${ach.unlocked ? 'unlocked' : 'locked'}">
                   <div class="ach-icon-box ${ach.unlocked ? 'ach-glow' : ''}">
                     ${ach.icon}
@@ -317,7 +327,9 @@ export class ProfileView {
                     <span class="ach-progress-text font-mono">${ach.progressText}</span>
                   </div>
                 </div>
-              `).join('')}
+              `
+                )
+                .join('')}
             </div>
           </section>
         </div>
@@ -329,11 +341,15 @@ export class ProfileView {
               <h2 class="profile-section-heading">Recent Race Sessions</h2>
               <p class="profile-section-sub">Detailed logs from your most recent high-speed typing competitions.</p>
             </div>
-            ${this.sessions.length > 0 ? `
+            ${
+              this.sessions.length > 0
+                ? `
               <button class="btn btn-outline btn-small" data-nav="analytics">
                 View Full Analytics →
               </button>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
 
           ${this.renderRecentSessions(this.sessions)}
@@ -434,14 +450,16 @@ export class ProfileView {
                 <!-- Built-in Avatars Palette -->
                 <div class="builtin-avatars-label">Or choose an official cyber avatar:</div>
                 <div class="builtin-avatars-grid">
-                  ${BUILTIN_AVATARS.map(item => `
+                  ${BUILTIN_AVATARS.map(
+                    (item) => `
                     <button type="button" 
                             class="builtin-avatar-option ${(this.pendingAvatar || this.profile?.avatar) === item.url ? 'selected' : ''}" 
                             data-avatar-url="${item.url}" 
                             title="${item.label}">
                       <img src="${item.url}" alt="${item.label}" class="builtin-avatar-thumb" />
                     </button>
-                  `).join('')}
+                  `
+                  ).join('')}
                 </div>
               </div>
 
@@ -575,7 +593,7 @@ export class ProfileView {
 
   calculateVerifiedStats(profile, sessions) {
     const sessionCount = sessions.length;
-    const sessionWins = sessions.filter(s => s.won).length;
+    const sessionWins = sessions.filter((s) => s.won).length;
 
     const totalRaces = Math.max(profile?.racesPlayed || 0, sessionCount);
     const totalWins = Math.max(profile?.racesWon || 0, sessionWins);
@@ -583,7 +601,7 @@ export class ProfileView {
 
     let bestWpm = profile?.bestWpm || 0;
     if (sessionCount > 0) {
-      bestWpm = Math.max(bestWpm, ...sessions.map(s => s.wpm || 0));
+      bestWpm = Math.max(bestWpm, ...sessions.map((s) => s.wpm || 0));
     }
 
     let averageWpm = profile?.averageWpm || 0;
@@ -604,7 +622,8 @@ export class ProfileView {
     const longestStreak = Math.max(profile?.longestStreak || 0, currentStreak);
 
     // Total play time formatting
-    const totalSecs = profile?.totalPracticeTimeSec || (sessions.reduce((acc, s) => acc + (s.duration || 30), 0));
+    const totalSecs =
+      profile?.totalPracticeTimeSec || sessions.reduce((acc, s) => acc + (s.duration || 30), 0);
     const hours = Math.floor(totalSecs / 3600);
     const minutes = Math.floor((totalSecs % 3600) / 60);
     const playtimeFormatted = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
@@ -641,7 +660,7 @@ export class ProfileView {
     let favoriteCircuit = 'Neo-Tokyo Expressway';
     if (sessions.length > 0) {
       const circuitCounts = {};
-      sessions.forEach(s => {
+      sessions.forEach((s) => {
         const mode = s.mode || 'AI Racing';
         circuitCounts[mode] = (circuitCounts[mode] || 0) + 1;
       });
@@ -706,9 +725,11 @@ export class ProfileView {
         title: 'Flawless Lap',
         desc: 'Finish a race session with 100% accuracy',
         icon: '👑',
-        unlocked: sessions.some(s => s.accuracy >= 100),
-        percent: sessions.some(s => s.accuracy >= 100) ? 100 : 0,
-        progressText: sessions.some(s => s.accuracy >= 100) ? '100% Achieved' : 'Pending 100% Race'
+        unlocked: sessions.some((s) => s.accuracy >= 100),
+        percent: sessions.some((s) => s.accuracy >= 100) ? 100 : 0,
+        progressText: sessions.some((s) => s.accuracy >= 100)
+          ? '100% Achieved'
+          : 'Pending 100% Race'
       },
       {
         id: 'ach-podium',
@@ -792,7 +813,9 @@ export class ProfileView {
             </tr>
           </thead>
           <tbody>
-            ${recentList.map(s => `
+            ${recentList
+              .map(
+                (s) => `
               <tr>
                 <td class="font-mono text-muted">${this.formatTimestamp(s.timestamp)}</td>
                 <td>
@@ -800,9 +823,10 @@ export class ProfileView {
                   <small class="diff-tag">${this.escapeHtml(s.difficulty || 'AMATEUR')}</small>
                 </td>
                 <td>
-                  ${s.won 
-                    ? `<span class="result-badge badge-win">🥇 1st Place</span>` 
-                    : `<span class="result-badge badge-finish">🏁 Finished</span>`
+                  ${
+                    s.won
+                      ? `<span class="result-badge badge-win">🥇 1st Place</span>`
+                      : `<span class="result-badge badge-finish">🏁 Finished</span>`
                   }
                 </td>
                 <td class="text-right font-mono highlight-cyan">
@@ -818,7 +842,9 @@ export class ProfileView {
                   ${s.duration || 30}s
                 </td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       </div>
@@ -861,12 +887,12 @@ export class ProfileView {
 
     // 5. Preset Avatar Pickers
     const builtinBtns = document.querySelectorAll('.builtin-avatar-option');
-    builtinBtns.forEach(btn => {
+    builtinBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
         soundEffects.playUiClick();
         const url = btn.getAttribute('data-avatar-url');
         this.pendingAvatar = url;
-        builtinBtns.forEach(b => b.classList.remove('selected'));
+        builtinBtns.forEach((b) => b.classList.remove('selected'));
         btn.classList.add('selected');
         this.updatePreviewAvatar(url);
       });
@@ -881,7 +907,7 @@ export class ProfileView {
     resetAvatarBtn?.addEventListener('click', () => {
       soundEffects.playUiClick();
       this.pendingAvatar = '/images/ui/avatar-kartik.png';
-      builtinBtns.forEach(b => b.classList.remove('selected'));
+      builtinBtns.forEach((b) => b.classList.remove('selected'));
       const defaultBtn = document.querySelector('[data-avatar-url="/images/ui/avatar-kartik.png"]');
       if (defaultBtn) defaultBtn.classList.add('selected');
       this.updatePreviewAvatar(this.pendingAvatar);
@@ -972,9 +998,9 @@ export class ProfileView {
 
     // 11. Radio Cards for Visibility in Modal
     const radioCards = document.querySelectorAll('.radio-card');
-    radioCards.forEach(card => {
+    radioCards.forEach((card) => {
       card.addEventListener('click', () => {
-        radioCards.forEach(c => c.classList.remove('selected'));
+        radioCards.forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
         const radio = card.querySelector('input[type="radio"]');
         if (radio) radio.checked = true;
@@ -1055,7 +1081,9 @@ export class ProfileView {
         this.updatePreviewAvatar(compressedDataUrl);
 
         // Clear selection on preset buttons
-        document.querySelectorAll('.builtin-avatar-option').forEach(b => b.classList.remove('selected'));
+        document
+          .querySelectorAll('.builtin-avatar-option')
+          .forEach((b) => b.classList.remove('selected'));
         soundEffects.playUiClick();
       };
       img.onerror = () => {
@@ -1114,7 +1142,8 @@ export class ProfileView {
     if (errBio) errBio.textContent = this.editErrors.bio || '';
 
     if (nameInput) nameInput.classList.toggle('input-error', Boolean(this.editErrors.username));
-    if (callsignInput) callsignInput.classList.toggle('input-error', Boolean(this.editErrors.callsign));
+    if (callsignInput)
+      callsignInput.classList.toggle('input-error', Boolean(this.editErrors.callsign));
     if (bioInput) bioInput.classList.toggle('input-error', Boolean(this.editErrors.bio));
 
     if (Object.keys(this.editErrors).length > 0) {

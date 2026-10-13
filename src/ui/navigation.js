@@ -385,9 +385,12 @@ export class NavigationManager {
 
     // Update .active class on all sidebar buttons
     const navBtns = document.querySelectorAll('.dash-nav-btn');
-    navBtns.forEach(btn => {
+    navBtns.forEach((btn) => {
       const navTarget = btn.getAttribute('data-nav');
-      if (navTarget === targetNav || (navTarget === 'race-modes' && (screenId === 'race' || screenId === 'ai-select'))) {
+      if (
+        navTarget === targetNav ||
+        (navTarget === 'race-modes' && (screenId === 'race' || screenId === 'ai-select'))
+      ) {
         btn.classList.add('active');
       } else {
         btn.classList.remove('active');
@@ -425,8 +428,6 @@ export class NavigationManager {
         return;
       }
 
-
-
       // Notification toggle
       const notifyBtn = e.target.closest('#dash-notify-btn');
       if (notifyBtn) {
@@ -437,7 +438,12 @@ export class NavigationManager {
 
       // Close notification popover if clicked outside
       const popover = document.getElementById('notify-popover');
-      if (popover && !popover.classList.contains('hidden') && !e.target.closest('#notify-popover') && !e.target.closest('#dash-notify-btn')) {
+      if (
+        popover &&
+        !popover.classList.contains('hidden') &&
+        !e.target.closest('#notify-popover') &&
+        !e.target.closest('#dash-notify-btn')
+      ) {
         popover.classList.add('hidden');
       }
 
@@ -532,25 +538,95 @@ export class NavigationManager {
     if (!resultsContainer) return;
 
     const items = [
-      { title: 'Home Dashboard', desc: 'Performance stats, quick actions & overview', nav: 'dashboard', icon: '🏠' },
-      { title: 'Showcase Landing Page', desc: 'Cinematic game showcase, features & live demo', nav: 'landing', icon: '✨' },
-      { title: 'Race Mode Hub', desc: 'Solo, AI Grid, Multiplayer & Championships', nav: 'race-modes', icon: '🏎️' },
-      { title: 'Practice Benchmark', desc: 'Typing speed & accuracy diagnostic test', nav: 'diagnostic', icon: '🎯' },
-      { title: 'Touch-Typing Academy', desc: 'Mastery curriculum from home row to code', nav: 'academy', icon: '🎓' },
-      { title: 'Supercar Garage', desc: '3D showroom, custom liveries & underglow', nav: 'garage', icon: '🛠️' },
-      { title: 'Ranked Leaderboard', desc: 'Global rankings & competitive league tiers', nav: 'leaderboard', icon: '🏆' },
-      { title: 'Telemetry & Statistics', desc: 'WPM trends, accuracy curves & key analytics', nav: 'analytics', icon: '📈' },
-      { title: 'Tournaments & Directives', desc: 'Weekly Grand Prix cups & daily missions', nav: 'missions', icon: '🛡️' },
-      { title: 'System & Audio Settings', desc: 'Configure engine audio, themes & calibration', nav: 'settings', icon: '⚙️' },
-      { title: 'Privacy Policy & Data Protection', desc: 'Review offline-first data retention and rights', nav: 'legal', icon: '🛡️' },
-      { title: 'Terms of Service & Fair Play', desc: 'Esports anti-botting code and game rules', nav: 'legal', icon: '📜' },
-      { title: 'Security & Vulnerability Disclosure', desc: 'Report security findings responsibly', nav: 'legal', icon: '🔒' },
-      { title: 'Account Deletion & Data Erasure', desc: 'Execute permanent account deletion workflow', nav: 'settings', icon: '🗑️' }
+      {
+        title: 'Home Dashboard',
+        desc: 'Performance stats, quick actions & overview',
+        nav: 'dashboard',
+        icon: '🏠'
+      },
+      {
+        title: 'Showcase Landing Page',
+        desc: 'Cinematic game showcase, features & live demo',
+        nav: 'landing',
+        icon: '✨'
+      },
+      {
+        title: 'Race Mode Hub',
+        desc: 'Solo, AI Grid, Multiplayer & Championships',
+        nav: 'race-modes',
+        icon: '🏎️'
+      },
+      {
+        title: 'Practice Benchmark',
+        desc: 'Typing speed & accuracy diagnostic test',
+        nav: 'diagnostic',
+        icon: '🎯'
+      },
+      {
+        title: 'Touch-Typing Academy',
+        desc: 'Mastery curriculum from home row to code',
+        nav: 'academy',
+        icon: '🎓'
+      },
+      {
+        title: 'Supercar Garage',
+        desc: '3D showroom, custom liveries & underglow',
+        nav: 'garage',
+        icon: '🛠️'
+      },
+      {
+        title: 'Ranked Leaderboard',
+        desc: 'Global rankings & competitive league tiers',
+        nav: 'leaderboard',
+        icon: '🏆'
+      },
+      {
+        title: 'Telemetry & Statistics',
+        desc: 'WPM trends, accuracy curves & key analytics',
+        nav: 'analytics',
+        icon: '📈'
+      },
+      {
+        title: 'Tournaments & Directives',
+        desc: 'Weekly Grand Prix cups & daily missions',
+        nav: 'missions',
+        icon: '🛡️'
+      },
+      {
+        title: 'System & Audio Settings',
+        desc: 'Configure engine audio, themes & calibration',
+        nav: 'settings',
+        icon: '⚙️'
+      },
+      {
+        title: 'Privacy Policy & Data Protection',
+        desc: 'Review offline-first data retention and rights',
+        nav: 'legal',
+        icon: '🛡️'
+      },
+      {
+        title: 'Terms of Service & Fair Play',
+        desc: 'Esports anti-botting code and game rules',
+        nav: 'legal',
+        icon: '📜'
+      },
+      {
+        title: 'Security & Vulnerability Disclosure',
+        desc: 'Report security findings responsibly',
+        nav: 'legal',
+        icon: '🔒'
+      },
+      {
+        title: 'Account Deletion & Data Erasure',
+        desc: 'Execute permanent account deletion workflow',
+        nav: 'settings',
+        icon: '🗑️'
+      }
     ];
 
     const q = query.toLowerCase().trim();
-    const filtered = items.filter(item => 
-      !q || item.title.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q)
+    const filtered = items.filter(
+      (item) => !q || item.title.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q)
     );
 
     if (filtered.length === 0) {
@@ -560,7 +636,9 @@ export class NavigationManager {
       return;
     }
 
-    resultsContainer.innerHTML = filtered.map(item => `
+    resultsContainer.innerHTML = filtered
+      .map(
+        (item) => `
       <div class="palette-item" role="button" data-nav="${item.nav}">
         <span class="palette-item-icon">${item.icon}</span>
         <div class="palette-item-text">
@@ -569,10 +647,12 @@ export class NavigationManager {
         </div>
         <span class="palette-item-arrow">→</span>
       </div>
-    `).join('');
+    `
+      )
+      .join('');
 
     // Attach click events to results
-    resultsContainer.querySelectorAll('.palette-item').forEach(el => {
+    resultsContainer.querySelectorAll('.palette-item').forEach((el) => {
       el.addEventListener('click', () => {
         const navTarget = el.getAttribute('data-nav');
         this.closeSearchPalette();

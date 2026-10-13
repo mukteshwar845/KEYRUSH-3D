@@ -180,7 +180,7 @@ export class DiagnosticView {
     });
 
     // Manual tier selection buttons
-    this.container.querySelectorAll('.select-tier-btn').forEach(btn => {
+    this.container.querySelectorAll('.select-tier-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
         const tier = btn.getAttribute('data-tier');
         this.app.showScreen('race', { difficulty: tier });
@@ -292,16 +292,20 @@ export class DiagnosticView {
 
     if (stats.wpm < 40 || stats.accuracy < 92) {
       recommendedTier = 'ROOKIE';
-      reasoning = 'Focusing on building clean muscle memory and home-row key reaches before pushing maximum top speed.';
+      reasoning =
+        'Focusing on building clean muscle memory and home-row key reaches before pushing maximum top speed.';
     } else if (stats.wpm < 70 && stats.accuracy >= 92) {
       recommendedTier = 'AMATEUR';
-      reasoning = 'Solid foundation with consistent rhythm. Ready to build fluid sentence endurance and higher average velocity.';
+      reasoning =
+        'Solid foundation with consistent rhythm. Ready to build fluid sentence endurance and higher average velocity.';
     } else if (stats.wpm < 95 && stats.accuracy >= 95) {
       recommendedTier = 'PRO';
-      reasoning = 'High velocity and strong precision. Ready for championship Grand Prix pacing, numbers, and punctuation.';
+      reasoning =
+        'High velocity and strong precision. Ready for championship Grand Prix pacing, numbers, and punctuation.';
     } else {
       recommendedTier = 'ELITE';
-      reasoning = 'Elite esports mastery. Ready for complex developer syntax, intense symbol distribution, and triple-digit WPM.';
+      reasoning =
+        'Elite esports mastery. Ready for complex developer syntax, intense symbol distribution, and triple-digit WPM.';
     }
 
     const recBox = document.getElementById('diag-recommendation-box');

@@ -37,13 +37,16 @@ export class DashboardView {
     const accuracy = this.profile.accuracy || 96;
     const bestWpm = this.profile.bestWpm || 112;
     const bestAccuracy = 98;
-    const totalPracticeSec = this.profile.totalPracticeTimeSec || (6 * 3600 + 42 * 60);
+    const totalPracticeSec = this.profile.totalPracticeTimeSec || 6 * 3600 + 42 * 60;
     const practiceHours = Math.floor(totalPracticeSec / 3600);
     const practiceMins = Math.floor((totalPracticeSec % 3600) / 60);
     const xpPoints = (this.profile.xp || 2480).toLocaleString();
     const level = this.profile.level || 6;
     const streakDays = this.profile.currentStreak || 7;
-    const username = (this.profile.username && this.profile.username !== 'CyberRacer') ? this.profile.username : 'Kartik';
+    const username =
+      this.profile.username && this.profile.username !== 'CyberRacer'
+        ? this.profile.username
+        : 'Kartik';
 
     this.container.innerHTML = `
       <div class="dash-body-container">
@@ -630,7 +633,6 @@ export class DashboardView {
       }
     });
 
-
     // 6. User chip profile shortcut
     document.getElementById('dash-user-chip')?.addEventListener('click', () => {
       soundEffects.playUiClick();
@@ -640,7 +642,9 @@ export class DashboardView {
     // 7. Notification bell
     document.getElementById('dash-notify-btn')?.addEventListener('click', () => {
       soundEffects.playUiClick();
-      alert('Active Directive: Complete 15 minutes of daily practice to earn +250 XP and unlock exclusive neon underglow colors!');
+      alert(
+        'Active Directive: Complete 15 minutes of daily practice to earn +250 XP and unlock exclusive neon underglow colors!'
+      );
     });
   }
 

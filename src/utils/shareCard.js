@@ -3,7 +3,16 @@
  * Creates high-resolution 1200x630 shareable graphics for Twitter, Discord, and esports bragging rights.
  */
 
-export function generatePerformanceCard({ username, wpm, accuracy, consistency, rank, carName, mode, date }) {
+export function generatePerformanceCard({
+  username,
+  wpm,
+  accuracy,
+  consistency,
+  rank,
+  carName,
+  mode,
+  date
+}) {
   const canvas = document.createElement('canvas');
   canvas.width = 1200;
   canvas.height = 630;

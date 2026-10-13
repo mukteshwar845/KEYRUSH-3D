@@ -25,7 +25,7 @@ export class LegalView {
   }
 
   async render(initialTab = 'privacy') {
-    if (LEGAL_TABS.some(t => t.id === initialTab)) {
+    if (LEGAL_TABS.some((t) => t.id === initialTab)) {
       this.activeTab = initialTab;
     }
 
@@ -48,14 +48,16 @@ export class LegalView {
               <span class="legal-nav-title">Policies</span>
             </div>
             <ul class="legal-tabs-list">
-              ${LEGAL_TABS.map(tab => `
+              ${LEGAL_TABS.map(
+                (tab) => `
                 <li>
                   <button class="legal-tab-btn ${this.activeTab === tab.id ? 'active' : ''}" data-legal-tab="${tab.id}">
                     <span class="tab-icon">${tab.icon}</span>
                     <span class="tab-label">${tab.label}</span>
                   </button>
                 </li>
-              `).join('')}
+              `
+              ).join('')}
             </ul>
 
             <div class="legal-sidebar-actions">
@@ -77,7 +79,7 @@ export class LegalView {
   }
 
   bindEvents() {
-    this.container.querySelectorAll('[data-legal-tab]').forEach(btn => {
+    this.container.querySelectorAll('[data-legal-tab]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const tabId = btn.getAttribute('data-legal-tab');
@@ -85,7 +87,9 @@ export class LegalView {
         this.activeTab = tabId;
 
         // Update active class
-        this.container.querySelectorAll('.legal-tab-btn').forEach(b => b.classList.remove('active'));
+        this.container
+          .querySelectorAll('.legal-tab-btn')
+          .forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
 
         // Swap document content
@@ -97,7 +101,7 @@ export class LegalView {
       });
     });
 
-    this.container.querySelectorAll('[data-nav]').forEach(btn => {
+    this.container.querySelectorAll('[data-nav]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const target = btn.getAttribute('data-nav');

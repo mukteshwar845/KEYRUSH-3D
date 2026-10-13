@@ -23,11 +23,11 @@ export const AUDIO_PATHS = {
 };
 
 export const RECOMMENDED_AUDIO_MIX = {
-  masterVolume: 0.80,   // 80% Master
+  masterVolume: 0.8, // 80% Master
   interiorVolume: 0.55, // 55% of Master (Effective: ~44% output — rich ambient soundtrack)
-  racingVolume: 0.65,   // 65% of Master (Effective: ~52% output — energetic race soundtrack)
-  sfxVolume: 0.60,      // 60% of Master
-  engineVolume: 0.50,   // 50% of Master
+  racingVolume: 0.65, // 65% of Master (Effective: ~52% output — energetic race soundtrack)
+  sfxVolume: 0.6, // 60% of Master
+  engineVolume: 0.5, // 50% of Master
   musicMuted: false
 };
 
@@ -269,11 +269,13 @@ class MusicManager {
         this.interiorAudio.volume = 0;
         const playPromise = this.interiorAudio.play();
         if (playPromise !== undefined) {
-          playPromise.then(() => {
-            this._fadeInTrack(this.interiorAudio, 'interior', fadeDurationMs);
-          }).catch(() => {
-            this._pendingMode = 'interior';
-          });
+          playPromise
+            .then(() => {
+              this._fadeInTrack(this.interiorAudio, 'interior', fadeDurationMs);
+            })
+            .catch(() => {
+              this._pendingMode = 'interior';
+            });
         }
       } else {
         this.interiorAudio.volume = targetVol;
@@ -307,11 +309,13 @@ class MusicManager {
 
       const playPromise = this.racingAudio.play();
       if (playPromise !== undefined) {
-        playPromise.then(() => {
-          this._fadeInTrack(this.racingAudio, 'racing', fadeDurationMs);
-        }).catch(() => {
-          this._pendingMode = 'racing';
-        });
+        playPromise
+          .then(() => {
+            this._fadeInTrack(this.racingAudio, 'racing', fadeDurationMs);
+          })
+          .catch(() => {
+            this._pendingMode = 'racing';
+          });
       }
     }
   }
@@ -404,8 +408,10 @@ class MusicManager {
   fadeOutAndStop(fadeMs = 500) {
     this._pendingMode = null;
     this._cancelDuck();
-    if ((!this.interiorAudio.paused && this.interiorAudio.volume > 0) ||
-        (!this.racingAudio.paused && this.racingAudio.volume > 0)) {
+    if (
+      (!this.interiorAudio.paused && this.interiorAudio.volume > 0) ||
+      (!this.racingAudio.paused && this.racingAudio.volume > 0)
+    ) {
       this._cancelFade();
       const startInterior = this.interiorAudio.volume;
       const startRacing = this.racingAudio.volume;
@@ -448,14 +454,16 @@ class MusicManager {
       const elapsed = now - startTime;
       const progress = Math.min(1, elapsed / durationMs);
       const ease = Math.sin((progress * Math.PI) / 2); // Smooth ease-out swell
-      const currentTarget = mode === 'racing' ? this.getTargetRacingVolume() : this.getTargetInteriorVolume();
+      const currentTarget =
+        mode === 'racing' ? this.getTargetRacingVolume() : this.getTargetInteriorVolume();
 
       audioElement.volume = Math.max(0, Math.min(1, currentTarget * ease));
 
       if (progress < 1) {
         this._fadeAnimationId = requestAnimationFrame(step);
       } else {
-        const finalTarget = mode === 'racing' ? this.getTargetRacingVolume() : this.getTargetInteriorVolume();
+        const finalTarget =
+          mode === 'racing' ? this.getTargetRacingVolume() : this.getTargetInteriorVolume();
         audioElement.volume = finalTarget;
         this._fadeAnimationId = null;
       }
@@ -495,9 +503,13 @@ class MusicManager {
       const fadeOutFactor = Math.cos((progress * Math.PI) / 2);
       const fadeInFactor = Math.sin((progress * Math.PI) / 2);
 
-      const targetIncoming = targetMode === 'racing' ? this.getTargetRacingVolume() : this.getTargetInteriorVolume();
+      const targetIncoming =
+        targetMode === 'racing' ? this.getTargetRacingVolume() : this.getTargetInteriorVolume();
 
-      incomingAudio.volume = Math.max(0, Math.min(1, startIncomingVol + (targetIncoming - startIncomingVol) * fadeInFactor));
+      incomingAudio.volume = Math.max(
+        0,
+        Math.min(1, startIncomingVol + (targetIncoming - startIncomingVol) * fadeInFactor)
+      );
       outgoingAudio.volume = Math.max(0, Math.min(1, startOutgoingVol * fadeOutFactor));
 
       if (progress < 1) {
@@ -594,7 +606,9 @@ class MusicManager {
     this.muted = !this.muted;
     this.applySettings({ musicMuted: this.muted });
     if (persist) await this._persistSettings();
-    window.dispatchEvent(new CustomEvent('keyrush:audio-toggle', { detail: { muted: this.muted } }));
+    window.dispatchEvent(
+      new CustomEvent('keyrush:audio-toggle', { detail: { muted: this.muted } })
+    );
     return this.muted;
   }
 
@@ -602,7 +616,9 @@ class MusicManager {
     this.muted = Boolean(isMuted);
     this.applySettings({ musicMuted: this.muted });
     if (persist) await this._persistSettings();
-    window.dispatchEvent(new CustomEvent('keyrush:audio-toggle', { detail: { muted: this.muted } }));
+    window.dispatchEvent(
+      new CustomEvent('keyrush:audio-toggle', { detail: { muted: this.muted } })
+    );
     return this.muted;
   }
 

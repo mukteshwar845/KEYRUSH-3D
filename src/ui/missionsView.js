@@ -24,7 +24,7 @@ export class MissionsView {
     const streak = profile?.currentStreak || 4;
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     const calendarDays = missions?.calendarDays || [true, true, true, true, false, false, false];
-    const availableCount = (missions?.list || []).filter(m => !m.claimed).length;
+    const availableCount = (missions?.list || []).filter((m) => !m.claimed).length;
 
     this.container.innerHTML = `
       <div class="dash-page-container missions-page-container">
@@ -79,12 +79,16 @@ export class MissionsView {
             <!-- 7-Day Week Row -->
             <div class="streak-strip-calendar">
               <div class="calendar-days-strip">
-                ${days.map((d, i) => `
-                  <div class="cal-day-cell ${calendarDays[i] ? 'is-complete' : (i === streak ? 'is-today' : '')}">
+                ${days
+                  .map(
+                    (d, i) => `
+                  <div class="cal-day-cell ${calendarDays[i] ? 'is-complete' : i === streak ? 'is-today' : ''}">
                     <span class="cal-day-name">${d}</span>
                     <span class="cal-day-mark">${calendarDays[i] ? '✓' : '—'}</span>
                   </div>
-                `).join('')}
+                `
+                  )
+                  .join('')}
               </div>
             </div>
           </div>
@@ -137,15 +141,16 @@ export class MissionsView {
           </div>
 
           <div class="directives-list-wrap">
-            ${(missions?.list || []).map(m => {
-              const isClaimed = m.completed && m.claimed;
-              const isReady = m.completed && !m.claimed;
-              const pct = Math.min(100, Math.round((m.current / m.target) * 100));
+            ${(missions?.list || [])
+              .map((m) => {
+                const isClaimed = m.completed && m.claimed;
+                const isReady = m.completed && !m.claimed;
+                const pct = Math.min(100, Math.round((m.current / m.target) * 100));
 
-              return `
+                return `
                 <div class="directive-row ${isReady ? 'is-ready' : ''} ${isClaimed ? 'is-claimed' : ''}">
                   <div class="directive-status-indicator">
-                    ${isClaimed ? '✓' : (isReady ? '★' : '○')}
+                    ${isClaimed ? '✓' : isReady ? '★' : '○'}
                   </div>
 
                   <div class="directive-details">
@@ -164,21 +169,28 @@ export class MissionsView {
                   </div>
 
                   <div class="directive-action-col">
-                    ${isReady ? `
+                    ${
+                      isReady
+                        ? `
                       <button class="btn btn-primary btn-claim glow-primary" data-mission-id="${m.id}">
                         Claim +${m.rewardXp} XP
                       </button>
-                    ` : isClaimed ? `
+                    `
+                        : isClaimed
+                          ? `
                       <span class="claimed-badge font-mono">Claimed</span>
-                    ` : `
+                    `
+                          : `
                       <button class="btn btn-outline btn-small" data-nav="race">
                         Start →
                       </button>
-                    `}
+                    `
+                    }
                   </div>
                 </div>
               `;
-            }).join('')}
+              })
+              .join('')}
           </div>
         </section>
 
@@ -229,11 +241,11 @@ export class MissionsView {
   }
 
   bindEvents(missions, profile) {
-    this.container.querySelectorAll('.btn-claim').forEach(btn => {
+    this.container.querySelectorAll('.btn-claim').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         e.preventDefault();
         const id = btn.getAttribute('data-mission-id');
-        const mission = missions?.list?.find(m => m.id === id);
+        const mission = missions?.list?.find((m) => m.id === id);
         if (mission && !mission.claimed) {
           mission.claimed = true;
           profile.xp = (profile.xp || 0) + mission.rewardXp;
@@ -262,7 +274,7 @@ export class MissionsView {
       });
     });
 
-    this.container.querySelectorAll('[data-nav]').forEach(btn => {
+    this.container.querySelectorAll('[data-nav]').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const target = btn.getAttribute('data-nav');

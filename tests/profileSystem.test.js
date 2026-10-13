@@ -1,11 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { 
-  renderAvatarMarkup, 
-  ProfileView, 
-  BUILTIN_AVATARS 
-} from '../src/ui/profileView.js';
+import { renderAvatarMarkup, ProfileView, BUILTIN_AVATARS } from '../src/ui/profileView.js';
 
 test('1. Avatar markup renderer handles images, data URLs, emojis, and fallbacks', () => {
   // Empty or undefined fallback
@@ -45,9 +41,33 @@ test('2. Verified gaming statistics: calculated accurately from sessions and pro
   };
 
   const mockSessions = [
-    { timestamp: Date.now() - 300000, mode: 'AI Racing', wpm: 90, accuracy: 98.0, errorCount: 1, duration: 40, won: true },
-    { timestamp: Date.now() - 600000, mode: 'AI Racing', wpm: 80, accuracy: 96.0, errorCount: 2, duration: 42, won: true },
-    { timestamp: Date.now() - 900000, mode: 'Solo Practice', wpm: 70, accuracy: 94.0, errorCount: 3, duration: 45, won: false }
+    {
+      timestamp: Date.now() - 300000,
+      mode: 'AI Racing',
+      wpm: 90,
+      accuracy: 98.0,
+      errorCount: 1,
+      duration: 40,
+      won: true
+    },
+    {
+      timestamp: Date.now() - 600000,
+      mode: 'AI Racing',
+      wpm: 80,
+      accuracy: 96.0,
+      errorCount: 2,
+      duration: 42,
+      won: true
+    },
+    {
+      timestamp: Date.now() - 900000,
+      mode: 'Solo Practice',
+      wpm: 70,
+      accuracy: 94.0,
+      errorCount: 3,
+      duration: 45,
+      won: false
+    }
   ];
 
   const stats = view.calculateVerifiedStats(mockProfile, mockSessions);
@@ -106,37 +126,35 @@ test('4. Achievements unlocks correctly correlate with telemetry records', () =>
     currentStreak: 7
   };
 
-  const sessionsWithFlawless = [
-    { wpm: 85, accuracy: 100, won: true }
-  ];
+  const sessionsWithFlawless = [{ wpm: 85, accuracy: 100, won: true }];
 
   const achs = view.calculateAchievements(stats, {}, sessionsWithFlawless);
 
-  const speedDemon = achs.find(a => a.id === 'ach-speed-demon');
+  const speedDemon = achs.find((a) => a.id === 'ach-speed-demon');
   assert.ok(speedDemon);
   assert.equal(speedDemon.unlocked, true); // bestWpm >= 80
 
-  const supersonic = achs.find(a => a.id === 'ach-supersonic');
+  const supersonic = achs.find((a) => a.id === 'ach-supersonic');
   assert.ok(supersonic);
   assert.equal(supersonic.unlocked, true); // bestWpm >= 100
 
-  const precisionMaster = achs.find(a => a.id === 'ach-precision-pilot');
+  const precisionMaster = achs.find((a) => a.id === 'ach-precision-pilot');
   assert.ok(precisionMaster);
   assert.equal(precisionMaster.unlocked, true); // accuracy >= 96%
 
-  const flawless = achs.find(a => a.id === 'ach-flawless');
+  const flawless = achs.find((a) => a.id === 'ach-flawless');
   assert.ok(flawless);
   assert.equal(flawless.unlocked, true); // has session with 100% accuracy
 
-  const podium = achs.find(a => a.id === 'ach-podium');
+  const podium = achs.find((a) => a.id === 'ach-podium');
   assert.ok(podium);
   assert.equal(podium.unlocked, true); // totalWins >= 10
 
-  const veteran = achs.find(a => a.id === 'ach-veteran');
+  const veteran = achs.find((a) => a.id === 'ach-veteran');
   assert.ok(veteran);
   assert.equal(veteran.unlocked, true); // totalRaces >= 25
 
-  const streak = achs.find(a => a.id === 'ach-streak');
+  const streak = achs.find((a) => a.id === 'ach-streak');
   assert.ok(streak);
   assert.equal(streak.unlocked, true); // currentStreak >= 7
 
@@ -149,7 +167,7 @@ test('4. Achievements unlocks correctly correlate with telemetry records', () =>
     currentStreak: 1
   };
   const noviceAchs = view.calculateAchievements(noviceStats, {}, []);
-  const noviceSpeed = noviceAchs.find(a => a.id === 'ach-speed-demon');
+  const noviceSpeed = noviceAchs.find((a) => a.id === 'ach-speed-demon');
   assert.equal(noviceSpeed.unlocked, false);
 });
 
@@ -177,15 +195,15 @@ test('5. Equipped vehicle identity: specs and customizations derived accurately'
 
 test('6. Built-in avatar catalog includes official cyberpunk presets', () => {
   assert.ok(BUILTIN_AVATARS.length >= 6);
-  const kartik = BUILTIN_AVATARS.find(a => a.id === 'pilot-kartik');
+  const kartik = BUILTIN_AVATARS.find((a) => a.id === 'pilot-kartik');
   assert.ok(kartik);
   assert.equal(kartik.url, '/images/ui/avatar-kartik.png');
 
-  const combat = BUILTIN_AVATARS.find(a => a.id === 'pilot-combat');
+  const combat = BUILTIN_AVATARS.find((a) => a.id === 'pilot-combat');
   assert.ok(combat);
   assert.equal(combat.url, '/images/ui/pilot-avatar.png');
 
-  const viper = BUILTIN_AVATARS.find(a => a.id === 'pilot-neon-viper');
+  const viper = BUILTIN_AVATARS.find((a) => a.id === 'pilot-neon-viper');
   assert.ok(viper);
   assert.ok(viper.url.startsWith('data:image/svg+xml'));
 });
@@ -283,4 +301,3 @@ test('10. Career data export: produces valid JSON with profile, garage, settings
   assert.ok(parsed.settings);
   assert.ok(Array.isArray(parsed.sessions));
 });
-

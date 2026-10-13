@@ -10,7 +10,6 @@ import { musicManager } from '../audio/musicManager.js';
 import { NotificationManager } from '../utils/notifications.js';
 import { accountLifecycle } from '../utils/accountLifecycle.js';
 
-
 export class SettingsView {
   constructor(container, app) {
     this.container = container;
@@ -116,8 +115,8 @@ export class SettingsView {
                 <span>Overall game volume level</span>
               </div>
               <div class="slider-with-label">
-                <input type="range" id="setting-master-vol" min="0" max="1" step="0.05" value="${settings?.masterVolume ?? 0.80}" class="custom-slider">
-                <span class="vol-label-val font-mono" id="master-vol-val">${Math.round((settings?.masterVolume ?? 0.80) * 100)}%</span>
+                <input type="range" id="setting-master-vol" min="0" max="1" step="0.05" value="${settings?.masterVolume ?? 0.8}" class="custom-slider">
+                <span class="vol-label-val font-mono" id="master-vol-val">${Math.round((settings?.masterVolume ?? 0.8) * 100)}%</span>
               </div>
             </div>
 
@@ -149,8 +148,8 @@ export class SettingsView {
                 <span>Countdown beeps, nitro turbo, mechanical switches, and victory fanfare</span>
               </div>
               <div class="slider-with-label">
-                <input type="range" id="setting-sfx-vol" min="0" max="1" step="0.05" value="${settings?.sfxVolume ?? 0.60}" class="custom-slider">
-                <span class="vol-label-val font-mono" id="sfx-vol-val">${Math.round((settings?.sfxVolume ?? 0.60) * 100)}%</span>
+                <input type="range" id="setting-sfx-vol" min="0" max="1" step="0.05" value="${settings?.sfxVolume ?? 0.6}" class="custom-slider">
+                <span class="vol-label-val font-mono" id="sfx-vol-val">${Math.round((settings?.sfxVolume ?? 0.6) * 100)}%</span>
               </div>
             </div>
 
@@ -395,10 +394,10 @@ export class SettingsView {
     const musicBadge = document.getElementById('setting-music-badge');
 
     const handleLiveAudioUpdate = () => {
-      const masterVolume = parseFloat(masterSlider?.value ?? 0.80);
+      const masterVolume = parseFloat(masterSlider?.value ?? 0.8);
       const interiorVolume = parseFloat(interiorSlider?.value ?? 0.55);
       const racingVolume = parseFloat(racingSlider?.value ?? 0.65);
-      const sfxVolume = parseFloat(sfxSlider?.value ?? 0.60);
+      const sfxVolume = parseFloat(sfxSlider?.value ?? 0.6);
       const isMusicEnabled = Boolean(musicToggle?.checked);
       const musicMuted = !isMusicEnabled;
 
@@ -483,11 +482,13 @@ export class SettingsView {
       const errorPenalty = document.getElementById('setting-error-penalty')?.value || 'standard';
       const targetWpm = parseInt(document.getElementById('setting-target-wpm')?.value, 10) || 80;
       const dailyGoal = parseInt(document.getElementById('setting-daily-goal')?.value, 10) || 15;
-      const keyboardClickSound = document.getElementById('setting-click-sound')?.value || 'cherry-blue';
+      const keyboardClickSound =
+        document.getElementById('setting-click-sound')?.value || 'cherry-blue';
       const engineAudio = document.getElementById('setting-engine-audio')?.checked ?? true;
-      const sfxVolume = parseFloat(document.getElementById('setting-sfx-vol')?.value) || 0.60;
-      const masterVolume = parseFloat(document.getElementById('setting-master-vol')?.value) || 0.80;
-      const interiorVolume = parseFloat(document.getElementById('setting-interior-vol')?.value) || 0.55;
+      const sfxVolume = parseFloat(document.getElementById('setting-sfx-vol')?.value) || 0.6;
+      const masterVolume = parseFloat(document.getElementById('setting-master-vol')?.value) || 0.8;
+      const interiorVolume =
+        parseFloat(document.getElementById('setting-interior-vol')?.value) || 0.55;
       const racingVolume = parseFloat(document.getElementById('setting-racing-vol')?.value) || 0.65;
       const isMusicEnabled = Boolean(document.getElementById('setting-music-enabled')?.checked);
       const musicMuted = !isMusicEnabled;
@@ -572,7 +573,11 @@ export class SettingsView {
 
     // Reset database
     document.getElementById('btn-reset-db')?.addEventListener('click', async () => {
-      if (confirm('Are you sure you want to clear all local data? This will reset your vehicles, streaks, and sessions to defaults.')) {
+      if (
+        confirm(
+          'Are you sure you want to clear all local data? This will reset your vehicles, streaks, and sessions to defaults.'
+        )
+      ) {
         await storage.clearAllData();
         alert('Data reset to defaults.');
         window.location.reload();

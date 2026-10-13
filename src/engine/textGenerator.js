@@ -6,35 +6,35 @@
 
 export const PASSAGE_DATABASE = {
   ROOKIE: [
-    "all fall dad glass flask half salad ask dash jack lake glad fall hall jazz sad flash glad",
-    "the cat ran fast down the dark road to see the old red car on the hill with joy and fun",
-    "keep your hands calm on the home row keys and let your fingers find each letter smoothly",
-    "simple words build quick habits for every racer who wants to become the fastest driver here",
-    "a quick start makes a great lap time so look ahead and feel the rhythm of your typing speed"
+    'all fall dad glass flask half salad ask dash jack lake glad fall hall jazz sad flash glad',
+    'the cat ran fast down the dark road to see the old red car on the hill with joy and fun',
+    'keep your hands calm on the home row keys and let your fingers find each letter smoothly',
+    'simple words build quick habits for every racer who wants to become the fastest driver here',
+    'a quick start makes a great lap time so look ahead and feel the rhythm of your typing speed'
   ],
   AMATEUR: [
-    "Speed and precision define true champions on the circuit. Keep your focus sharp and your hands steady.",
-    "Every keystroke accelerates your engine forward. Maintain an even cadence to avoid sudden engine stalls.",
-    "The secret to fast typing is relaxing your shoulders, staying on the home row, and breathing with each sentence.",
-    "Driving at eighty miles an hour requires absolute anticipation. You must read two words ahead of what you type.",
-    "Consistent daily practice creates muscle memory faster than any single marathon session on the keyboard."
+    'Speed and precision define true champions on the circuit. Keep your focus sharp and your hands steady.',
+    'Every keystroke accelerates your engine forward. Maintain an even cadence to avoid sudden engine stalls.',
+    'The secret to fast typing is relaxing your shoulders, staying on the home row, and breathing with each sentence.',
+    'Driving at eighty miles an hour requires absolute anticipation. You must read two words ahead of what you type.',
+    'Consistent daily practice creates muscle memory faster than any single marathon session on the keyboard.'
   ],
   PRO: [
-    "In competitive motorsports, victory belongs not merely to the boldest driver, but to the one whose telemetry shows flawless execution across every single sector of the course.",
-    "High-speed aerodynamic efficiency demands zero wasted movement; similarly, elite touch-typists minimize finger travel distance across the keyboard layout to achieve triple-digit WPM.",
-    "Under intense championship pressure, maintaining 99% typing accuracy yields a significantly higher average velocity than reckless bursts punctuated by repeated backspace stalls.",
-    "The twin-turbocharged engine roars as you approach turn four at 185 mph, your fingers dancing seamlessly across the mechanical switches without a fraction of hesitation.",
-    "Telemetry analysis confirms that smooth throttle modulation through corner apexes directly parallels consistent inter-keystroke timing in professional typing tournaments."
+    'In competitive motorsports, victory belongs not merely to the boldest driver, but to the one whose telemetry shows flawless execution across every single sector of the course.',
+    'High-speed aerodynamic efficiency demands zero wasted movement; similarly, elite touch-typists minimize finger travel distance across the keyboard layout to achieve triple-digit WPM.',
+    'Under intense championship pressure, maintaining 99% typing accuracy yields a significantly higher average velocity than reckless bursts punctuated by repeated backspace stalls.',
+    'The twin-turbocharged engine roars as you approach turn four at 185 mph, your fingers dancing seamlessly across the mechanical switches without a fraction of hesitation.',
+    'Telemetry analysis confirms that smooth throttle modulation through corner apexes directly parallels consistent inter-keystroke timing in professional typing tournaments.'
   ],
   ELITE: [
-    "async function raceLoop(delta: number, wpm: number): Promise<TelemetryReport> { const throttle = Math.min(1.0, wpm / 120.0); return await telemetry.sync({ throttle, latencyMs: 14.2 }); }",
-    "const apexVector = new Vector3(Math.cos(theta) * radius, 0.0, Math.sin(theta) * radius); const driftCoefficient = (slipAngle > 0.15) ? 0.82 : 1.0; vehicle.applyForce(apexVector.multiplyScalar(driftCoefficient));",
+    'async function raceLoop(delta: number, wpm: number): Promise<TelemetryReport> { const throttle = Math.min(1.0, wpm / 120.0); return await telemetry.sync({ throttle, latencyMs: 14.2 }); }',
+    'const apexVector = new Vector3(Math.cos(theta) * radius, 0.0, Math.sin(theta) * radius); const driftCoefficient = (slipAngle > 0.15) ? 0.82 : 1.0; vehicle.applyForce(apexVector.multiplyScalar(driftCoefficient));',
     "The hypercar's carbon-ceramic braking threshold (deceleration > 2.4g) requires millisecond precision: [P1 = 0x7F, P2 = 0x3C, status: 'NOMINAL', boost_psi: 28.6, rpm: 9200];",
-    "Touch-typing at 140+ WPM with nested brackets { [ (x, y) => x !== null && y.length > 0 ] } separates amateur keystrokes from Grand Prix esports dominance.",
-    "export type ChampionshipLeaderboard = Record<string, { rank: number; bestWpm: number; accuracy: number; trophies: string[] }>; const topTen = Object.values(board).sort((a,b) => b.bestWpm - a.bestWpm);"
+    'Touch-typing at 140+ WPM with nested brackets { [ (x, y) => x !== null && y.length > 0 ] } separates amateur keystrokes from Grand Prix esports dominance.',
+    'export type ChampionshipLeaderboard = Record<string, { rank: number; bestWpm: number; accuracy: number; trophies: string[] }>; const topTen = Object.values(board).sort((a,b) => b.bestWpm - a.bestWpm);'
   ],
   DIAGNOSTIC: [
-    "Welcome to the KeyRush diagnostic assessment. Type naturally without rushing or pausing. This test evaluates your raw speed, inter-key timing consistency, and error distribution across home-row and peripheral keys to calibrate your optimal racing championship league tier."
+    'Welcome to the KeyRush diagnostic assessment. Type naturally without rushing or pausing. This test evaluates your raw speed, inter-key timing consistency, and error distribution across home-row and peripheral keys to calibrate your optimal racing championship league tier.'
   ],
   ACADEMY: {
     'home-row-1': {

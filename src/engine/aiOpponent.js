@@ -151,7 +151,7 @@ export class AiOpponent {
     let delay = Math.max(35, baseDelayMs + jitter);
 
     // Simulate occasional error based on accuracy rating
-    const makeError = (Math.random() * 100) > this.config.accuracy;
+    const makeError = Math.random() * 100 > this.config.accuracy;
     if (makeError) {
       this.errors++;
       delay += this.config.errorRecoveryDelayMs;
@@ -164,7 +164,7 @@ export class AiOpponent {
       this.progress = Math.min(1.0, this.typedChars / this.totalChars);
 
       const elapsedMin = Math.max(0.01, (performance.now() - this.startTime) / 60000);
-      this.currentWpm = Math.round((this.typedChars / 5) / elapsedMin);
+      this.currentWpm = Math.round(this.typedChars / 5 / elapsedMin);
 
       if (onUpdate) {
         onUpdate({
@@ -229,7 +229,11 @@ export class AiOpponentGrid {
     let selectedKeys = [];
     if (this.difficulty === 'NOVICE' || this.difficulty === 'ROOKIE') {
       selectedKeys = ['beginner', 'drift_king', 'intermediate', 'adaptive'];
-    } else if (this.difficulty === 'PRO' || this.difficulty === 'EXPERT' || this.difficulty === 'CHAMPION') {
+    } else if (
+      this.difficulty === 'PRO' ||
+      this.difficulty === 'EXPERT' ||
+      this.difficulty === 'CHAMPION'
+    ) {
       selectedKeys = ['advanced', 'ghost_rider', 'titan_overdrive', 'expert'];
     } else {
       // AMATEUR / STANDARD: balanced competitive spread
@@ -272,7 +276,7 @@ export class AiOpponentGrid {
   start(totalChars, onGridUpdate, onGridFinish) {
     let finishedCount = 0;
 
-    this.opponents.forEach(entry => {
+    this.opponents.forEach((entry) => {
       entry.ai.start(
         totalChars,
         (stats) => {
@@ -294,11 +298,11 @@ export class AiOpponentGrid {
   }
 
   stop() {
-    this.opponents.forEach(entry => entry.ai.stop());
+    this.opponents.forEach((entry) => entry.ai.stop());
   }
 
   getOpponentsData() {
-    return this.opponents.map(o => ({
+    return this.opponents.map((o) => ({
       id: o.id,
       name: o.name,
       avatar: o.avatar,
@@ -331,7 +335,7 @@ export class AiOpponentGrid {
         accuracy: playerStats.accuracy || 100,
         isFinished: playerStats.isFinished || false
       },
-      ...this.opponents.map(o => ({
+      ...this.opponents.map((o) => ({
         id: o.id,
         name: o.name,
         avatar: o.avatar,
@@ -354,7 +358,7 @@ export class AiOpponentGrid {
     });
 
     // Assign positions 1..N and compute gap to player
-    const playerIndex = list.findIndex(r => r.isPlayer);
+    const playerIndex = list.findIndex((r) => r.isPlayer);
     const leader = list[0];
 
     const ranked = list.map((racer, idx) => {

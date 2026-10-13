@@ -142,7 +142,9 @@ export class AcademyView {
           </div>
 
           <div class="lessons-grid">
-            ${Object.entries(PASSAGE_DATABASE.ACADEMY).map(([id, lesson]) => `
+            ${Object.entries(PASSAGE_DATABASE.ACADEMY)
+              .map(
+                ([id, lesson]) => `
               <div class="lesson-card card-dark" data-lesson-id="${id}">
                 <div class="lesson-header">
                   <span class="lesson-tag">${lesson.fingerFocus}</span>
@@ -154,7 +156,9 @@ export class AcademyView {
                   Launch Practice Track →
                 </button>
               </div>
-            `).join('')}
+            `
+              )
+              .join('')}
           </div>
         </div>
       </div>
@@ -164,7 +168,7 @@ export class AcademyView {
   }
 
   bindEvents() {
-    this.container.querySelectorAll('.btn-start-lesson').forEach(btn => {
+    this.container.querySelectorAll('.btn-start-lesson').forEach((btn) => {
       btn.addEventListener('click', () => {
         const lessonId = btn.getAttribute('data-lesson-id');
         this.app.showScreen('race', {

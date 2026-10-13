@@ -88,7 +88,7 @@ export class TypingEngine {
     this.totalKeystrokes++;
     this.keystrokeTimestamps.push(now);
 
-    const isMatch = (key === expectedChar);
+    const isMatch = key === expectedChar;
 
     if (isMatch) {
       this.correctKeystrokes++;
@@ -104,7 +104,7 @@ export class TypingEngine {
       if (this.lastCharTime) {
         const intervalSec = (now - this.lastCharTime) / 1000;
         if (intervalSec > 0.01) {
-          const rawCharWpm = (1 / 5) / (intervalSec / 60);
+          const rawCharWpm = 1 / 5 / (intervalSec / 60);
           this.instantWpm = Math.min(220, rawCharWpm);
         }
       }
@@ -131,15 +131,21 @@ export class TypingEngine {
       this.keyErrors[expectedLower] = (this.keyErrors[expectedLower] || 0) + 1;
 
       // Apply error penalty
-      let penaltyDrop = 0.20; // standard
-      if (this.errorPenaltyMode === 'forgiving') penaltyDrop = 0.10;
-      if (this.errorPenaltyMode === 'hardcore') penaltyDrop = 0.40;
+      let penaltyDrop = 0.2; // standard
+      if (this.errorPenaltyMode === 'forgiving') penaltyDrop = 0.1;
+      if (this.errorPenaltyMode === 'hardcore') penaltyDrop = 0.4;
       this.penaltyMultiplier = Math.max(0.2, this.penaltyMultiplier - penaltyDrop);
 
       const stats = this.getStats();
       this.onMistake(expectedChar, key, stats);
 
-      return { type: 'incorrect', expected: expectedChar, actual: key, index: this.currentIndex, stats };
+      return {
+        type: 'incorrect',
+        expected: expectedChar,
+        actual: key,
+        index: this.currentIndex,
+        stats
+      };
     }
   }
 
@@ -169,8 +175,8 @@ export class TypingEngine {
     // Standard formula: (characters / 5) / minutes
     // Use a minimum of 2 seconds to avoid huge WPM spikes on first keystrokes
     const safeElapsedMin = Math.max(elapsedMin, 2 / 60);
-    const rawWpm = (this.totalKeystrokes / 5) / safeElapsedMin;
-    const netWpm = (this.correctKeystrokes / 5) / safeElapsedMin;
+    const rawWpm = this.totalKeystrokes / 5 / safeElapsedMin;
+    const netWpm = this.correctKeystrokes / 5 / safeElapsedMin;
 
     // Effective racing WPM with penalty multiplier
     const effectiveWpm = Math.max(0, Math.min(300, netWpm * this.penaltyMultiplier));
@@ -180,11 +186,10 @@ export class TypingEngine {
     const alpha = elapsedSec < 3 ? 0.3 : 0.15; // faster initial smoothing, then slower
     this._smoothWpm = this._smoothWpm * (1 - alpha) + effectiveWpm * alpha;
 
-    const accuracy = this.totalKeystrokes > 0
-      ? (this.correctKeystrokes / this.totalKeystrokes) * 100
-      : 100;
+    const accuracy =
+      this.totalKeystrokes > 0 ? (this.correctKeystrokes / this.totalKeystrokes) * 100 : 100;
 
-    const cpm = Math.round((this.correctKeystrokes / safeElapsedMin));
+    const cpm = Math.round(this.correctKeystrokes / safeElapsedMin);
 
     // Calculate consistency based on standard deviation of keystroke intervals
     let consistency = 95;
@@ -196,8 +201,8 @@ export class TypingEngine {
       const mean = intervals.reduce((a, b) => a + b, 0) / intervals.length;
       const variance = intervals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / intervals.length;
       const stdDev = Math.sqrt(variance);
-      const cv = mean > 0 ? (stdDev / mean) : 0; // coefficient of variation
-      consistency = Math.max(50, Math.min(99, Math.round(100 - (cv * 40))));
+      const cv = mean > 0 ? stdDev / mean : 0; // coefficient of variation
+      consistency = Math.max(50, Math.min(99, Math.round(100 - cv * 40)));
     }
 
     return {

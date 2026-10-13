@@ -68,7 +68,11 @@ export class AccountLifecycleManager {
    */
   async executePermanentDeletion(inputPhrase) {
     if (this.state !== DeletionState.PENDING_CONFIRMATION) {
-      return { success: false, state: this.state, error: 'No active deletion request pending confirmation.' };
+      return {
+        success: false,
+        state: this.state,
+        error: 'No active deletion request pending confirmation.'
+      };
     }
 
     if (String(inputPhrase || '').trim() !== this.requiredPhrase) {
@@ -86,7 +90,7 @@ export class AccountLifecycleManager {
       // 2. Clear all Service Worker browser caches
       if (typeof caches !== 'undefined') {
         const cacheNames = await caches.keys();
-        await Promise.all(cacheNames.map(name => caches.delete(name)));
+        await Promise.all(cacheNames.map((name) => caches.delete(name)));
       }
 
       // 3. Clear sessionStorage and localStorage
@@ -100,14 +104,24 @@ export class AccountLifecycleManager {
       this.state = DeletionState.COMPLETED;
       auditLogger.log('ACCOUNT_DELETED_PERMANENTLY', {
         state: this.state,
-        purgedStores: ['profile', 'sessions', 'garage', 'missions', 'settings', 'leaderboard', 'caches']
+        purgedStores: [
+          'profile',
+          'sessions',
+          'garage',
+          'missions',
+          'settings',
+          'leaderboard',
+          'caches'
+        ]
       });
 
       // Dispatch global event for application navigation reset
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('keyrush:account-deleted', {
-          detail: { timestamp: new Date().toISOString() }
-        }));
+        window.dispatchEvent(
+          new CustomEvent('keyrush:account-deleted', {
+            detail: { timestamp: new Date().toISOString() }
+          })
+        );
       }
 
       return { success: true, state: this.state };

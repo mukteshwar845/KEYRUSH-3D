@@ -48,7 +48,9 @@ export function sanitizeObject(obj, allowedKeys = null) {
     if (val && typeof val === 'object' && !Array.isArray(val)) {
       clean[key] = sanitizeObject(val);
     } else if (Array.isArray(val)) {
-      clean[key] = val.map(item => (typeof item === 'object' && item !== null ? sanitizeObject(item) : item));
+      clean[key] = val.map((item) =>
+        typeof item === 'object' && item !== null ? sanitizeObject(item) : item
+      );
     } else {
       clean[key] = val;
     }
@@ -70,11 +72,33 @@ export function validateProfileSchema(input) {
   }
 
   const allowedKeys = [
-    'id', 'username', 'callsign', 'role', 'avatar', 'league', 'leagueTier',
-    'bio', 'tagline', 'country', 'joinedDate', 'visibility', 'showStats',
-    'showHistory', 'xp', 'level', 'totalPracticeTimeSec', 'racesWon',
-    'racesPlayed', 'bestWpm', 'averageWpm', 'accuracy', 'currentStreak',
-    'longestStreak', 'lastActiveDate', 'weakKeys', 'analyticsConsent'
+    'id',
+    'username',
+    'callsign',
+    'role',
+    'avatar',
+    'league',
+    'leagueTier',
+    'bio',
+    'tagline',
+    'country',
+    'joinedDate',
+    'visibility',
+    'showStats',
+    'showHistory',
+    'xp',
+    'level',
+    'totalPracticeTimeSec',
+    'racesWon',
+    'racesPlayed',
+    'bestWpm',
+    'averageWpm',
+    'accuracy',
+    'currentStreak',
+    'longestStreak',
+    'lastActiveDate',
+    'weakKeys',
+    'analyticsConsent'
   ];
 
   const raw = sanitizeObject(input, allowedKeys);
@@ -93,11 +117,18 @@ export function validateProfileSchema(input) {
   callsign = callsign.replace(/[^A-Za-z0-9\-_]/g, '').slice(0, 16);
 
   // 3. Bio & Tagline
-  let bio = String(raw.bio || '').trim().slice(0, 250);
-  let tagline = String(raw.tagline || '').trim().slice(0, 80);
+  let bio = String(raw.bio || '')
+    .trim()
+    .slice(0, 250);
+  let tagline = String(raw.tagline || '')
+    .trim()
+    .slice(0, 80);
 
   // 4. Country Code (ISO alpha-3)
-  let country = String(raw.country || 'IND').trim().toUpperCase().slice(0, 3);
+  let country = String(raw.country || 'IND')
+    .trim()
+    .toUpperCase()
+    .slice(0, 3);
   if (!/^[A-Z]{2,3}$/.test(country)) country = 'IND';
 
   // 5. Visibility & Privacy
@@ -108,7 +139,7 @@ export function validateProfileSchema(input) {
 
   // 6. Avatar URL or Data URI check
   let avatar = String(raw.avatar || '/images/ui/avatar-kartik.png').trim();
-  const isValidAvatar = 
+  const isValidAvatar =
     avatar.startsWith('/') ||
     avatar.startsWith('data:image/png;base64,') ||
     avatar.startsWith('data:image/jpeg;base64,') ||
@@ -153,10 +184,24 @@ export function validateSettingsSchema(input) {
   }
 
   const allowedKeys = [
-    'id', 'theme', 'soundEffects', 'engineAudio', 'sfxVolume', 'engineVolume',
-    'masterVolume', 'interiorVolume', 'racingVolume', 'musicMuted',
-    'keyboardClickSound', 'errorPenalty', 'reducedMotion', 'targetWpm',
-    'targetAccuracy', 'dailyGoalMinutes', 'notificationsEnabled', 'analyticsConsent'
+    'id',
+    'theme',
+    'soundEffects',
+    'engineAudio',
+    'sfxVolume',
+    'engineVolume',
+    'masterVolume',
+    'interiorVolume',
+    'racingVolume',
+    'musicMuted',
+    'keyboardClickSound',
+    'errorPenalty',
+    'reducedMotion',
+    'targetWpm',
+    'targetAccuracy',
+    'dailyGoalMinutes',
+    'notificationsEnabled',
+    'analyticsConsent'
   ];
 
   const raw = sanitizeObject(input, allowedKeys);
@@ -174,16 +219,18 @@ export function validateSettingsSchema(input) {
   const errorPenalty = allowedPenalties.includes(raw.errorPenalty) ? raw.errorPenalty : 'standard';
 
   const allowedClicks = ['cherry-blue', 'mx-red', 'cyber-blip', 'off'];
-  const keyboardClickSound = allowedClicks.includes(raw.keyboardClickSound) ? raw.keyboardClickSound : 'cherry-blue';
+  const keyboardClickSound = allowedClicks.includes(raw.keyboardClickSound)
+    ? raw.keyboardClickSound
+    : 'cherry-blue';
 
   const sanitized = {
     id: 'user_settings',
     theme,
     soundEffects: Boolean(raw.soundEffects ?? true),
     engineAudio: Boolean(raw.engineAudio ?? true),
-    sfxVolume: clamp(raw.sfxVolume, 0, 1, 0.60),
-    engineVolume: clamp(raw.engineVolume, 0, 1, 0.50),
-    masterVolume: clamp(raw.masterVolume, 0, 1, 0.80),
+    sfxVolume: clamp(raw.sfxVolume, 0, 1, 0.6),
+    engineVolume: clamp(raw.engineVolume, 0, 1, 0.5),
+    masterVolume: clamp(raw.masterVolume, 0, 1, 0.8),
     interiorVolume: clamp(raw.interiorVolume, 0, 1, 0.55),
     racingVolume: clamp(raw.racingVolume, 0, 1, 0.65),
     musicMuted: Boolean(raw.musicMuted ?? false),
@@ -203,7 +250,7 @@ export function validateSettingsSchema(input) {
 /**
  * Validates uploaded image files for avatar safety.
  * Enforces MIME type whitelists and file size constraints (max 2MB).
- * @param {File} file 
+ * @param {File} file
  * @returns {Promise<{ safe: boolean, error?: string }>}
  */
 export async function validateAvatarFile(file) {
